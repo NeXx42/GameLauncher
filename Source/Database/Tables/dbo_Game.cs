@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -19,6 +20,7 @@ namespace GameLibary.Source.Database.Tables
 
 
         public string GetRealIconPath => !string.IsNullOrEmpty(iconPath) ? FileManager.GetPathForScreenshot(iconPath) : "";
+        public string GetRealExecutionPath => !string.IsNullOrEmpty(executablePath) ? Path.Combine(FileManager.GetProcessGameLocation(), gameName, executablePath.Substring(1)) : ""; 
 
 
         public override Row[] GetRows() => new[]

@@ -28,8 +28,6 @@ namespace GameLibary.Components
         private HashSet<int> gameTags;
         private Dictionary<int, Button> allTags = new Dictionary<int, Button>();
 
-        private List<string> executableBinaries = new List<string>();
-
         public Control_GameView()
         {
             InitializeComponent();
@@ -64,15 +62,16 @@ namespace GameLibary.Components
             inp_Emulate.IsChecked = game.useEmulator;
             lbl_Title.Content = game.gameName;
 
-            executableBinaries = GetBinaries(game.executablePath);
+            List<string> executableBinaries = GetBinaries(game.gameName);
 
             inp_binary.ItemsSource = executableBinaries.Select(x => Path.GetFileName(x));
-            inp_binary.SelectedIndex = executableBinaries.IndexOf(game.executablePath);
+            inp_binary.SelectedIndex = executableBinaries.IndexOf(game.executablePath.Substring(1));
         }
 
-        private List<string> GetBinaries(string currentBinary)
+        private List<string> GetBinaries(string gameName)
         {
-            return Directory.GetFiles(Path.GetDirectoryName(currentBinary)).Where(x => x.EndsWith(".exe", StringComparison.CurrentCultureIgnoreCase)).ToList();
+            string gameFolder = Path.Combine(FileManager.GetProcessGameLocation(), gameName);
+            return Directory.GetFiles(gameFolder).Where(x => x.EndsWith(".exe", StringComparison.CurrentCultureIgnoreCase)).Select(x => Path.GetFileName(x)).ToList();
         }
 
         private void RedrawSelectedTags()

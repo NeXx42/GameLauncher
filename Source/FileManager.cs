@@ -6,6 +6,9 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Transactions;
+using GameLibary.Source.Database.Tables;
+using Microsoft.Win32.SafeHandles;
 
 namespace GameLibary.Source
 {
@@ -14,6 +17,7 @@ namespace GameLibary.Source
         public static string GetDataLocation() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MyLibaryApplication");
         public static string GetTempLocation() => Path.Combine(GetDataLocation(), "__Temp");
 
+        public static string GetProcessGameLocation() => Path.Combine(MainWindow.GameRootLocation, "____Processed");
 
         public static void Setup()
         {
@@ -55,6 +59,35 @@ namespace GameLibary.Source
 
             File.Move(path, GetPathForScreenshot(newName));
             return newName;
+        }
+
+        public static void TryMigrate(dbo_Game game, out bool invalidGame, out bool wasMigrated)
+        {
+            invalidGame = false;
+            wasMigrated = false;
+
+            if (game.executablePath.StartsWith("#"))
+            {
+                return;
+            }
+
+            if(!File.Exists(game.executablePath))
+            {
+                invalidGame = true;
+                return;
+            }
+
+            if(!Directory.Exists(GetProcessGameLocation()))
+            {
+                Directory.CreateDirectory(GetProcessGameLocation());
+            }
+
+            string parentExecutableFolder = Path.GetDirectoryName(game.executablePath);
+
+            Directory.Move(parentExecutableFolder, Path.Combine(GetProcessGameLocation(), $"{game.gameName}"));
+            game.executablePath =$"#{Path.GetFileName(game.executablePath)}";
+
+            wasMigrated = true;
         }
 
         public static string GetPathForScreenshot(string fileName) => Path.Combine(GetDataLocation(), fileName);

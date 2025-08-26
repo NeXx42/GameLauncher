@@ -4,6 +4,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -41,6 +42,13 @@ namespace GameLibary.Source
 
                 try
                 {
+                    string realPath = game.GetRealExecutionPath;
+
+                    if(!File.Exists(realPath))
+                    {
+                        throw new Exception("Path doesnt exist - " + realPath);
+                    }
+
                     if (game.useEmulator)
                     {
                         activeGame.StartInfo.FileName = MainWindow.EmulatorLocation;
@@ -48,7 +56,7 @@ namespace GameLibary.Source
                     }
                     else
                     {
-                        activeGame.StartInfo.FileName = game.executablePath;
+                        activeGame.StartInfo.FileName = realPath;
                     }
                 
                 

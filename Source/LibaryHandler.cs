@@ -37,35 +37,48 @@ namespace GameLibary.Source
         private static void FindGames()
         {
             gameFilterList = null;
-            games = DatabaseHandler.GetItems<dbo_Game>();
 
             var temp = CrawlGames();
-            HashSet<string> existingDirs = games.Select(x => Path.GetDirectoryName(x.executablePath)).ToHashSet();
 
             List<dbo_Game> newGames = new List<dbo_Game>();
+
             for (int i = 0; i < temp.Count; i++)
             {
                 string exectuable = temp[i].exectuables.FirstOrDefault() ?? "";
                 string dirName = Path.GetDirectoryName(temp[i].exectuables.FirstOrDefault());
 
-                if (string.IsNullOrEmpty(dirName) || existingDirs.Contains(dirName))
-                    continue;
-
-                newGames.Add(new dbo_Game
+                dbo_Game newGame = new dbo_Game
                 {
                     gameName = Path.GetFileName(temp[i].path),
                     executablePath = exectuable
-                });
+                };
+
+                FileManager.TryMigrate(newGame, out bool isInvalid, out _);
+
+                if(!isInvalid)
+                    newGames.Add(newGame);
             }
 
-            foreach(dbo_Game game in newGames)
+            foreach (dbo_Game game in newGames)
             {
                 DatabaseHandler.InsertIntoTable(game);
             }
 
-            if(games.Length > 0)
+            games = DatabaseHandler.GetItems<dbo_Game>();
+            
+            foreach(dbo_Game existingGame in games)
             {
-                games = DatabaseHandler.GetItems<dbo_Game>();
+                FileManager.TryMigrate(existingGame, out bool isInvalid, out bool wasMigrated);
+
+                if (isInvalid)
+                {
+                    continue;
+                }
+
+                if (wasMigrated)
+                {
+                    DatabaseHandler.UpdateTableEntry(existingGame, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), existingGame.id));
+                }
             }
         }
 
@@ -190,19 +203,11 @@ namespace GameLibary.Source
 
         public static void ChangeBinaryLocation(int gameId, string? path)
         {
-            if (string.IsNullOrEmpty(path))
-                return;
-
             dbo_Game? game = GetGameFromId(gameId);
 
             if (game != null)
             {
-                string desiredPath = Path.Combine(Path.GetDirectoryName(game.executablePath), path);
-
-                if(!File.Exists(desiredPath))
-                    return;
-
-                game.executablePath = desiredPath;
+                game.executablePath = $"#{path}";
                 DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
             }
         }
@@ -230,6 +235,9 @@ namespace GameLibary.Source
 
             void Craw(string path)
             {
+                if (string.Equals(path, FileManager.GetProcessGameLocation(), StringComparison.CurrentCultureIgnoreCase))
+                    return;
+
                 string[] allFiles = Directory.GetFiles(path);
                 string[] binaries = allFiles.Where(x => x.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase)).ToArray();
 
