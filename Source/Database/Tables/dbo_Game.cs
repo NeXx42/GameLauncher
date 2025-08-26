@@ -19,8 +19,9 @@ namespace GameLibary.Source.Database.Tables
         public bool useEmulator {  get; set; }
 
 
-        public string GetRealIconPath => !string.IsNullOrEmpty(iconPath) ? FileManager.GetPathForScreenshot(iconPath) : "";
-        public string GetRealExecutionPath => !string.IsNullOrEmpty(executablePath) ? Path.Combine(FileManager.GetProcessGameLocation(), gameName, executablePath.Substring(1)) : ""; 
+        public string GetFolderName => Path.Combine(FileManager.GetProcessGameLocation(), gameName);
+        public string GetRealIconPath => !string.IsNullOrEmpty(iconPath) ? Path.Combine(GetFolderName, iconPath) : "";
+        public string GetRealExecutionPath => !string.IsNullOrEmpty(executablePath) ? Path.Combine(GetFolderName, executablePath.Substring(1)) : ""; 
 
 
         public override Row[] GetRows() => new[]

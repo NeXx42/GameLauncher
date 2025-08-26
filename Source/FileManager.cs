@@ -55,9 +55,9 @@ namespace GameLibary.Source
         public static string PromoteTempFile(int gameId, string path)
         {
             string extension = Path.GetExtension(path);
-            string newName = $"{gameId}_{Guid.NewGuid()}{extension}";
+            string newName = $"{Guid.NewGuid()}{extension}";
 
-            File.Move(path, GetPathForScreenshot(newName));
+            File.Move(path, Path.Combine(LibaryHandler.GetGameFromId(gameId).GetFolderName, newName));
             return newName;
         }
 
@@ -89,7 +89,5 @@ namespace GameLibary.Source
 
             wasMigrated = true;
         }
-
-        public static string GetPathForScreenshot(string fileName) => Path.Combine(GetDataLocation(), fileName);
     }
 }
