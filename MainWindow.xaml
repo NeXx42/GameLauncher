@@ -47,11 +47,11 @@
                     <Button x:Name="btn_PrevPage" HorizontalAlignment="Right" Margin="0,10,70,10" Width="50" Content="&lt;" Click="btn_PrevPage_Click"/>
                 </Grid>
 
-            </Border>21
+            </Border>
         </Grid>
 
         <Grid  x:Name="cont_MenuView" Background="#3F000000" Visibility="Visible" MouseLeftButtonDown="cont_MenuView_MouseLeftButtonDown">
-            <components:Control_GameView x:Name="GameViewer" Width="1200" Height="900" Visibility="Visible" VerticalAlignment="Bottom" HorizontalAlignment="Center"/>
+            <components:Control_GameView x:Name="GameViewer" Width="1200" Visibility="Visible" HorizontalAlignment="Center" Margin="0, 100, 0, 0"/>
             <components:Control_CreateTag x:Name="TagCreator" Width="500" Height="150" Visibility="Hidden" />
             <components:Control_Setup Width="600" Height="300" x:Name="SetupHandler" Visibility="Hidden"/>
         </Grid>

@@ -91,9 +91,7 @@ namespace GameLibary.Source
             }
 
             dbo_GameTag[] gameTags = DatabaseHandler.GetItems<dbo_GameTag>(new DatabaseHandler.QueryBuilder().SearchIn(nameof(dbo_GameTag.TagId), tagFilter.ToArray()));
-            Dictionary<int, int> tagFits = gameTags.GroupBy(x => x.GameId).ToDictionary(x => x.Key, x => x.Count());
-
-            gameFilterList = gameTags.Where(x => { if (tagFits.ContainsKey(x.GameId)) return tagFits[x.GameId] == tagFilter.Count; return false; }).Select(x => x.GameId).ToArray();
+            gameFilterList = gameTags.GroupBy(x => x.GameId).Where(x => x.Count() == tagFilter.Count).Select(x => x.Key).ToArray();
         }
 
         public static int GetFilteredGameCount() => gameFilterList.Length;
