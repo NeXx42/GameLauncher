@@ -1,0 +1,177 @@
+﻿using GameLibary.Source.Database;
+using GameLibary.Source.Database.Tables;
+using System;
+using System.Collections.Generic;
+using System.Data.SQLite;
+using System.IO;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
+using System.Transactions;
+using System.Windows.Media.Animation;
+using static GameLibary.Source.DatabaseHandler;
+using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
+
+namespace GameLibary.Source
+{
+    public static class DatabaseHandler
+    {
+        private static string dbPath => Path.Combine(FileManager.GetDataLocation(), "libary.db");
+        private static string GetConnectionString() => $"Data Source={dbPath};Version=3;";
+
+        private static SQLiteConnection connection;
+
+
+        public static void Setup()
+        {
+            if (!File.Exists(dbPath))
+            {
+                SQLiteConnection.CreateFile(dbPath);
+                connection = new SQLiteConnection(GetConnectionString());
+            }
+
+            connection ??= new SQLiteConnection(GetConnectionString());
+            GenerateTables();
+        }
+
+        private static void GenerateTables()
+        {
+            // cannot add or modify existing columns. way too advanced for this
+
+            Type[] tables = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(DatabaseTable))).ToArray();
+
+            connection.Open();
+
+            foreach (Type tableType in tables)
+            {
+                DatabaseTable table = Activator.CreateInstance(tableType) as DatabaseTable;
+
+                using (SQLiteCommand command = new SQLiteCommand(table.GenerateCreateCommand(), connection))
+                {
+                    command.ExecuteNonQuery();
+                }
+            }
+
+            connection.Close();
+        }
+
+
+        public static void InsertIntoTable(DatabaseTable value)
+        {
+            TryExecute(value.GenerateInsertCommand());
+        }
+
+        public static void DeleteFromTable<T>(QueryBuilder queryBuilder) where T: DatabaseTable
+        {
+            TryExecute($"DELETE FROM {GetTableNameFromGeneric<T>()} {queryBuilder?.BuildWhereClause() ?? ""}");
+        }
+
+        public static void UpdateTableEntry<T>(T entry, QueryBuilder queryBuilder) where T : DatabaseTable
+        {
+            string updateSQL = entry.GenerateUpdateCommand();
+            TryExecute($"{updateSQL} {queryBuilder?.BuildWhereClause() ?? ""}");
+        }
+
+
+        private static void TryExecute(string sql)
+        {
+            try
+            {
+                connection.Open();
+
+                using (SQLiteCommand cmd = new SQLiteCommand(sql, connection))
+                {
+                    cmd.ExecuteNonQuery();
+                }
+            }
+            catch (Exception e)
+            {
+
+            }
+            finally
+            {
+                connection.Close();
+            }
+        }
+
+
+        public static T[] GetItems<T>(QueryBuilder? queryBuilder = null) where T : DatabaseTable
+        {
+            List<T> val = new List<T>();
+            connection.Open();
+
+            using (SQLiteCommand cmd = new SQLiteCommand($"SELECT * FROM {GetTableNameFromGeneric<T>()} {queryBuilder?.BuildWhereClause() ?? ""}", connection))
+            using (SQLiteDataReader reader = cmd.ExecuteReader())
+            {
+                while (reader.Read())
+                {
+                    T res = (T)Activator.CreateInstance(typeof(T));
+                    res.Map(reader);
+
+                    val.Add(res);
+                }
+            }
+
+            connection.Close();
+            return val.ToArray();
+        }
+
+        private static string GetTableNameFromGeneric<T>() where T : DatabaseTable
+        {
+            T table = (T)Activator.CreateInstance(typeof(T));
+            return table.tableName;
+        }
+
+
+
+        public class QueryBuilder
+        {
+            private string searchClause = "";
+
+            private void PrepSearch()
+            {
+                if (!string.IsNullOrEmpty(searchClause))
+                    searchClause += " AND";
+            }
+
+            public QueryBuilder SearchEquals(string column, string value)
+            {
+                PrepSearch();
+
+                searchClause += $" {column} = '{value}'";
+                return this;
+            }
+
+            public QueryBuilder SearchEquals(string column, int value)
+            {
+                PrepSearch();
+
+                searchClause += $" {column} = {value}";
+                return this;
+            }
+
+            public QueryBuilder SearchIn(string column, params int[] values)
+            {
+                PrepSearch();
+
+                searchClause += $" {column} in ( ";
+
+                for(int i = 0; i < values.Length; i++)
+                {
+                    searchClause += $"{values[i]}";
+
+                    if (i < values.Length - 1)
+                        searchClause += ",";
+                }
+                searchClause += ")";
+                return this;
+            }
+
+            public string BuildWhereClause()
+            {
+                return string.IsNullOrEmpty(searchClause) ? "" : $"WHERE {searchClause}";
+            }
+        }
+    }
+}

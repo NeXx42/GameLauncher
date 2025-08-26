@@ -1,0 +1,41 @@
+﻿<UserControl x:Class="GameLibary.Components.Control_GameView"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:GameLibary.Components"
+             mc:Ignorable="d" 
+             d:DesignHeight="900" d:DesignWidth="1200">
+    <Border Background="#070A0D">
+        <Grid>
+            <Grid.Effect>
+                <DropShadowEffect />
+            </Grid.Effect>
+            <Grid Margin="25,25,25,25">
+                <Label x:Name="lbl_Title" VerticalAlignment="Top" HorizontalAlignment="Center" Foreground="White" FontSize="24">Game Name</Label>
+
+                <Border Margin="50,50,50,50" Background="#31373C" HorizontalAlignment="Center" VerticalAlignment="Top" Width="600" Height="337.5" >
+                    <Image  x:Name="img_bg" Source="/Components/temp.jpeg" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5"/>
+                </Border>
+
+                <StackPanel Margin="0, 400, 0, 0" VerticalAlignment="Top" Background="#99000000" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Margin="0, 0, 5, 0" x:Name="btn_RegenMedia" Width="100"  Content="Clear" Click="btn_RegenMedia_Click"/>
+                    <Button x:Name="btn_Overlay" Width="100"  Content="Open Overlay" Click="btn_Overlay_Click"/>
+                </StackPanel>
+                
+                <Grid Background="#31373C" VerticalAlignment="Bottom" Margin="0,0,0,50" Height="200">
+                    <Label VerticalAlignment="Top" Content="Tags" HorizontalAlignment="Center" Foreground="White"/>
+                    <WrapPanel x:Name="cont_AllTags" Margin="15,30,15,50">
+
+                    </WrapPanel>
+                </Grid>
+
+                <Label Content="Emulate" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="25, 0, 0 ,0" Foreground="White"/>
+                <CheckBox x:Name="inp_Emulate" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="5,0,0,5"/>
+
+                <Button x:Name="btn_Browse" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="100" Height="20" Margin="0, 0, 110, 0" Content="Browse" />
+                <Button x:Name="btn_Launch" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="100" Height="20" Content="Launch" />
+            </Grid>
+        </Grid>
+    </Border>
+</UserControl>

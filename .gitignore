@@ -1,0 +1,81 @@
+# Build results
+bin/
+obj/
+[Bb]uild/
+[Ll]og/
+[Ll]ogs/
+
+# Visual Studio files
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains IDE
+.idea/
+*.iml
+
+# VS Code
+.vscode/
+
+# NuGet
+*.nupkg
+*.snupkg
+*.nuspec
+*.nuget.props
+*.nuget.targets
+packages/
+project.lock.json
+project.fragment.lock.json
+
+# Azure build output
+*.azurePubxml
+
+# Publish
+publish/
+AppPackages/
+BundleArtifacts/
+Package.StoreAssociation.xml
+_PfxCerts/
+
+# Auto-generated files
+Generated\ Files/
+*.g.cs
+*.g.i.cs
+*.Designer.cs
+
+# Resharper
+_ReSharper*/
+*.[Rr]e[Ss]harper
+
+# Backup & cache files
+*~
+*.bak
+*.tmp
+*.temp
+*.log
+
+# OS-specific
+[Tt]humbs.db
+[Dd]esktop.ini
+$RECYCLE.BIN/
+.DS_Store
+
+# WPF specific (compiled XAML, generated cache)
+*.baml
+*.xaml.g.cs
+*.xaml.g.i.cs
+
+# Local tools
+*.dotCover
+*.coverage
+*.coveragexml
+
+# Other
+*.pdb
+*.mdb
+*.dbmdl
+*.bak
+*.swp
+
