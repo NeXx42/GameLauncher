@@ -26,7 +26,9 @@ namespace GameLibary.Components
         private int inspectingGameId;
 
         private HashSet<int> gameTags;
-        private Dictionary<int, Button> allTags = new Dictionary<int, Button>();
+        private Dictionary<int, Element_Tag> allTags = new Dictionary<int, Element_Tag>();
+
+        private bool ignoredComboboxEvents;
 
         public Control_GameView()
         {
@@ -64,8 +66,10 @@ namespace GameLibary.Components
 
             List<string> executableBinaries = GetBinaries(game.gameName);
 
+            ignoredComboboxEvents = true;
             inp_binary.ItemsSource = executableBinaries.Select(x => Path.GetFileName(x));
             inp_binary.SelectedIndex = executableBinaries.IndexOf(game.executablePath.Substring(1));
+            ignoredComboboxEvents = false;
         }
 
         private List<string> GetBinaries(string gameName)
@@ -78,9 +82,9 @@ namespace GameLibary.Components
         {
             gameTags = LibaryHandler.GetGameTags(inspectingGameId).ToHashSet();
 
-            foreach (KeyValuePair<int, Button> tag in allTags)
+            foreach (KeyValuePair<int, Element_Tag> tag in allTags)
             {
-                tag.Value.BorderThickness = gameTags.Contains(tag.Key) ? new Thickness(5) : new Thickness(0);
+                tag.Value.Toggle(gameTags.Contains(tag.Key));
             }
         }
 
@@ -109,15 +113,11 @@ namespace GameLibary.Components
             {
                 dbo_Tag tag = LibaryHandler.GetTagById(tagId);
 
-                Button btn = new Button();
-                btn.Content = tag.TagName;
-                btn.Width = 150;
-                btn.Height = 30;
+                Element_Tag tagUI = new Element_Tag();
+                tagUI.Draw(tag, HandleTagToggle);
 
-                btn.Click += (_, __) => HandleTagToggle(tagId);
-
-                cont_AllTags.Children.Add(btn);
-                allTags.Add(tagId, btn);
+                cont_AllTags.Children.Add(tagUI);
+                allTags.Add(tagId, tagUI);
             }
         }
 
@@ -154,6 +154,9 @@ namespace GameLibary.Components
 
         private void HandleBinaryChange()
         {
+            if (ignoredComboboxEvents)
+                return;
+
             LibaryHandler.ChangeBinaryLocation(inspectingGameId, inp_binary.SelectedValue?.ToString());
             Draw(LibaryHandler.GetGameFromId(inspectingGameId));
         }

@@ -6,7 +6,11 @@
              xmlns:local="clr-namespace:GameLibary.Components"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Border>
-         
+    <Border Background="Black">
+        <Grid>
+            <Label Content="Login" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Top" Margin="0,25,0,0" FontSize="24"/>
+            <TextBox x:Name="inp_password" VerticalAlignment="Top" Margin="0,100,0,0" HorizontalAlignment="Center" Width="400"/>
+            <Button x:Name="btn_login" Content="Login" Margin="0,130,0,0" Width="50" HorizontalAlignment="Center" VerticalAlignment="Top"/>
+        </Grid>
     </Border>
 </UserControl>

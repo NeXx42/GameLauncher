@@ -24,18 +24,28 @@
                     <ComboBox x:Name="inp_binary" Width="385"></ComboBox>
                 </StackPanel>
 
-                <Grid Background="#31373C" VerticalAlignment="Bottom" Margin="0,0,0,50" Height="200">
-                    <Label VerticalAlignment="Top" Content="Tags" HorizontalAlignment="Center" Foreground="White"/>
-                    <WrapPanel x:Name="cont_AllTags" Margin="15,30,15,50">
+                <Grid  VerticalAlignment="Bottom" Margin="0,0,0,50" Height="200">
+                    <Label VerticalAlignment="Top" Content="Tags" HorizontalAlignment="Center" Foreground="White" FontSize="20"/>
+                    <Grid  Margin="15,40,15,50" Background="#31373C" VerticalAlignment="Top">
+                        <WrapPanel Margin="10" x:Name="cont_AllTags" HorizontalAlignment="Center">
 
-                    </WrapPanel>
+                        </WrapPanel>
+                    </Grid>
                 </Grid>
 
-                <Label Content="Emulate" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="25, 0, 0 ,0" Foreground="White"/>
-                <CheckBox x:Name="inp_Emulate" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="5,0,0,5"/>
+                <CheckBox x:Name="inp_Emulate" Content="Emulate" VerticalAlignment="Bottom" HorizontalAlignment="Left" Margin="70,0,0,20" Foreground="White" RenderTransformOrigin="0.5,0.5">
+                    <CheckBox.RenderTransform>
+                        <TransformGroup>
+                            <ScaleTransform ScaleX="3" ScaleY="3"/>
+                            <SkewTransform/>
+                            <RotateTransform/>
+                            <TranslateTransform/>
+                        </TransformGroup>
+                    </CheckBox.RenderTransform>
+                </CheckBox>
 
-                <Button x:Name="btn_Browse" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="100" Height="20" Margin="0, 0, 110, 0" Content="Browse" />
-                <Button x:Name="btn_Launch" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="100" Height="20" Content="Launch" />
+                <Button x:Name="btn_Browse" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="200" Height="50" Margin="0, 0, 210, 0" Content="Browse" />
+                <Button x:Name="btn_Launch" VerticalAlignment="Bottom" HorizontalAlignment="Right" Width="200" Height="50" Content="Launch" />
             </Grid>
         </Grid>
     </Border>

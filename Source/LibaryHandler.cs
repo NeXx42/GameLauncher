@@ -11,6 +11,9 @@ namespace GameLibary.Source
 
         private static int[] gameFilterList;
 
+        public static bool isCrawling { private set; get; }
+        private static Thread crawlingThread;
+
         public static bool getAreTagsDirty
         {
             get
@@ -27,17 +30,27 @@ namespace GameLibary.Source
         private static bool m_AreTagsDirty;
 
 
-        public static void Setup()
+        public static async Task Setup()
         {
-            FindGames();
+            await FindGames();
             FindTags();
         }
 
 
-        private static void FindGames()
+        private static async Task FindGames()
         {
             gameFilterList = null;
 
+            isCrawling = true;
+
+            await FindGames_Internal();
+
+            //crawlingThread = new Thread(FindGames_Internal);
+            //crawlingThread.Start();
+        }
+
+        private static async Task FindGames_Internal()
+        {
             var temp = CrawlGames();
 
             List<dbo_Game> newGames = new List<dbo_Game>();
@@ -53,22 +66,22 @@ namespace GameLibary.Source
                     executablePath = exectuable
                 };
 
-                FileManager.TryMigrate(newGame, out bool isInvalid, out _);
+                (bool isInvalid, bool wasMigrated) = await FileManager.TryMigrate(newGame);
 
-                if(!isInvalid)
+                if (!isInvalid)
                     newGames.Add(newGame);
             }
 
             foreach (dbo_Game game in newGames)
             {
-                DatabaseHandler.InsertIntoTable(game);
+                await DatabaseHandler.InsertIntoTable(game);
             }
 
             games = DatabaseHandler.GetItems<dbo_Game>();
-            
-            foreach(dbo_Game existingGame in games)
+
+            foreach (dbo_Game existingGame in games)
             {
-                FileManager.TryMigrate(existingGame, out bool isInvalid, out bool wasMigrated);
+                (bool isInvalid, bool wasMigrated) = await FileManager.TryMigrate(existingGame);
 
                 if (isInvalid)
                 {
@@ -77,7 +90,7 @@ namespace GameLibary.Source
 
                 if (wasMigrated)
                 {
-                    DatabaseHandler.UpdateTableEntry(existingGame, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), existingGame.id));
+                    await DatabaseHandler.UpdateTableEntry(existingGame, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), existingGame.id));
                 }
             }
         }
@@ -207,7 +220,15 @@ namespace GameLibary.Source
 
             if (game != null)
             {
+                string existing = game.executablePath;
                 game.executablePath = $"#{path}";
+
+                if (!File.Exists(game.GetRealExecutionPath))
+                {
+                    game.executablePath = existing;
+                    return;
+                }
+
                 DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
             }
         }

@@ -35,14 +35,18 @@ namespace GameLibary.Components
             inp_Emulator.Content = MainWindow.EmulatorLocation ?? "Set Location";
         }
 
-        private void btn_Complete_Click(object sender, RoutedEventArgs e)
+        private async void btn_Complete_Click(object sender, RoutedEventArgs e)
         {
             if (!CanContinue())
                 return;
 
-            DatabaseHandler.InsertIntoTable(new dbo_Config() { key = MainWindow.CONFIG_ROOTLOCATION, value = dataRoot });
-            DatabaseHandler.InsertIntoTable(new dbo_Config() { key = MainWindow.CONFIG_EMULATORLOCATION, value = emulator });
-            DatabaseHandler.InsertIntoTable(new dbo_Config() { key = MainWindow.CONFIG_PASSWORD, value = inp_Password.Text });
+            await DatabaseHandler.InsertIntoTable(new dbo_Config() { key = MainWindow.CONFIG_ROOTLOCATION, value = dataRoot });
+            await DatabaseHandler.InsertIntoTable(new dbo_Config() { key = MainWindow.CONFIG_EMULATORLOCATION, value = emulator });
+
+            if (!string.IsNullOrEmpty(inp_Password.Text))
+            {
+                await DatabaseHandler.InsertIntoTable(new dbo_Config() { key = MainWindow.CONFIG_PASSWORD, value = EncryptionHelper.EncryptPassword(inp_Password.Text) });
+            }
 
             MainWindow.window!.CheckForSetup();
         }
@@ -51,7 +55,7 @@ namespace GameLibary.Components
         {
             string password = inp_Password.Text;
 
-            if (!string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(dataRoot) && !string.IsNullOrEmpty(emulator))
+            if (!string.IsNullOrEmpty(dataRoot) && !string.IsNullOrEmpty(emulator))
             {
                 return true;
             }

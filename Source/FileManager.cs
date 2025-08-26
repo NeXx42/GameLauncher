@@ -7,6 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
+using System.Windows;
 using GameLibary.Source.Database.Tables;
 using Microsoft.Win32.SafeHandles;
 
@@ -61,20 +62,16 @@ namespace GameLibary.Source
             return newName;
         }
 
-        public static void TryMigrate(dbo_Game game, out bool invalidGame, out bool wasMigrated)
+        public static async Task<(bool isInvalid, bool wasMigrated)> TryMigrate(dbo_Game game)
         {
-            invalidGame = false;
-            wasMigrated = false;
-
             if (game.executablePath.StartsWith("#"))
             {
-                return;
+                return (false, false);
             }
 
             if(!File.Exists(game.executablePath))
             {
-                invalidGame = true;
-                return;
+                return (true, false);
             }
 
             if(!Directory.Exists(GetProcessGameLocation()))
@@ -82,12 +79,21 @@ namespace GameLibary.Source
                 Directory.CreateDirectory(GetProcessGameLocation());
             }
 
-            string parentExecutableFolder = Path.GetDirectoryName(game.executablePath);
+            try
+            {
+                string parentExecutableFolder = Path.GetDirectoryName(game.executablePath);
 
-            Directory.Move(parentExecutableFolder, Path.Combine(GetProcessGameLocation(), $"{game.gameName}"));
-            game.executablePath =$"#{Path.GetFileName(game.executablePath)}";
+                Directory.Move(parentExecutableFolder, Path.Combine(GetProcessGameLocation(), $"{game.gameName}"));
+                game.executablePath =$"#{Path.GetFileName(game.executablePath)}";
 
-            wasMigrated = true;
+                return (false, true);
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message);
+                return (true, false);
+            }
+
         }
     }
 }

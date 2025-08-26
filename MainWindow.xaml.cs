@@ -27,7 +27,7 @@ namespace GameLibary
         private int gamesSlide;
 
         private HashSet<int> activeTags = new HashSet<int>();
-        private Dictionary<int, Button> existingTags = new Dictionary<int, Button>();
+        private Dictionary<int, Element_Tag> existingTags = new Dictionary<int, Element_Tag>();
 
 
         public MainWindow()
@@ -53,42 +53,49 @@ namespace GameLibary
 
         public void CheckForSetup()
         {
-            if(!IsValidSave(out GameRootLocation, out _, out EmulatorLocation))
-            {
-                ToggleMenu(true, true);
-                SetupHandler.Visibility = Visibility.Visible;
+            ToggleMenu(true, true);
 
+            if(!IsValidSave(out GameRootLocation, out EmulatorLocation, out bool requireLogin))
+            {
+                SetupHandler.Visibility = Visibility.Visible;
                 return;
             }
 
-            CompleteLoad();
+            if (requireLogin)
+            {
+                LoginHandler.Visibility = Visibility.Visible;
+            }
+            else
+            {
+                CompleteLoad();
+            }
         }
 
-        private bool IsValidSave(out string dir, out string login, out string emu)
+        private bool IsValidSave(out string dir, out string emu, out bool useLogin)
         {
             dbo_Config? mainDirectory = DatabaseHandler.GetItems<dbo_Config>(new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Config.key), CONFIG_ROOTLOCATION)).FirstOrDefault();
-            dbo_Config? loginHash = DatabaseHandler.GetItems<dbo_Config>(new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Config.key), CONFIG_PASSWORD)).FirstOrDefault();
             dbo_Config? emulatorDirectory = DatabaseHandler.GetItems<dbo_Config>(new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Config.key), CONFIG_EMULATORLOCATION)).FirstOrDefault();
 
-            if (mainDirectory != null && loginHash != null && emulatorDirectory != null)
+            if (mainDirectory != null && emulatorDirectory != null)
             {
                 dir = mainDirectory!.value;
-                login = loginHash!.value;
                 emu = emulatorDirectory!.value;
+
+                useLogin = DatabaseHandler.GetItems<dbo_Config>(new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Config.key), CONFIG_PASSWORD)).Length > 0;
 
                 return true;
             }
 
             dir = "";
-            login = "";
             emu = "";
+            useLogin = false;
 
             return false;
         }
 
-        private void CompleteLoad()
+        public async void CompleteLoad()
         {
-            LibaryHandler.Setup();
+            await LibaryHandler.Setup();
 
             GameViewer.Setup(this);
 
@@ -147,39 +154,31 @@ namespace GameLibary
 
             GameViewer.RedrawTags(tagIds);
 
-            Button CreateTagUI(int tagId)
+            Element_Tag CreateTagUI(int tagId)
             {
                 dbo_Tag? tag = LibaryHandler.GetTagById(tagId);
 
-                Button btn = new Button();
-                btn.Content = tag.TagName;
-                btn.Width = 150;
-                btn.Height = 30;
+                Element_Tag ui = new Element_Tag();
+                ui.Draw(tag, SwapTagMode);
 
-                btn.Click += (_, __) => SwapTagMode(tagId);
-
-                cont_AllTags.Children.Add(btn);
-                return btn;
+                cont_AllTags.Children.Add(ui);
+                return ui;
             }
         }
 
         private void SwapTagMode(int tagId)
         {
-            if (existingTags.TryGetValue(tagId, out Button btn))
+            if (existingTags.TryGetValue(tagId, out Element_Tag ui))
             {
                 if (activeTags.Contains(tagId))
                 {
                     activeTags.Remove(tagId);
-
-                    cont_TagSearch.Children.Remove(btn);
-                    cont_AllTags.Children.Add(btn);
+                    ui.Toggle(false);
                 }
                 else
                 {
                     activeTags.Add(tagId);
-
-                    cont_AllTags.Children.Remove(btn);
-                    cont_TagSearch.Children.Add(btn);
+                    ui.Toggle(true);
                 }
             }
 
@@ -221,6 +220,7 @@ namespace GameLibary
             TagCreator.Visibility = Visibility.Hidden;
             GameViewer.Visibility = Visibility.Hidden;
             SetupHandler.Visibility = Visibility.Hidden;
+            LoginHandler.Visibility = Visibility.Hidden;
         }
 
         private void btn_CreateTag_Click(object sender, RoutedEventArgs e)

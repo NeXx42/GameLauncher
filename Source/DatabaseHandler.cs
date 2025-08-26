@@ -10,8 +10,6 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
 using System.Windows.Media.Animation;
-using static GameLibary.Source.DatabaseHandler;
-using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 
 namespace GameLibary.Source
 {
@@ -57,24 +55,24 @@ namespace GameLibary.Source
         }
 
 
-        public static void InsertIntoTable(DatabaseTable value)
+        public static async Task InsertIntoTable(DatabaseTable value)
         {
-            TryExecute(value.GenerateInsertCommand());
+            await TryExecute(value.GenerateInsertCommand());
         }
 
-        public static void DeleteFromTable<T>(QueryBuilder queryBuilder) where T: DatabaseTable
+        public static async Task DeleteFromTable<T>(QueryBuilder queryBuilder) where T: DatabaseTable
         {
-            TryExecute($"DELETE FROM {GetTableNameFromGeneric<T>()} {queryBuilder?.BuildWhereClause() ?? ""}");
+            await TryExecute($"DELETE FROM {GetTableNameFromGeneric<T>()} {queryBuilder?.BuildWhereClause() ?? ""}");
         }
 
-        public static void UpdateTableEntry<T>(T entry, QueryBuilder queryBuilder) where T : DatabaseTable
+        public static async Task UpdateTableEntry<T>(T entry, QueryBuilder queryBuilder) where T : DatabaseTable
         {
             string updateSQL = entry.GenerateUpdateCommand();
-            TryExecute($"{updateSQL} {queryBuilder?.BuildWhereClause() ?? ""}");
+            await TryExecute($"{updateSQL} {queryBuilder?.BuildWhereClause() ?? ""}");
         }
 
 
-        private static void TryExecute(string sql)
+        private static async Task TryExecute(string sql)
         {
             try
             {
@@ -82,7 +80,7 @@ namespace GameLibary.Source
 
                 using (SQLiteCommand cmd = new SQLiteCommand(sql, connection))
                 {
-                    cmd.ExecuteNonQuery();
+                    await cmd.ExecuteNonQueryAsync();
                 }
             }
             catch (Exception e)
