@@ -188,6 +188,25 @@ namespace GameLibary.Source
             }
         }
 
+        public static void ChangeBinaryLocation(int gameId, string? path)
+        {
+            if (string.IsNullOrEmpty(path))
+                return;
+
+            dbo_Game? game = GetGameFromId(gameId);
+
+            if (game != null)
+            {
+                string desiredPath = Path.Combine(Path.GetDirectoryName(game.executablePath), path);
+
+                if(!File.Exists(desiredPath))
+                    return;
+
+                game.executablePath = desiredPath;
+                DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
+            }
+        }
+
 
 
 

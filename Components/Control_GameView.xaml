@@ -18,11 +18,12 @@
                     <Image  x:Name="img_bg" Source="/Components/temp.jpeg" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="5"/>
                 </Border>
 
-                <StackPanel Margin="0, 400, 0, 0" VerticalAlignment="Top" Background="#99000000" Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Button Margin="0, 0, 5, 0" x:Name="btn_RegenMedia" Width="100"  Content="Clear" Click="btn_RegenMedia_Click"/>
-                    <Button x:Name="btn_Overlay" Width="100"  Content="Open Overlay" Click="btn_Overlay_Click"/>
+                <StackPanel Margin="0,400,0,0" VerticalAlignment="Top" Background="#99000000" Orientation="Horizontal" HorizontalAlignment="Center">
+                    <Button Margin="0,0,5,0" x:Name="btn_RegenMedia" Width="100"  Content="Clear" Click="btn_RegenMedia_Click"/>
+                    <Button Margin="0,0,5,0" x:Name="btn_Overlay" Width="100"  Content="Open Overlay" Click="btn_Overlay_Click"/>
+                    <ComboBox x:Name="inp_binary" Width="385"></ComboBox>
                 </StackPanel>
-                
+
                 <Grid Background="#31373C" VerticalAlignment="Bottom" Margin="0,0,0,50" Height="200">
                     <Label VerticalAlignment="Top" Content="Tags" HorizontalAlignment="Center" Foreground="White"/>
                     <WrapPanel x:Name="cont_AllTags" Margin="15,30,15,50">

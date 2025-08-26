@@ -28,6 +28,8 @@ namespace GameLibary.Components
         private HashSet<int> gameTags;
         private Dictionary<int, Button> allTags = new Dictionary<int, Button>();
 
+        private List<string> executableBinaries = new List<string>();
+
         public Control_GameView()
         {
             InitializeComponent();
@@ -37,6 +39,8 @@ namespace GameLibary.Components
 
             inp_Emulate.Checked += (_, __) => HandleEmulateToggle(true);
             inp_Emulate.Unchecked += (_, __) => HandleEmulateToggle(false);
+
+            inp_binary.SelectionChanged += (_, __) => HandleBinaryChange();
         }
 
         public void Setup(MainWindow master)
@@ -59,6 +63,16 @@ namespace GameLibary.Components
 
             inp_Emulate.IsChecked = game.useEmulator;
             lbl_Title.Content = game.gameName;
+
+            executableBinaries = GetBinaries(game.executablePath);
+
+            inp_binary.ItemsSource = executableBinaries.Select(x => Path.GetFileName(x));
+            inp_binary.SelectedIndex = executableBinaries.IndexOf(game.executablePath);
+        }
+
+        private List<string> GetBinaries(string currentBinary)
+        {
+            return Directory.GetFiles(Path.GetDirectoryName(currentBinary)).Where(x => x.EndsWith(".exe", StringComparison.CurrentCultureIgnoreCase)).ToList();
         }
 
         private void RedrawSelectedTags()
@@ -137,6 +151,12 @@ namespace GameLibary.Components
         private void BrowseToGame()
         {
             Process.Start("explorer.exe", Path.GetDirectoryName(LibaryHandler.GetGameFromId(inspectingGameId).executablePath));
+        }
+
+        private void HandleBinaryChange()
+        {
+            LibaryHandler.ChangeBinaryLocation(inspectingGameId, inp_binary.SelectedValue?.ToString());
+            Draw(LibaryHandler.GetGameFromId(inspectingGameId));
         }
     }
 }
