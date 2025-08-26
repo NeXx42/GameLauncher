@@ -52,7 +52,7 @@ namespace GameLibary.Source
                     if (game.useEmulator)
                     {
                         activeGame.StartInfo.FileName = MainWindow.EmulatorLocation;
-                        activeGame.StartInfo.Arguments = $"-run \"{game.executablePath}\"";
+                        activeGame.StartInfo.Arguments = $"-run \"{realPath}\"";
                     }
                     else
                     {
