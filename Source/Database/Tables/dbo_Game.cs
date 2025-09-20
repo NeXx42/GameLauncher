@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Drawing;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Media.Imaging;
 
 namespace GameLibary.Source.Database.Tables
 {
@@ -19,9 +21,16 @@ namespace GameLibary.Source.Database.Tables
         public bool useEmulator {  get; set; }
 
 
+        private BitmapImage cachedImage;
+
+
         public string GetFolderName => Path.Combine(FileManager.GetProcessGameLocation(), gameName);
         public string GetRealIconPath => !string.IsNullOrEmpty(iconPath) ? Path.Combine(GetFolderName, iconPath) : "";
-        public string GetRealExecutionPath => !string.IsNullOrEmpty(executablePath) ? Path.Combine(GetFolderName, executablePath.Substring(1)) : ""; 
+        public string GetRealExecutionPath => !string.IsNullOrEmpty(executablePath) ? Path.Combine(GetFolderName, executablePath.Substring(1)) : "";
+
+
+        public BitmapImage GetCachedImage() => cachedImage;
+        public void SetCachedIcon(BitmapImage to) => cachedImage = to;
 
 
         public override Row[] GetRows() => new[]

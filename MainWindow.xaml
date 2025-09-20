@@ -7,54 +7,13 @@
         mc:Ignorable="d"
         Title="MainWindow" Height="1080" Width="1920">
     <Grid Background="#FF0F141A">
-        <Grid>
-            <Grid.Effect>
-                <BlurEffect x:Name="effect_blur" Radius="0"/>
-            </Grid.Effect>
-            
-            <Label x:Name="lbl_GamePos" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="25,0,0,0" FontSize="30">Games - 25</Label>
-            <StackPanel x:Name="cont_TagSearch" VerticalAlignment="Top" Margin="250,10,0,0" Height="40" Orientation="Horizontal">
-                <Button BorderBrush="{x:Null}" Foreground="White" Background="#FFF9700F" Width="150" Height="30">Triple A</Button>
-            </StackPanel>
-            
-            <Border Margin="0,25,0,25">
-                <WrapPanel x:Name="cont_Games" Margin="0,25,0,25" HorizontalAlignment="Center">
+        <Frame x:Name="MainPage" NavigationUIVisibility="Hidden" JournalOwnership="OwnsJournal"/>
 
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                </WrapPanel>
-            </Border>
-
-            <Border  VerticalAlignment="Bottom" Height="100" Margin="25,0,25,25" Background="#FF31363C">
-                <Grid>
-                    <WrapPanel x:Name="cont_AllTags" Margin="70,10,130,10">
-                    </WrapPanel>
-                    <Button x:Name="btn_CreateTag" HorizontalAlignment="Left" Margin="10,10,10,10" Width="50" Content="NEW" Click="btn_CreateTag_Click"/>
-                    <Button x:Name="btn_NextPage" HorizontalAlignment="Right" Margin="0,10,10,10" Width="50" Content=">" Click="btn_NextPage_Click"/>
-                    <Button x:Name="btn_PrevPage" HorizontalAlignment="Right" Margin="0,10,70,10" Width="50" Content="&lt;" Click="btn_PrevPage_Click"/>
-                </Grid>
-
-            </Border>
-        </Grid>
-
-        <Grid  x:Name="cont_MenuView" Background="#3F000000" Visibility="Visible" MouseLeftButtonDown="cont_MenuView_MouseLeftButtonDown">
-            <components:Control_GameView x:Name="GameViewer" Width="1200" Visibility="Hidden" HorizontalAlignment="Center" Margin="0, 100, 0, 0"/>
-            <components:Control_CreateTag x:Name="TagCreator" Width="500" Height="150" Visibility="Hidden" />
-            <components:Control_Setup Width="600" Height="300" x:Name="SetupHandler" Visibility="Hidden"/>
-            <components:Control_Login x:Name="LoginHandler" Visibility="Hidden"/>
-        </Grid>
+        <Border x:Name="Banner_ActiveGame" Background="#FF0A2569" VerticalAlignment="Top" Height="50" Width="500" HorizontalAlignment="Center" Visibility="Hidden">
+            <Grid>
+                <Label x:Name="Banner_Text" Content="Playing - " Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Left"/>
+                <Button x:Name="btn_Banner_Detach" Content="Detach" Width="100" Height="35" Margin="0,0,10,0" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+            </Grid>
+        </Border>
     </Grid>
 </Window>

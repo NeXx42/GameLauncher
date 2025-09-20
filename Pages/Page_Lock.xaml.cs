@@ -1,4 +1,6 @@
-﻿using System;
+﻿using GameLibary.Source.Database.Tables;
+using GameLibary.Source;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -12,17 +14,15 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using GameLibary.Source;
-using GameLibary.Source.Database.Tables;
 
-namespace GameLibary.Components
+namespace GameLibary.Pages
 {
     /// <summary>
-    /// Interaction logic for Control_Login.xaml
+    /// Interaction logic for Page_Lock.xaml
     /// </summary>
-    public partial class Control_Login : UserControl
+    public partial class Page_Lock : Page
     {
-        public Control_Login()
+        public Page_Lock()
         {
             InitializeComponent();
             btn_login.Click += (_, __) => AttemptLogin();
@@ -33,9 +33,9 @@ namespace GameLibary.Components
             dbo_Config? password = DatabaseHandler.GetItems<dbo_Config>(new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Config.key), MainWindow.CONFIG_PASSWORD)).FirstOrDefault();
             string testPassword = inp_password.Text;
 
-            if(EncryptionHelper.TestPassword(testPassword, password?.value))
+            if (EncryptionHelper.TestPassword(testPassword, password?.value))
             {
-                MainWindow.window.CompleteLoad();
+                MainWindow.window!.LoadPage<Page_Content>();
             }
             else
             {

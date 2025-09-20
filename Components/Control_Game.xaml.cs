@@ -24,6 +24,7 @@ namespace GameLibary.Components
     public partial class Control_Game : UserControl
     {
         private Action onClick;
+        private int gameId;
 
         public Control_Game()
         {
@@ -33,17 +34,27 @@ namespace GameLibary.Components
 
         public void Draw(int gameId, Action<int> onLaunch)
         {
+            if (this.gameId == gameId)
+                return;
+
+            this.gameId = gameId;
             dbo_Game? game = LibaryHandler.GetGameFromId(gameId);
 
             if(game != null)
             {
                 title.Content = game.gameName;
-
-                if(File.Exists(game.GetRealIconPath)) 
-                    img.Source = new BitmapImage(new Uri(game.GetRealIconPath));
+                LibaryHandler.GetGameImage(game, RedrawIcon);
             }
 
             onClick = () => onLaunch?.Invoke(gameId);
+        }
+
+        private void RedrawIcon(int gameId, BitmapImage bitmapImg)
+        {
+            if (this.gameId != gameId)
+                return;
+
+            img.Source = bitmapImg;
         }
     }
 }

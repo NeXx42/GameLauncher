@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:GameLibary.Components"
              mc:Ignorable="d" 
              d:DesignHeight="900" d:DesignWidth="1200">
-    <Border Background="#070A0D">
+    <Border Background="#070A0D" CornerRadius="5,5,0,0">
         <Grid>
             <Grid.Effect>
                 <DropShadowEffect />

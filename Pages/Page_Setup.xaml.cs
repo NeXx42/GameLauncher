@@ -3,6 +3,7 @@ using GameLibary.Source;
 using Microsoft.WindowsAPICodePack.Dialogs;
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -15,19 +16,18 @@ using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Navigation;
 using System.Windows.Shapes;
-using System.IO;
 
-namespace GameLibary.Components
+namespace GameLibary.Pages
 {
     /// <summary>
-    /// Interaction logic for Control_Setup.xaml
+    /// Interaction logic for Page_Setup.xaml
     /// </summary>
-    public partial class Control_Setup : UserControl
+    public partial class Page_Setup : Page
     {
         private string dataRoot;
         private string emulator;
 
-        public Control_Setup()
+        public Page_Setup()
         {
             InitializeComponent();
 
@@ -79,8 +79,8 @@ namespace GameLibary.Components
             inp_Emulator.Content = emulator ?? "Set Location";
         }
 
-        private void inp_DataRoot_Click(object sender, RoutedEventArgs e) 
-        { 
+        private void inp_DataRoot_Click(object sender, RoutedEventArgs e)
+        {
             var dlg = new CommonOpenFileDialog
             {
                 IsFolderPicker = true,

@@ -1,4 +1,5 @@
 ﻿using GameLibary.Components;
+using GameLibary.Pages;
 using GameLibary.Source;
 using GameLibary.Source.Database.Tables;
 using Microsoft.WindowsAPICodePack.Dialogs;
@@ -23,27 +24,19 @@ namespace GameLibary
 
         public static MainWindow? window;
 
-        private bool inSetup = true;
-        private int gamesSlide;
-
-        private HashSet<int> activeTags = new HashSet<int>();
-        private Dictionary<int, Element_Tag> existingTags = new Dictionary<int, Element_Tag>();
-
+        private Dictionary<string, Page> generatedPages = new Dictionary<string, Page>();
 
         public MainWindow()
         {
-            inSetup = true;
             window = this;
 
             InitializeComponent();
 
-            GameViewer.MouseLeftButtonDown += (_, e) => e.Handled = true;
-            SetupHandler.MouseLeftButtonDown += (_, e) => e.Handled = true;
-            TagCreator.MouseLeftButtonDown += (_, e) => e.Handled = true;
+            UpdateActiveBanner(null);
+            btn_Banner_Detach.Click += (_, __) => GameLauncher.DetachPlayingGame();
 
             FileManager.Setup();
             DatabaseHandler.Setup();
-            GameLauncher.Setup();
 
             CheckForSetup();
 
@@ -53,21 +46,19 @@ namespace GameLibary
 
         public void CheckForSetup()
         {
-            ToggleMenu(true, true);
-
             if(!IsValidSave(out GameRootLocation, out EmulatorLocation, out bool requireLogin))
             {
-                SetupHandler.Visibility = Visibility.Visible;
+                LoadPage<Page_Setup>();
                 return;
             }
 
             if (requireLogin)
             {
-                LoginHandler.Visibility = Visibility.Visible;
+                LoadPage<Page_Lock>();
             }
             else
             {
-                CompleteLoad();
+                LoadPage<Page_Content>();
             }
         }
 
@@ -93,164 +84,30 @@ namespace GameLibary
             return false;
         }
 
-        public async void CompleteLoad()
+        public void LoadPage<T>() where T : Page
         {
-            await LibaryHandler.Setup();
+            string pageName = typeof(T).FullName;
 
-            GameViewer.Setup(this);
-
-            inSetup = false;
-            ToggleMenu(false);
-
-            DrawGames();
-            DrawTags();
-        }
-
-
-
-        public void DrawGames()
-        {
-            const float ratio = 0.1927083333f;
-            const int columnLimit = 5;
-
-            lbl_GamePos.Content = $"Games - {gamesSlide}";
-            cont_Games.Children.Clear();
-
-            int[] games = LibaryHandler.GetDrawList(gamesSlide, columnLimit * 3);
-
-            foreach(int gameId in games)
-                DrawGame(gameId);
-
-            void DrawGame(int gameId)
+            if(!generatedPages.ContainsKey(pageName))
             {
-                Control_Game ui = new Control_Game();
-                ui.Width = (1920 * ratio) + 5;
-                ui.Height = (1080 * ratio) + 5 + 50; // + padding + title
-                ui.Margin = new Thickness(0, 0, 2, 0);
-
-                ui.Draw(gameId, ToggleGameView);
-
-                cont_Games.Children.Add(ui);
-            }
-        }
-
-        public void DrawTags()
-        {
-            existingTags.Clear();
-            activeTags.Clear();
-
-            cont_AllTags.Children.Clear();
-            cont_TagSearch.Children.Clear();
-
-            int[] tagIds = LibaryHandler.GetAllTags();
-
-            foreach (int tagId in tagIds) 
-            {
-                if (existingTags.ContainsKey(tagId))
-                    continue;
-
-                existingTags.Add(tagId, CreateTagUI(tagId));
+                generatedPages.Add(pageName, (Page)Activator.CreateInstance(typeof(T)));
             }
 
-            GameViewer.RedrawTags(tagIds);
+            MainPage.Navigate(generatedPages[pageName]);
+        }
 
-            Element_Tag CreateTagUI(int tagId)
+
+        public void UpdateActiveBanner(string? playing = null)
+        {
+            if (string.IsNullOrEmpty(playing))
             {
-                dbo_Tag? tag = LibaryHandler.GetTagById(tagId);
-
-                Element_Tag ui = new Element_Tag();
-                ui.Draw(tag, SwapTagMode);
-
-                cont_AllTags.Children.Add(ui);
-                return ui;
+                Banner_ActiveGame.Visibility = Visibility.Hidden;
             }
-        }
-
-        private void SwapTagMode(int tagId)
-        {
-            if (existingTags.TryGetValue(tagId, out Element_Tag ui))
+            else
             {
-                if (activeTags.Contains(tagId))
-                {
-                    activeTags.Remove(tagId);
-                    ui.Toggle(false);
-                }
-                else
-                {
-                    activeTags.Add(tagId);
-                    ui.Toggle(true);
-                }
+                Banner_ActiveGame.Visibility = Visibility.Visible;
+                Banner_Text.Content = playing;
             }
-
-            LibaryHandler.RefilterGames(activeTags);
-            gamesSlide = 0;
-
-            DrawGames();
-        }
-
-
-        private void ToggleGameView(int gameId)
-        {
-            dbo_Game? game = LibaryHandler.GetGameFromId(gameId);
-
-            if (game != null)
-            {
-                GameViewer.Draw(game);
-            }
-
-            ToggleMenu(true);
-            GameViewer.Visibility = Visibility.Visible;
-        }
-
-        public void OpenTagCreator()
-        {
-            ToggleMenu(true);
-            TagCreator.Visibility = Visibility.Visible;
-        }
-
-
-        public void ToggleMenu(bool to, bool force = false)
-        {
-            if (inSetup || force)
-                return;
-
-            effect_blur.Radius = to ? 10 : 0;
-            cont_MenuView.Visibility = to ? Visibility.Visible : Visibility.Hidden;
-
-            TagCreator.Visibility = Visibility.Hidden;
-            GameViewer.Visibility = Visibility.Hidden;
-            SetupHandler.Visibility = Visibility.Hidden;
-            LoginHandler.Visibility = Visibility.Hidden;
-        }
-
-        private void btn_CreateTag_Click(object sender, RoutedEventArgs e)
-        {
-            OpenTagCreator();
-        }
-
-        private void cont_MenuView_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
-        {
-            ToggleMenu(false);
-        }
-
-
-        private void btn_PrevPage_Click(object sender, RoutedEventArgs e)
-        {
-            gamesSlide -= (5 * 3);
-            gamesSlide = Math.Max(0, gamesSlide);
-
-            DrawGames();
-        }
-
-        private void btn_NextPage_Click(object sender, RoutedEventArgs e)
-        {
-            float interval = 5f * 3f;
-            int maxSlide = ((int)Math.Floor(LibaryHandler.GetFilteredGameCount() / interval)) * (int)interval;
-
-            gamesSlide += (int)interval;
-            gamesSlide = Math.Min(gamesSlide, maxSlide);
-
-            DrawGames();
         }
     }
 }

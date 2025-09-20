@@ -1,18 +1,24 @@
 ﻿using GameLibary.Source.Database.Tables;
+using System.Collections.Concurrent;
+using System.Drawing;
 using System.IO;
+using System.Windows;
 using System.Windows.Controls;
+using System.Windows.Media.Imaging;
+using System.Windows.Threading;
 
 namespace GameLibary.Source
 {
     public static class LibaryHandler
     {
+        private static bool isSetup = false;
+
         private static dbo_Game[] games;
         private static dbo_Tag[] tags;
 
         private static int[] gameFilterList;
 
         public static bool isCrawling { private set; get; }
-        private static Thread crawlingThread;
 
         public static bool getAreTagsDirty
         {
@@ -29,53 +35,59 @@ namespace GameLibary.Source
         }
         private static bool m_AreTagsDirty;
 
+        private static ConcurrentQueue<(int gameId, Action<int, BitmapImage> onFetch)> queuedImageFetch = new ConcurrentQueue<(int gameId, Action<int, BitmapImage> onFetch)>();
+        private static Thread? imageFetchThread;
+
 
         public static async Task Setup()
         {
-            await FindGames();
+            if (isSetup)
+                return;
+
+            isSetup = true;
+
+            imageFetchThread = new Thread(GameImageFetcher);
+            imageFetchThread.Name = "Image Thread";
+            imageFetchThread.Start();
+
+            await RedetectGames();
             FindTags();
         }
 
 
-        private static async Task FindGames()
+        public static async Task RedetectGames()
         {
             gameFilterList = null;
-
-            isCrawling = true;
-
             await FindGames_Internal();
-
-            //crawlingThread = new Thread(FindGames_Internal);
-            //crawlingThread.Start();
         }
 
         private static async Task FindGames_Internal()
         {
-            var temp = CrawlGames();
-
-            List<dbo_Game> newGames = new List<dbo_Game>();
-
-            for (int i = 0; i < temp.Count; i++)
-            {
-                string exectuable = temp[i].exectuables.FirstOrDefault() ?? "";
-                string dirName = Path.GetDirectoryName(temp[i].exectuables.FirstOrDefault());
-
-                dbo_Game newGame = new dbo_Game
-                {
-                    gameName = Path.GetFileName(temp[i].path),
-                    executablePath = exectuable
-                };
-
-                (bool isInvalid, bool wasMigrated) = await FileManager.TryMigrate(newGame);
-
-                if (!isInvalid)
-                    newGames.Add(newGame);
-            }
-
-            foreach (dbo_Game game in newGames)
-            {
-                await DatabaseHandler.InsertIntoTable(game);
-            }
+            //var temp = CrawlGames();
+            //
+            //List<dbo_Game> newGames = new List<dbo_Game>();
+            //
+            //for (int i = 0; i < temp.Count; i++)
+            //{
+            //    string exectuable = temp[i].exectuables.FirstOrDefault() ?? "";
+            //    string dirName = Path.GetDirectoryName(temp[i].exectuables.FirstOrDefault());
+            //
+            //    dbo_Game newGame = new dbo_Game
+            //    {
+            //        gameName = Path.GetFileName(temp[i].path),
+            //        executablePath = exectuable
+            //    };
+            //
+            //    (bool isInvalid, bool wasMigrated) = await FileManager.TryMigrate(newGame);
+            //
+            //    if (!isInvalid)
+            //        newGames.Add(newGame);
+            //}
+            //
+            //foreach (dbo_Game game in newGames)
+            //{
+            //    await DatabaseHandler.InsertIntoTable(game);
+            //}
 
             games = DatabaseHandler.GetItems<dbo_Game>();
 
@@ -100,6 +112,52 @@ namespace GameLibary.Source
             tags = DatabaseHandler.GetItems<dbo_Tag>();
         }
 
+
+
+
+        public static void GetGameImage(dbo_Game game, Action<int, BitmapImage> onFetch)
+        {
+            if(game.GetCachedImage() != null)
+            {
+                onFetch?.Invoke(game.id, game.GetCachedImage());
+                return;
+            }
+
+            queuedImageFetch.Enqueue((game.id, onFetch));
+        }
+
+        private static async void GameImageFetcher()
+        {
+            while(true)
+            {
+                await Task.Delay(10);
+
+                if (queuedImageFetch.Count == 0)
+                    continue;
+
+                if (!queuedImageFetch.TryDequeue(out (int gameId, Action<int, BitmapImage> onFetch) a))
+                    continue;
+
+                dbo_Game game = GetGameFromId(a.gameId);
+
+                if(game != null)
+                {
+                    if (File.Exists(game.GetRealIconPath))
+                    {
+                        BitmapImage bitmap = new BitmapImage();
+                        bitmap.BeginInit();
+                        bitmap.UriSource = new Uri(game.GetRealIconPath);
+                        bitmap.DecodePixelWidth = 200;
+                        bitmap.CacheOption = BitmapCacheOption.OnLoad;
+                        bitmap.EndInit();
+                        bitmap.Freeze();
+
+                        game.SetCachedIcon(bitmap);
+                        Application.Current.Dispatcher.Invoke(() => a.onFetch?.Invoke(a.gameId, game.GetCachedImage()));
+                    }
+                }
+            }
+        }
 
 
 
@@ -191,7 +249,7 @@ namespace GameLibary.Source
                 DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
             }
 
-            MainWindow.window.DrawGames();
+            //MainWindow.window.DrawGames();
 
             if (File.Exists(requiresCleanup))
             {

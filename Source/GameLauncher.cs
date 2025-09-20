@@ -19,17 +19,12 @@ namespace GameLibary.Source
 
         private static int? runningGame;
 
-        public static void Setup()
-        {
-
-        }
-
         public static void LaunchGame(int gameId)
         {
             if(activeGame != null)
             {
                 activeGame.Kill();
-                overlay.Close();
+                overlay?.Close();
             }
 
             dbo_Game? game = LibaryHandler.GetGameFromId(gameId);
@@ -62,8 +57,11 @@ namespace GameLibary.Source
                 
                     activeGame.EnableRaisingEvents = true;
 
-                    activeGame.Exited += OnGameClose;
+                    MainWindow.window!.UpdateActiveBanner($"Playing - {game.gameName}");
+
+                    activeGame.Exited += (_, __) => OnGameClose();
                     activeGame.Start();
+
 
                     if (string.IsNullOrEmpty(game.iconPath))
                     {
@@ -72,23 +70,24 @@ namespace GameLibary.Source
                 }
                 catch (Exception e)
                 {
-                    OnGameClose(null, null);
+                    OnGameClose();
                     MessageBox.Show(e.Message);
                 }
 
             }
         }
 
-        private static void OnGameClose(object? sender, EventArgs args)
+        private static void OnGameClose()
         {
+            overlay = null;
+            activeGame = null;
+
+            runningGame = null;
+
             Application.Current.Dispatcher.Invoke(() =>
             {
                 overlay?.Close();
-
-                overlay = null;
-                activeGame = null;
-
-                runningGame = null;
+                MainWindow.window!.UpdateActiveBanner();
             });
         }
 
@@ -105,6 +104,11 @@ namespace GameLibary.Source
 
             overlay.Prep(process, gameId);
             overlay.Show();
+        }
+
+        public static void DetachPlayingGame()
+        {
+            OnGameClose();
         }
     }
 }

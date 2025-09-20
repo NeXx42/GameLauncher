@@ -38,6 +38,12 @@ namespace GameLibary.Components
         public GameOverlay()
         {
             InitializeComponent();
+
+            Left = 0;
+            Top = 0;
+
+            Width = 200;
+            Height = 50;
         }
 
 
