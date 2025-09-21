@@ -19,7 +19,7 @@ namespace GameLibary.Source
 
         private static int? runningGame;
 
-        public static void LaunchGame(int gameId)
+        public static async void LaunchGame(int gameId)
         {
             if(activeGame != null)
             {
@@ -32,6 +32,9 @@ namespace GameLibary.Source
             if(game != null) 
             {
                 runningGame = game.id;
+                game.lastPlayed = DateTime.UtcNow;
+
+                await DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), runningGame.Value));
 
                 activeGame = new Process();
 
@@ -79,9 +82,7 @@ namespace GameLibary.Source
 
         private static void OnGameClose()
         {
-            overlay = null;
             activeGame = null;
-
             runningGame = null;
 
             Application.Current.Dispatcher.Invoke(() =>

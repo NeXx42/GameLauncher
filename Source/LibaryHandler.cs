@@ -1,5 +1,6 @@
 ﻿using GameLibary.Source.Database.Tables;
 using System.Collections.Concurrent;
+using System.ComponentModel;
 using System.Drawing;
 using System.IO;
 using System.Windows;
@@ -11,12 +12,33 @@ namespace GameLibary.Source
 {
     public static class LibaryHandler
     {
+        public enum OrderType
+        {
+            [Description("ID")]
+            IdAsc,
+
+            [Description("ID Descending")]
+            IdDesc,
+
+            [Description("Name")]
+            NameAsc,
+
+            [Description("Name Descending")]
+            NameDesc,
+
+            [Description("Last Played")]
+            LastPlayedAsc,
+
+            [Description("Last Played Descending")]
+            LastPlayedDesc,
+        }
+
         private static bool isSetup = false;
 
-        private static dbo_Game[] games;
-        private static dbo_Tag[] tags;
+        private static dbo_Game[]? games;
+        private static dbo_Tag[]? tags;
 
-        private static int[] gameFilterList;
+        private static int[]? gameFilterList;
 
         public static bool isCrawling { private set; get; }
 
@@ -35,8 +57,11 @@ namespace GameLibary.Source
         }
         private static bool m_AreTagsDirty;
 
-        private static ConcurrentQueue<(int gameId, Action<int, BitmapImage> onFetch)> queuedImageFetch = new ConcurrentQueue<(int gameId, Action<int, BitmapImage> onFetch)>();
+        private static ConcurrentQueue<(int gameId, Action<int, BitmapImage?> onFetch)> queuedImageFetch = new ConcurrentQueue<(int gameId, Action<int, BitmapImage?> onFetch)>();
         private static Thread? imageFetchThread;
+
+
+        public static Action<int, BitmapImage?> onGlobalImageSet = null!;
 
 
         public static async Task Setup()
@@ -63,33 +88,8 @@ namespace GameLibary.Source
 
         private static async Task FindGames_Internal()
         {
-            //var temp = CrawlGames();
-            //
-            //List<dbo_Game> newGames = new List<dbo_Game>();
-            //
-            //for (int i = 0; i < temp.Count; i++)
-            //{
-            //    string exectuable = temp[i].exectuables.FirstOrDefault() ?? "";
-            //    string dirName = Path.GetDirectoryName(temp[i].exectuables.FirstOrDefault());
-            //
-            //    dbo_Game newGame = new dbo_Game
-            //    {
-            //        gameName = Path.GetFileName(temp[i].path),
-            //        executablePath = exectuable
-            //    };
-            //
-            //    (bool isInvalid, bool wasMigrated) = await FileManager.TryMigrate(newGame);
-            //
-            //    if (!isInvalid)
-            //        newGames.Add(newGame);
-            //}
-            //
-            //foreach (dbo_Game game in newGames)
-            //{
-            //    await DatabaseHandler.InsertIntoTable(game);
-            //}
-
             games = DatabaseHandler.GetItems<dbo_Game>();
+            games ??= Array.Empty<dbo_Game>();
 
             foreach (dbo_Game existingGame in games)
             {
@@ -115,7 +115,7 @@ namespace GameLibary.Source
 
 
 
-        public static void GetGameImage(dbo_Game game, Action<int, BitmapImage> onFetch)
+        public static void GetGameImage(dbo_Game game, Action<int, BitmapImage?> onFetch)
         {
             if(game.GetCachedImage() != null)
             {
@@ -135,10 +135,10 @@ namespace GameLibary.Source
                 if (queuedImageFetch.Count == 0)
                     continue;
 
-                if (!queuedImageFetch.TryDequeue(out (int gameId, Action<int, BitmapImage> onFetch) a))
+                if (!queuedImageFetch.TryDequeue(out (int gameId, Action<int, BitmapImage?> onFetch) a))
                     continue;
 
-                dbo_Game game = GetGameFromId(a.gameId);
+                dbo_Game game = GetGameFromId(a.gameId)!;
 
                 if(game != null)
                 {
@@ -147,7 +147,7 @@ namespace GameLibary.Source
                         BitmapImage bitmap = new BitmapImage();
                         bitmap.BeginInit();
                         bitmap.UriSource = new Uri(game.GetRealIconPath);
-                        bitmap.DecodePixelWidth = 200;
+                        //bitmap.DecodePixelWidth = 200;
                         bitmap.CacheOption = BitmapCacheOption.OnLoad;
                         bitmap.EndInit();
                         bitmap.Freeze();
@@ -163,31 +163,53 @@ namespace GameLibary.Source
 
 
 
-        public static dbo_Game? GetGameFromId(int id) => games.FirstOrDefault(x => x.id == id);
+        public static dbo_Game? GetGameFromId(int id) => games!.FirstOrDefault(x => x.id == id);
 
 
-        public static void RefilterGames(HashSet<int> tagFilter)
+        public static void RefilterGames(HashSet<int> tagFilter, OrderType orderType)
         {
             if((tagFilter?.Count ?? 0) == 0)
             {
-                gameFilterList = games.Select(x => x.id).ToArray();
+                gameFilterList = FilterList(games!.Select(x => x.id));
                 return;
             }
 
-            dbo_GameTag[] gameTags = DatabaseHandler.GetItems<dbo_GameTag>(new DatabaseHandler.QueryBuilder().SearchIn(nameof(dbo_GameTag.TagId), tagFilter.ToArray()));
-            gameFilterList = gameTags.GroupBy(x => x.GameId).Where(x => x.Count() == tagFilter.Count).Select(x => x.Key).ToArray();
+            dbo_GameTag[] gameTags = DatabaseHandler.GetItems<dbo_GameTag>(new DatabaseHandler.QueryBuilder().SearchIn(nameof(dbo_GameTag.TagId), tagFilter!.ToArray()));
+            gameFilterList = FilterList(gameTags.GroupBy(x => x.GameId).Where(x => x.Count() == tagFilter.Count).Select(x => x.Key));
+
+            int[] FilterList(IEnumerable<int> inp)
+            {
+                switch (orderType)
+                {
+                    case OrderType.IdAsc: return inp.OrderBy(x => x).ToArray();
+                    case OrderType.IdDesc: return inp.OrderByDescending(x => x).ToArray();
+
+                    case OrderType.NameAsc: return inp.OrderBy(x => GetGameFromId(x)!.gameName).ToArray();
+                    case OrderType.NameDesc: return inp.OrderByDescending(x => GetGameFromId(x)!.gameName).ToArray();
+
+                    case OrderType.LastPlayedAsc: return inp.OrderBy(x => GetGameFromId(x)!.lastPlayed).ToArray();
+                    case OrderType.LastPlayedDesc: return inp.OrderByDescending(x => GetGameFromId(x)!.lastPlayed).ToArray();
+                }
+
+                return inp.ToArray();
+            }
         }
 
-        public static int GetFilteredGameCount() => gameFilterList.Length;
+        public static void OrderFilterList()
+        {
+            gameFilterList = gameFilterList!.OrderByDescending(x => GetGameFromId(x)!.gameName).ToArray();
+        }
+
+        public static int GetFilteredGameCount() => gameFilterList!.Length;
 
         public static int[] GetDrawList(int offset, int take)
         {
             if (gameFilterList == null)
-                RefilterGames(null);
+                RefilterGames(null!, OrderType.NameAsc);
 
             List<int> res = new List<int>();
 
-            for (int i = offset; i < MathF.Min(offset + take, gameFilterList.Length); i++)
+            for (int i = offset; i < MathF.Min(offset + take, gameFilterList!.Length); i++)
             {
                 res.Add(gameFilterList[i]);
             }
@@ -202,12 +224,12 @@ namespace GameLibary.Source
                 FindTags();
             }
 
-            return tags.Select(x => x.TagId).ToArray();
+            return tags!.Select(x => x.TagId).ToArray();
         }
 
         public static dbo_Tag? GetTagById(int id)
         {
-            return tags.FirstOrDefault(x => x.TagId == id);
+            return tags!.FirstOrDefault(x => x.TagId == id);
         }
 
         public static int[] GetGameTags(int gameId)
@@ -216,14 +238,14 @@ namespace GameLibary.Source
         }
 
 
-        public static void RemoveTagFromGame(int gameId, int tagId)
+        public static async void RemoveTagFromGame(int gameId, int tagId)
         {
-            DatabaseHandler.DeleteFromTable<dbo_GameTag>(new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_GameTag.GameId), gameId).SearchEquals(nameof(dbo_GameTag.TagId), tagId));
+            await DatabaseHandler.DeleteFromTable<dbo_GameTag>(new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_GameTag.GameId), gameId).SearchEquals(nameof(dbo_GameTag.TagId), tagId));
         }
 
-        public static void AddTagToGame(int gameId, int tagId)
+        public static async void AddTagToGame(int gameId, int tagId)
         {
-            DatabaseHandler.InsertIntoTable(new dbo_GameTag() { GameId = gameId, TagId = tagId });
+            await DatabaseHandler.InsertIntoTable(new dbo_GameTag() { GameId = gameId, TagId = tagId });
         }
 
         public static void MarkTagsAsDirty() => m_AreTagsDirty = true;
@@ -238,18 +260,20 @@ namespace GameLibary.Source
             }
         }
 
-        public static void UpdateGameIcon(int gameId, string path)
+        public static async void UpdateGameIcon(int gameId, string path)
         {
             dbo_Game? game = GetGameFromId(gameId);
-            string requiresCleanup = game.GetRealIconPath;
+            string requiresCleanup = game!.GetRealIconPath;
 
             if (game != null)
             {
                 game.iconPath = path;
-                DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
-            }
+                game.SetCachedIcon(null);
 
-            //MainWindow.window.DrawGames();
+                await DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
+
+                GetGameImage(game, onGlobalImageSet);
+            }
 
             if (File.Exists(requiresCleanup))
             {
@@ -261,24 +285,24 @@ namespace GameLibary.Source
             }
         }
 
-        public static void UpdateGameEmulationStatus(int gameId, bool to)
+        public static async void UpdateGameEmulationStatus(int gameId, bool to)
         {
             dbo_Game? game = GetGameFromId(gameId);
 
             if (game != null)
             {
                 game.useEmulator = to;
-                DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
+                await DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
             }
         }
 
-        public static void ChangeBinaryLocation(int gameId, string? path)
+        public static async void ChangeBinaryLocation(int gameId, string? path)
         {
             dbo_Game? game = GetGameFromId(gameId);
 
             if (game != null)
             {
-                string existing = game.executablePath;
+                string existing = game.executablePath ?? "";
                 game.executablePath = $"#{path}";
 
                 if (!File.Exists(game.GetRealExecutionPath))
@@ -287,89 +311,31 @@ namespace GameLibary.Source
                     return;
                 }
 
-                DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
+                await DatabaseHandler.UpdateTableEntry(game, new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
             }
         }
 
-
-
-
-
-
-        private static List<GameFolder> CrawlGames()
+        public static async Task<Exception?> DeleteGame(dbo_Game game)
         {
-            List<GameFolder> foundGameFolders = new List<GameFolder>();
-            List<GameZip> foundZips = new List<GameZip>();
-
-            Craw(MainWindow.GameRootLocation);
-
-            foreach (GameZip zip in foundZips)
+            try
             {
-                Button btn = new Button();
-                btn.Content = Path.GetFileName(zip.path);
+                Exception? fileDeletionFail = FileManager.DeleteGame(game);
 
-                //cont_zips.Children.Add(btn);
+                if (fileDeletionFail != null && 
+                    MessageBox.Show($"Continue with delete?\n\n{fileDeletionFail.Message}", "Skip Folder Cleanup?", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
+                    return fileDeletionFail;
+
+                await DatabaseHandler.DeleteFromTable<dbo_GameTag>(new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_GameTag.GameId), game.id));
+                await DatabaseHandler.DeleteFromTable<dbo_Game>(new DatabaseHandler.QueryBuilder().SearchEquals(nameof(dbo_Game.id), game.id));
+
+                await RedetectGames();
+
+                return null;
             }
-
-
-            void Craw(string path)
+            catch (Exception e)
             {
-                if (string.Equals(path, FileManager.GetProcessGameLocation(), StringComparison.CurrentCultureIgnoreCase))
-                    return;
-
-                string[] allFiles = Directory.GetFiles(path);
-                string[] binaries = allFiles.Where(x => x.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase)).ToArray();
-
-                if (binaries.Length > 0)
-                {
-                    foundGameFolders.Add(new GameFolder()
-                    {
-                        path = path,
-                        exectuables = binaries
-                    });
-                    return;
-                }
-
-                string[] zips = allFiles.Where(IsZip).ToArray();
-
-                if (zips.Length > 0)
-                {
-                    foreach (string zip in zips)
-                    {
-                        foundZips.Add(new GameZip()
-                        {
-                            path = zip
-                        });
-                    }
-                }
-
-                string[] subDirs = Directory.GetDirectories(path);
-
-                foreach (string dir in subDirs)
-                {
-                    Craw(dir);
-                }
+                return e;
             }
-
-            return foundGameFolders;
-        }
-
-        private static bool IsZip(string path)
-        {
-            return path.EndsWith(".7z", StringComparison.InvariantCultureIgnoreCase) ||
-                path.EndsWith(".rar", StringComparison.InvariantCultureIgnoreCase);
-        }
-
-
-        private struct GameFolder
-        {
-            public string path;
-            public string[] exectuables;
-        }
-
-        private struct GameZip
-        {
-            public string path;
         }
     }
 }

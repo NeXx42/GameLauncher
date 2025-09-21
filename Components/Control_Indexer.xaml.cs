@@ -21,6 +21,8 @@ namespace GameLibary.Components
         {
             InitializeComponent();
 
+            cont_FoundGames.Children.Clear();
+
             btn_Search.MouseLeftButtonDown += (_, __) => ScanDirectory();
             btn_Import.MouseLeftButtonDown += async (_, __) => await AttemptImport();
         }

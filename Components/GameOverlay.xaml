@@ -3,11 +3,28 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:local="clr-namespace:GameLibary.Components"
+        xmlns:local="clr-namespace:GameLibary.Components" xmlns:Common="clr-namespace:GameLibary.Components.Common"
         mc:Ignorable="d"
-        Title="GameOverlay" Height="50" Width="140" AllowsTransparency="True" Background="Transparent" Topmost="True" WindowStyle="None">
-    <StackPanel Orientation="Horizontal">
-        <Button Width="70" x:Name="btn_CaptureGame" Content="Game" Click="btn_CaptureGame_Click"/>
-        <Button Width="70" x:Name="btn_CaptureScreen" Content="Screen" Click="btn_CaptureScreen_Click"/>
-    </StackPanel>
+        Title="GameOverlay"
+        Height="40"
+        Width="400"
+        AllowsTransparency="True"
+        Background="Transparent" 
+        Topmost="True"
+        ShowInTaskbar="False"
+        ShowActivated="False"
+        WindowStyle="None">
+    <Border >
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="100"/>
+                <ColumnDefinition Width="100"/>
+            </Grid.ColumnDefinitions>
+
+            <Common:CommonControl_Button Margin="2" Grid.Column="0" x:Name="btn_Process" Label="wwww.exe"/>
+            <Common:CommonControl_Button Margin="2" Grid.Column="1" x:Name="btn_CaptureGame" Label="Game"/>
+            <Common:CommonControl_Button Margin="2" Grid.Column="2" x:Name="btn_CaptureScreen" Label="Screen"/>
+        </Grid>
+    </Border>
 </Window>

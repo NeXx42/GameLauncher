@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
@@ -93,7 +94,33 @@ namespace GameLibary.Source
                 MessageBox.Show(e.Message);
                 return (true, false);
             }
+        }
 
+        public static void BrowseToGame(dbo_Game game)
+        {
+            string folder = Path.GetDirectoryName(game.GetRealExecutionPath) ?? string.Empty;
+
+            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
+                return;
+
+            Process.Start("explorer.exe", folder);
+        }
+
+        public static Exception? DeleteGame(dbo_Game game)
+        {
+            try
+            {
+                string toDelete = Path.GetDirectoryName(game.GetRealExecutionPath!) ?? string.Empty;
+
+                if(!string.IsNullOrEmpty(toDelete) && Directory.Exists(toDelete))
+                    File.Delete(toDelete);
+
+                return null;
+            }
+            catch (Exception e)
+            {
+                return e;
+            }
         }
     }
 }

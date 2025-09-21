@@ -3,7 +3,7 @@
       xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
       xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
       xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
-      xmlns:local="clr-namespace:GameLibary.Pages" xmlns:components="clr-namespace:GameLibary.Components"
+      xmlns:local="clr-namespace:GameLibary.Pages" xmlns:components="clr-namespace:GameLibary.Components" xmlns:common="clr-namespace:GameLibary.Components.Common"
       mc:Ignorable="d" 
       d:DesignHeight="1230" d:DesignWidth="1920"
       Title="Page_Content">
@@ -14,14 +14,14 @@
                 <BlurEffect x:Name="effect_blur" Radius="0"/>
             </Grid.Effect>
 
-            <Border VerticalAlignment="Top" Background="#FF31363C" Height="30">
-                <StackPanel Orientation="Horizontal">
-                    <TextBlock FontSize="18" Width="70" Text="Lock" Foreground="White" VerticalAlignment="Center" TextAlignment="Center"/>
-                    <TextBlock x:Name="nav_Indexer" FontSize="18" Width="70" Text="Index" Foreground="White" VerticalAlignment="Center" TextAlignment="Center"/>
+            <Border VerticalAlignment="Top" Height="70">
+                <StackPanel Margin="8" Orientation="Horizontal">
+                    <Label Margin="20, 0, 0, 0" FontSize="30" Content="Games" Foreground="White" HorizontalAlignment="Left"/>
+                    <ComboBox x:Name="combo_OrderType" Margin="20, 10, 0, 10" Width="200"/>
                 </StackPanel>
             </Border>
 
-            <Border Margin="0,30,0,25">
+            <Border Margin="0,70,0,25">
                 <WrapPanel x:Name="cont_Games" Margin="0,25,0,25" HorizontalAlignment="Center">
 
                     <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
@@ -42,40 +42,30 @@
                 </WrapPanel>
             </Border>
 
-            <Border CornerRadius="5" VerticalAlignment="Bottom" Height="130" Margin="10,0,10,80" Background="#FF31363C">
-                <WrapPanel x:Name="cont_AllTags" Margin="10,10,10,10">
-                </WrapPanel>
+            <Border CornerRadius="5" VerticalAlignment="Bottom" Height="130" Margin="10,0,10,70" Background="{DynamicResource BG_3}">
+                <WrapPanel x:Name="cont_AllTags" Margin="10,10,10,10"/>
             </Border>
 
-            <Border VerticalAlignment="Bottom" Height="50" Margin="10,0,10,10">
+            <Border VerticalAlignment="Bottom" Height="40" Margin="10,0,10,10">
                 <Grid>
-                    <Grid HorizontalAlignment="Left" Width="390">
+                    <Grid HorizontalAlignment="Left" Width="460">
                         <TextBox x:Name="inp_TagName" Width="250" HorizontalAlignment="Left"/>
-                        <Border x:Name="btn_CreateTag" CornerRadius="5" HorizontalAlignment="Right" Width="130" Background="#FF556D84">
-                            <Label Content="Create Tag" Foreground="White" HorizontalAlignment="Center" FontSize="23" VerticalAlignment="Center"/>
-                        </Border>
+                        <common:CommonControl_Button Label="Create Tag" x:Name="btn_CreateTag"  HorizontalAlignment="Right" Width="200"/>
                     </Grid>
-                    
-                    
+
+                    <common:CommonControl_Button Label="Open Indexer" x:Name="btn_Indexer"  HorizontalAlignment="Center" Width="200"/>
 
                     <StackPanel Orientation="Horizontal" Width="270" HorizontalAlignment="Right">
-                        <Border x:Name="btn_FirstPage" CornerRadius="5" HorizontalAlignment="Right" Width="50" Background="#FF556D84" Margin="2">
-                            <TextBlock Text="&lt;&lt;" Foreground="White" HorizontalAlignment="Center" FontSize="30" VerticalAlignment="Center"/>
-                        </Border>
-                        <Border x:Name="btn_PrevPage" CornerRadius="5" HorizontalAlignment="Right" Width="50" Background="#FF556D84" Margin="2">
-                            <TextBlock Text="&lt;" Foreground="White" HorizontalAlignment="Center" FontSize="30" VerticalAlignment="Center"/>
-                        </Border>
 
+                        <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_FirstPage" Label="&lt;&lt;" HorizontalAlignment="Right" Width="50"/>
+                        <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_PrevPage" Label="&lt;" HorizontalAlignment="Right" Width="50"/>
+ 
                         <Border  CornerRadius="5" HorizontalAlignment="Right" Width="50" Margin="2">
                             <TextBlock x:Name="lbl_PageNum" Text="5" Foreground="White" HorizontalAlignment="Center" FontSize="30" VerticalAlignment="Center"/>
                         </Border>
 
-                        <Border x:Name="btn_NextPage" CornerRadius="5" HorizontalAlignment="Right" Width="50" Background="#FF556D84" Margin="2">
-                            <TextBlock Text=">" Foreground="White" HorizontalAlignment="Center" FontSize="30" VerticalAlignment="Center"/>
-                        </Border>
-                        <Border x:Name="btn_LastPage" CornerRadius="5" HorizontalAlignment="Right" Width="50" Background="#FF556D84" Margin="2">
-                            <TextBlock Text=">>" Foreground="White" HorizontalAlignment="Center" FontSize="30" VerticalAlignment="Center"/>
-                        </Border>
+                        <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_NextPage" Label=">" HorizontalAlignment="Right" Width="50"/>
+                        <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_LastPage" Label=">>" HorizontalAlignment="Right" Width="50"/>
                     </StackPanel>
                 </Grid>
             </Border>

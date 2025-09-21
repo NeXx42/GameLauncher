@@ -34,6 +34,7 @@ namespace GameLibary.Pages
         public Page_Content()
         {
             _ = LibaryHandler.Setup();
+            LibaryHandler.onGlobalImageSet += (i, b) => DrawGames();
 
             InitializeComponent();
 
@@ -48,6 +49,7 @@ namespace GameLibary.Pages
         private void BindButtons()
         {
             Indexer.Setup(DrawGames);
+            GameViewer.Setup(this);
 
             GameViewer.MouseLeftButtonDown += (_, e) => e.Handled = true;
             Indexer.MouseLeftButtonDown += (_, e) => e.Handled = true;
@@ -59,7 +61,12 @@ namespace GameLibary.Pages
             btn_NextPage.MouseLeftButtonDown += (_, __) => NextPage();
             btn_LastPage.MouseLeftButtonDown += (_, __) => LastPage();
 
-            nav_Indexer.MouseLeftButtonDown += (_, __) => OpenIndexer();
+            btn_Indexer.MouseLeftButtonDown += (_, __) => OpenIndexer();
+
+            combo_OrderType.ItemsSource = System.Enum.GetValues(typeof(LibaryHandler.OrderType));
+            combo_OrderType.SelectedIndex = 0;
+
+            combo_OrderType.SelectionChanged += (_, __) => RefilterGames();
         }
 
         public void DrawGames()
@@ -67,7 +74,7 @@ namespace GameLibary.Pages
             const float ratio = 0.1927083333f;
             const int columnLimit = 5;
 
-            lbl_PageNum.Text = $"{gamesSlide / getGamesPerPage}";
+            lbl_PageNum.Text = $"{(gamesSlide / getGamesPerPage) + 1}";
             cont_Games.Children.Clear();
 
             int[] games = LibaryHandler.GetDrawList(gamesSlide, columnLimit * 3);
@@ -135,7 +142,12 @@ namespace GameLibary.Pages
                 }
             }
 
-            LibaryHandler.RefilterGames(activeTags);
+            RefilterGames();
+        }
+
+        private void RefilterGames()
+        {
+            LibaryHandler.RefilterGames(activeTags, (LibaryHandler.OrderType)combo_OrderType.SelectedIndex);
             gamesSlide = 0;
 
             DrawGames();

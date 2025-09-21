@@ -6,10 +6,7 @@
              xmlns:local="clr-namespace:GameLibary.Components"
              mc:Ignorable="d" 
              d:DesignHeight="50" d:DesignWidth="800">
-    <Border x:Name="border" Background="#FF0F141A" BorderBrush="#FF335E90" CornerRadius="5">
-        <Border.Effect>
-            <DropShadowEffect Direction="0" Opacity="0.5" BlurRadius="24.9"/>
-        </Border.Effect>
+    <Border x:Name="border" Background="#FF0F141A" BorderBrush="#FF335E90">
         <Label x:Name="txt" Content="Test" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontSize="14"/>
     </Border>
 </UserControl>

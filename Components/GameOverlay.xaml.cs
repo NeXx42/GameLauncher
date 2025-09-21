@@ -6,6 +6,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Text;
+using System.Windows.Interop;
 
 namespace GameLibary.Components
 {
@@ -14,9 +16,6 @@ namespace GameLibary.Components
     /// </summary>
     public partial class GameOverlay : Window
     {
-        [DllImport("user32.dll")]
-        static extern bool PrintWindow(IntPtr hwnd, IntPtr hdcBlt, uint nFlags);
-
         [DllImport("user32.dll")]
         [return: MarshalAs(UnmanagedType.Bool)]
         static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
@@ -32,6 +31,35 @@ namespace GameLibary.Components
 
 
 
+        [DllImport("user32.dll")]
+        private static extern IntPtr GetForegroundWindow();
+
+        [DllImport("user32.dll")]
+        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+
+        [DllImport("user32.dll")]
+        private static extern bool SetForegroundWindow(IntPtr hWnd);
+
+        [DllImport("user32.dll")]
+        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        private const int SW_RESTORE = 9;
+
+        private const int GWL_EXSTYLE = -20;
+        private const int WS_EX_NOACTIVATE = 0x08000000;
+
+        const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
+
+        [DllImport("user32.dll")]
+        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
+
+        [DllImport("user32.dll")]
+        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
+
+        [DllImport("dwmapi.dll")]
+        static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out RECT rect, int cbAttribute);
+
+
         private Process process;
         private int gameId;
 
@@ -39,11 +67,26 @@ namespace GameLibary.Components
         {
             InitializeComponent();
 
+            btn_CaptureGame.RegisterClick(btn_CaptureGame_Click);
+            btn_CaptureScreen.RegisterClick(btn_CaptureScreen_Click);
+            btn_Process.RegisterClick(ChooseProcess);
+
             Left = 0;
             Top = 0;
 
-            Width = 200;
-            Height = 50;
+            Width = 450;
+            Height = 40;
+
+            Loaded += OverlayWindow_Loaded;
+        }
+
+
+        private void OverlayWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            var hwnd = new WindowInteropHelper(this).Handle;
+
+            int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
+            SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
         }
 
 
@@ -52,51 +95,90 @@ namespace GameLibary.Components
             this.process = window;
             this.gameId = gameId;
 
-            btn_CaptureGame.Content = window == null ? "Close" : "Game";
+            btn_Process.Label = process?.MainWindowTitle ?? "unselected";
         }
 
-
-        private void btn_CaptureGame_Click(object sender, RoutedEventArgs e)
+        private async void ChooseProcess() 
         {
-            this.Close();
-            IntPtr hwnd = process?.MainWindowHandle ?? IntPtr.Zero;
+            btn_Process.Label = "selecting...";
+            process = await Task.Run(WaitForSelectionOfProcess);
+            btn_Process.Label = process?.MainWindowTitle ?? "unselected";
+        }
 
-            if (hwnd == IntPtr.Zero) return; // window not ready yet
-
-            // Get the window size
-            RECT rect;
-            if (!GetWindowRect(hwnd, out rect)) return;
-
-            int width = rect.Right - rect.Left;
-            int height = rect.Bottom - rect.Top;
-
-            Bitmap bmp = new Bitmap(width, height);
-            using (Graphics gfx = Graphics.FromImage(bmp))
+        private async void btn_CaptureGame_Click()
+        {
+            if((process?.MainWindowHandle ?? IntPtr.Zero) != IntPtr.Zero)
             {
-                IntPtr hdc = gfx.GetHdc();
-                PrintWindow(hwnd, hdc, 0);
-                gfx.ReleaseHdc(hdc);
+                ShowWindow(process!.MainWindowHandle, SW_RESTORE);
+                await Task.Delay(50);
+
+                SetForegroundWindow(process!.MainWindowHandle);
+                await Task.Delay(50);
+
+                ScreenShot(GetBoundsForProcess(process!.MainWindowHandle));
+            }
+            else
+            {
+
+                ScreenShot(GetScreenBounds());
             }
 
-            FileManager.SaveScreenshot(bmp);
-            LibaryHandler.UpdateGameIcon(gameId);
+            this.Close();
         }
 
-        private void btn_CaptureScreen_Click(object sender, RoutedEventArgs e)
+        private async Task<Process> WaitForSelectionOfProcess()
         {
-            this.Close();
+            // doesnt work properly for emulated games .... WHY
+            IntPtr current = GetForegroundWindow();
 
-            // Get the size of the primary screen
-            System.Drawing.Rectangle bounds = new System.Drawing.Rectangle(0, 0, 1920, 1080);
+            while (true)
+            {
+                IntPtr next = GetForegroundWindow();
+                if (next != current)
+                {
+                    GetWindowThreadProcessId(next, out uint pid);
+                    return Process.GetProcessById((int)pid);
+                }
+
+                await Task.Delay(50);
+            }
+        }
+
+
+        private void btn_CaptureScreen_Click()
+        {
+            ScreenShot(GetScreenBounds());
+            this.Close();
+        }
+
+        private void ScreenShot(System.Drawing.Rectangle bounds)
+        {
+            this.Visibility = Visibility.Hidden;
             Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height);
 
             using (Graphics g = Graphics.FromImage(bitmap))
             {
                 g.CopyFromScreen(bounds.Left, bounds.Top, 0, 0, bounds.Size);
             }
-
+            
             FileManager.SaveScreenshot(bitmap);
             LibaryHandler.UpdateGameIcon(gameId);
         }
+
+        private System.Drawing.Rectangle GetBoundsForProcess(nint hwnd)
+        {
+            RECT rect;
+            int res = DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, out rect, Marshal.SizeOf(typeof(RECT)));
+
+            if (res != 0) 
+            {
+                if (!GetWindowRect(hwnd, out rect))
+                    return GetScreenBounds();
+            }
+
+            return new System.Drawing.Rectangle(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
+        }
+
+        private System.Drawing.Rectangle GetScreenBounds() => new System.Drawing.Rectangle(0, 0, 1920, 1080);
     }
 }

@@ -1,10 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Data.SQLite;
+using System.Globalization;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
 
 namespace GameLibary.Source.Database
 {
@@ -14,6 +16,8 @@ namespace GameLibary.Source.Database
 
         public abstract Row[] GetRows();
 
+        public Row? GetRow(string name) => GetRows().FirstOrDefault(x => x.name.Equals(name));
+
         public string GenerateCreateCommand()
         {
             Row[] rows = GetRows();
@@ -22,30 +26,49 @@ namespace GameLibary.Source.Database
             
             for(int i = 0; i < rows.Length; i++)
             {
-                Row r = rows[i];
-                sql.Append($"{r.name} {r.type.ToString()}");
-
-                switch (r.type)
-                {
-                    case DataType.INTEGER:
-                        if(r.isPrimaryKey)
-                            sql.Append(" PRIMARY KEY");
-
-                        if (r.isAutoIncrement)
-                            sql.Append(" AUTOINCREMENT");
-                        break;
-                }
-
-                if (!r.isNullable)
-                {
-                    sql.Append(" NOT NULL");
-                }
+                sql.Append(BuildRowCreation(rows[i]));
 
                 if (i < rows.Length - 1)
                     sql.Append(",");
             }
 
             sql.Append(")");
+            return sql.ToString();
+        }
+
+        public string BuildRowCreation(Row r)
+        {
+            string typeName;
+
+            switch (r.type)
+            {
+                case DataType.DATETIME:
+                    typeName = DataType.TEXT.ToString();
+                    break;
+
+                default:
+                    typeName = r.type.ToString();
+                    break;
+            }
+
+            StringBuilder sql = new StringBuilder().Append($"{r.name} {typeName}");
+
+            switch (r.type)
+            {
+                case DataType.INTEGER:
+                    if (r.isPrimaryKey)
+                        sql.Append(" PRIMARY KEY");
+
+                    if (r.isAutoIncrement)
+                        sql.Append(" AUTOINCREMENT");
+                    break;
+            }
+
+            if (!r.isNullable)
+            {
+                sql.Append(" NOT NULL");
+            }
+
             return sql.ToString();
         }
 
@@ -141,6 +164,10 @@ namespace GameLibary.Source.Database
                 case DataType.BIT:
                     o = Convert.ToInt64(o) == 1;
                     break;
+
+                case DataType.DATETIME:
+                    o = DateTime.ParseExact((string)o, "yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture);
+                    break;
             }
 
             prop.SetValue(this, o);
@@ -154,6 +181,7 @@ namespace GameLibary.Source.Database
 
             switch (r.type)
             {
+                case DataType.DATETIME:
                 case DataType.TEXT:
                     val = val == null ? "NULL" : $"'{val}'";
                     break;
@@ -183,6 +211,7 @@ namespace GameLibary.Source.Database
             INTEGER,
             TEXT,
             BIT,
+            DATETIME,
         }
     }
 }

@@ -42,7 +42,7 @@ namespace GameLibary.Components
 
             if(game != null)
             {
-                title.Content = game.gameName;
+                title.Text = game.gameName;
                 LibaryHandler.GetGameImage(game, RedrawIcon);
             }
 

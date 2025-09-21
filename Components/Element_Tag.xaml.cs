@@ -30,7 +30,7 @@ namespace GameLibary.Components
             border.Margin = new Thickness(0, 0, 5, 5);
 
             this.Width = 150;
-            this.Height = 30;
+            this.Height = 40;
         }
 
         public void Draw(dbo_Tag tag, Action<int> onClick)

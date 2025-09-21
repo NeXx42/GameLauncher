@@ -1,4 +1,5 @@
-﻿using GameLibary.Source;
+﻿using GameLibary.Pages;
+using GameLibary.Source;
 using GameLibary.Source.Database.Tables;
 using System;
 using System.Collections.Generic;
@@ -29,13 +30,18 @@ namespace GameLibary.Components
         private Dictionary<int, Element_Tag> allTags = new Dictionary<int, Element_Tag>();
 
         private bool ignoredComboboxEvents;
+        private Page_Content master;
 
         public Control_GameView()
         {
             InitializeComponent();
 
-            btn_Browse.Click += (_, __) => BrowseToGame();
-            btn_Launch.Click += (_, __) => HandleLaunch();
+            btn_Delete.RegisterClick(DeleteGame);
+            btn_RegenMedia.RegisterClick(btn_RegenMedia_Click);
+            btn_Overlay.RegisterClick(btn_Overlay_Click);
+
+            btn_Browse.RegisterClick(BrowseToGame);
+            btn_Launch.RegisterClick(HandleLaunch);
 
             inp_Emulate.Checked += (_, __) => HandleEmulateToggle(true);
             inp_Emulate.Unchecked += (_, __) => HandleEmulateToggle(false);
@@ -43,8 +49,10 @@ namespace GameLibary.Components
             inp_binary.SelectionChanged += (_, __) => HandleBinaryChange();
         }
 
-        public void Setup(MainWindow master)
+        public void Setup(Page_Content master)
         {
+            this.master = master;
+            LibaryHandler.onGlobalImageSet += (i, p) => UpdateGameIcon(i, p);
         }
 
 
@@ -53,11 +61,7 @@ namespace GameLibary.Components
             inspectingGameId = game.id;
 
             img_bg.Source = null;
-
-            if (File.Exists(game.GetRealIconPath))
-            {
-                img_bg.Source = new BitmapImage(new Uri(game.GetRealIconPath));
-            }
+            LibaryHandler.GetGameImage(game, UpdateGameIcon);
 
             RedrawSelectedTags();
 
@@ -70,6 +74,14 @@ namespace GameLibary.Components
             inp_binary.ItemsSource = executableBinaries.Select(x => Path.GetFileName(x));
             inp_binary.SelectedIndex = executableBinaries.IndexOf(game.executablePath.Substring(1));
             ignoredComboboxEvents = false;
+        }
+
+        private void UpdateGameIcon(int gameId, BitmapImage? img)
+        {
+            if (inspectingGameId != gameId)
+                return;
+
+            img_bg.Source = img;
         }
 
         private List<string> GetBinaries(string gameName)
@@ -91,12 +103,6 @@ namespace GameLibary.Components
         private void HandleLaunch()
         {
             GameLauncher.LaunchGame(inspectingGameId);
-        }
-
-        private void btn_RegenMedia_Click(object sender, RoutedEventArgs e)
-        {
-            LibaryHandler.UpdateGameIcon(inspectingGameId, "");
-            Draw(LibaryHandler.GetGameFromId(inspectingGameId));
         }
 
         public void RedrawTags(int[] tags)
@@ -142,23 +148,51 @@ namespace GameLibary.Components
             LibaryHandler.UpdateGameEmulationStatus(inspectingGameId, to);           
         }
 
-        private void btn_Overlay_Click(object sender, RoutedEventArgs e)
+        private void btn_Overlay_Click()
         {
             GameLauncher.RequestOverlay(inspectingGameId, null);
         }
-
-        private void BrowseToGame()
+        private void btn_RegenMedia_Click()
         {
-            Process.Start("explorer.exe", Path.GetDirectoryName(LibaryHandler.GetGameFromId(inspectingGameId).executablePath));
+            UpdateGameIcon(inspectingGameId, null);
+
+            LibaryHandler.UpdateGameIcon(inspectingGameId, "");
+            Draw(LibaryHandler.GetGameFromId(inspectingGameId));
         }
 
+        private void BrowseToGame() => FileManager.BrowseToGame(LibaryHandler.GetGameFromId(inspectingGameId)!);
         private void HandleBinaryChange()
         {
             if (ignoredComboboxEvents)
                 return;
 
             LibaryHandler.ChangeBinaryLocation(inspectingGameId, inp_binary.SelectedValue?.ToString());
-            Draw(LibaryHandler.GetGameFromId(inspectingGameId));
+            Draw(LibaryHandler.GetGameFromId(inspectingGameId)!);
+        }
+
+        private async void DeleteGame()
+        {
+            dbo_Game? game = LibaryHandler.GetGameFromId(inspectingGameId);
+
+            if (game != null && MessageBox.Show($"Are you sure you want to delete '{game.gameName}'", "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            {
+                RetryLogic();
+            }
+
+            async void RetryLogic()
+            {
+                Exception? error = await LibaryHandler.DeleteGame(game!);
+
+                if (error == null)
+                {
+                    master.DrawGames();
+                    master.ToggleMenu(false);
+                }
+                else if(MessageBox.Show(error.Message, "Retry", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                {
+                    RetryLogic();
+                }
+            }
         }
     }
 }

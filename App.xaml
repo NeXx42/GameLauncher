@@ -4,6 +4,16 @@
              xmlns:local="clr-namespace:GameLibary"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-         
+
+
+        <SolidColorBrush x:Key="BG_1" Color="#010409"/>
+        <SolidColorBrush x:Key="BG_2" Color="#121319"/>
+        <SolidColorBrush x:Key="BG_3" Color="#353849"/>
+        <SolidColorBrush x:Key="BG_4" Color="#646B80"/>
+
+        <SolidColorBrush x:Key="Accent_1" Color="#3861FB"/>
+        <SolidColorBrush x:Key="Accent_2" Color="#A0E0F2"/>
+        <SolidColorBrush x:Key="Accent_3" Color="#213D82"/>
+        
     </Application.Resources>
 </Application>

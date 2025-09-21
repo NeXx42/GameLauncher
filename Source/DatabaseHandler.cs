@@ -1,4 +1,5 @@
 ﻿using GameLibary.Source.Database;
+using GameLibary.Source.Database.Migrations;
 using GameLibary.Source.Database.Tables;
 using System;
 using System.Collections.Generic;
@@ -9,6 +10,8 @@ using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Transactions;
+using System.Windows;
+using System.Windows.Documents;
 using System.Windows.Media.Animation;
 
 namespace GameLibary.Source
@@ -31,6 +34,7 @@ namespace GameLibary.Source
 
             connection ??= new SQLiteConnection(GetConnectionString());
             GenerateTables();
+            HandleMigrations();
         }
 
         private static void GenerateTables()
@@ -43,15 +47,64 @@ namespace GameLibary.Source
 
             foreach (Type tableType in tables)
             {
-                DatabaseTable table = Activator.CreateInstance(tableType) as DatabaseTable;
+                DatabaseTable? table = Activator.CreateInstance(tableType) as DatabaseTable;
 
-                using (SQLiteCommand command = new SQLiteCommand(table.GenerateCreateCommand(), connection))
+                using (SQLiteCommand command = new SQLiteCommand(table!.GenerateCreateCommand(), connection))
                 {
                     command.ExecuteNonQuery();
                 }
             }
 
             connection.Close();
+        }
+
+        private static async void HandleMigrations()
+        {
+            Type[] migrations = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(MigrationBase))).ToArray();
+
+            long? lastMigration = null;
+            string? id = GetItems<dbo_Config>(new QueryBuilder().SearchEquals(nameof(dbo_Config.key), MigrationBase.CONFIG_MIGRATIONID)).FirstOrDefault()?.value ?? null;
+
+            if (!string.IsNullOrEmpty(id))
+            {
+                lastMigration = long.Parse(id);
+            }
+
+            MigrationBase[] migrationsToApply = migrations.Select(x => (MigrationBase)Activator.CreateInstance(x)!)
+                .Where(x => x.migrationId > (lastMigration ?? 0))
+                .OrderBy(x => x.migrationId).ToArray();
+
+            if (lastMigration.HasValue)
+            {
+                lastMigration = null;
+
+                connection.Open();
+
+                foreach (MigrationBase migration in migrationsToApply)
+                {
+                    lastMigration = migration.migrationId;
+
+                    using (SQLiteCommand command = new SQLiteCommand(migration.Up(), connection))
+                    {
+                        command.ExecuteNonQuery();
+                    }
+                }
+
+                connection.Close();
+            }
+            else
+            {
+                // migrations in this context are only to update existing database TABLES,
+                // as migrations are only for amending tables there is no need to do migration on a database that is has just been created
+
+                lastMigration = migrationsToApply[migrations.Length - 1].migrationId;
+            }
+
+            if (lastMigration.HasValue)
+            {
+                await DeleteFromTable<dbo_Config>(new QueryBuilder().SearchEquals(nameof(dbo_Config.key), MigrationBase.CONFIG_MIGRATIONID));
+                await InsertIntoTable(new dbo_Config() { key = MigrationBase.CONFIG_MIGRATIONID, value = lastMigration.Value.ToString() });
+            }
         }
 
 
@@ -85,7 +138,7 @@ namespace GameLibary.Source
             }
             catch (Exception e)
             {
-
+                MessageBox.Show($"{sql}\n{e.Message}", "Failed sql", MessageBoxButton.OK, MessageBoxImage.Error);
             }
             finally
             {
@@ -96,23 +149,31 @@ namespace GameLibary.Source
 
         public static T[] GetItems<T>(QueryBuilder? queryBuilder = null) where T : DatabaseTable
         {
-            List<T> val = new List<T>();
-            connection.Open();
-
-            using (SQLiteCommand cmd = new SQLiteCommand($"SELECT * FROM {GetTableNameFromGeneric<T>()} {queryBuilder?.BuildWhereClause() ?? ""}", connection))
-            using (SQLiteDataReader reader = cmd.ExecuteReader())
+            try
             {
-                while (reader.Read())
+                List<T> val = new List<T>();
+                connection.Open();
+
+                using (SQLiteCommand cmd = new SQLiteCommand($"SELECT * FROM {GetTableNameFromGeneric<T>()} {queryBuilder?.BuildWhereClause() ?? ""}", connection))
+                using (SQLiteDataReader reader = cmd.ExecuteReader())
                 {
-                    T res = (T)Activator.CreateInstance(typeof(T));
-                    res.Map(reader);
+                    while (reader.Read())
+                    {
+                        T res = (T)Activator.CreateInstance(typeof(T));
+                        res.Map(reader);
 
-                    val.Add(res);
+                        val.Add(res);
+                    }
                 }
-            }
 
-            connection.Close();
-            return val.ToArray();
+                connection.Close();
+                return val.ToArray();
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Failed to get SQL");
+                return null;
+            }
         }
 
         private static string GetTableNameFromGeneric<T>() where T : DatabaseTable

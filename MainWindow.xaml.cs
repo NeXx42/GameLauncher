@@ -33,7 +33,7 @@ namespace GameLibary
             InitializeComponent();
 
             UpdateActiveBanner(null);
-            btn_Banner_Detach.Click += (_, __) => GameLauncher.DetachPlayingGame();
+            btn_Banner_Detach.RegisterClick(GameLauncher.DetachPlayingGame);
 
             FileManager.Setup();
             DatabaseHandler.Setup();
