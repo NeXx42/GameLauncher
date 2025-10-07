@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Data.SQLite;
+﻿using System.Data.SQLite;
 using System.Globalization;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-using System.Windows;
 
 namespace GameLibary.Source.Database
 {
@@ -23,8 +18,8 @@ namespace GameLibary.Source.Database
             Row[] rows = GetRows();
 
             StringBuilder sql = new StringBuilder($"CREATE TABLE IF NOT EXISTS {tableName} ( ");
-            
-            for(int i = 0; i < rows.Length; i++)
+
+            for (int i = 0; i < rows.Length; i++)
             {
                 sql.Append(BuildRowCreation(rows[i]));
 
@@ -79,8 +74,8 @@ namespace GameLibary.Source.Database
             StringBuilder vals = new StringBuilder("(");
 
             Row[] rows = GetRows();
-            
-            for(int i = 0; i < rows.Length; i++)
+
+            for (int i = 0; i < rows.Length; i++)
             {
                 Row r = rows[i];
 
@@ -92,7 +87,7 @@ namespace GameLibary.Source.Database
                 sql.Append($"{r.name}");
                 vals.Append(val);
 
-                if (i < rows.Length - 1) 
+                if (i < rows.Length - 1)
                 {
                     sql.Append(", ");
                     vals.Append(", ");
@@ -110,7 +105,7 @@ namespace GameLibary.Source.Database
         {
             Row[] rows = GetRows();
 
-            foreach(Row r in rows)
+            foreach (Row r in rows)
             {
                 object o = reader[r.name];
 
@@ -149,7 +144,7 @@ namespace GameLibary.Source.Database
         {
             PropertyInfo prop = GetType().GetProperty(r.name);
 
-            if(o == DBNull.Value)
+            if (o == DBNull.Value)
             {
                 prop.SetValue(this, null);
                 return;

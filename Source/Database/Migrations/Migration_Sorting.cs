@@ -1,9 +1,4 @@
 ﻿using GameLibary.Source.Database.Tables;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace GameLibary.Source.Database.Migrations
 {
@@ -18,7 +13,7 @@ namespace GameLibary.Source.Database.Migrations
 
         public override string Up()
         {
-            dbo_Game template = new dbo_Game();
+            dbo_Game template = new dbo_Game() { gameName = "", libaryId = 0 };
             string rowSQL = template.BuildRowCreation(template.GetRow(nameof(template.lastPlayed))!);
 
             return $"ALTER TABLE {template.tableName} ADD COLUMN {rowSQL};";

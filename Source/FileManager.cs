@@ -1,16 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using GameLibary.Source.Database.Tables;
 using System.Diagnostics;
 using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Transactions;
 using System.Windows;
-using GameLibary.Source.Database.Tables;
-using Microsoft.Win32.SafeHandles;
 
 namespace GameLibary.Source
 {
@@ -19,7 +12,6 @@ namespace GameLibary.Source
         public static string GetDataLocation() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), "MyLibaryApplication");
         public static string GetTempLocation() => Path.Combine(GetDataLocation(), "__Temp");
 
-        public static string GetProcessGameLocation() => Path.Combine(MainWindow.GameRootLocation, "____Processed");
 
         public static void Setup()
         {
@@ -36,7 +28,7 @@ namespace GameLibary.Source
 
         public static void Cleanup()
         {
-            foreach(string f in Directory.GetFiles(GetTempLocation()))
+            foreach (string f in Directory.GetFiles(GetTempLocation()))
             {
                 File.Delete(f);
             }
@@ -54,38 +46,29 @@ namespace GameLibary.Source
             return !string.IsNullOrEmpty(path);
         }
 
-        public static string PromoteTempFile(int gameId, string path)
+        public static async Task<string> PromoteTempFile(int gameId, string path)
         {
             string extension = Path.GetExtension(path);
             string newName = $"{Guid.NewGuid()}{extension}";
 
-            File.Move(path, Path.Combine(LibaryHandler.GetGameFromId(gameId).GetFolderName, newName));
+            string folderName = await LibaryHandler.GetGameFromId(gameId)!.GetFolderLocation();
+            File.Move(path, Path.Combine(folderName, newName));
             return newName;
         }
 
         public static async Task<(bool isInvalid, bool wasMigrated)> TryMigrate(dbo_Game game)
         {
-            if (game.executablePath.StartsWith("#"))
-            {
-                return (false, false);
-            }
-
-            if(!File.Exists(game.executablePath))
+            if (!File.Exists(game.executablePath))
             {
                 return (true, false);
             }
 
-            if(!Directory.Exists(GetProcessGameLocation()))
-            {
-                Directory.CreateDirectory(GetProcessGameLocation());
-            }
-
             try
             {
-                string parentExecutableFolder = Path.GetDirectoryName(game.executablePath);
+                string parentExecutableFolder = Path.GetDirectoryName(game.executablePath)!;
 
-                Directory.Move(parentExecutableFolder, Path.Combine(GetProcessGameLocation(), $"{game.gameName}"));
-                game.executablePath =$"#{Path.GetFileName(game.executablePath)}";
+                Directory.Move(parentExecutableFolder, await game.GetFolderLocation());
+                game.executablePath = $"{Path.GetFileName(game.executablePath)}";
 
                 return (false, true);
             }
@@ -96,9 +79,9 @@ namespace GameLibary.Source
             }
         }
 
-        public static void BrowseToGame(dbo_Game game)
+        public static async Task BrowseToGame(dbo_Game game)
         {
-            string folder = Path.GetDirectoryName(game.GetRealExecutionPath) ?? string.Empty;
+            string folder = Path.GetDirectoryName(await game.GetFolderLocation()) ?? string.Empty;
 
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 return;
@@ -106,13 +89,13 @@ namespace GameLibary.Source
             Process.Start("explorer.exe", folder);
         }
 
-        public static Exception? DeleteGame(dbo_Game game)
+        public static async Task<Exception?> DeleteGame(dbo_Game game)
         {
             try
             {
-                string toDelete = Path.GetDirectoryName(game.GetRealExecutionPath!) ?? string.Empty;
+                string toDelete = Path.GetDirectoryName(await game.GetFolderLocation()!) ?? string.Empty;
 
-                if(!string.IsNullOrEmpty(toDelete) && Directory.Exists(toDelete))
+                if (!string.IsNullOrEmpty(toDelete) && Directory.Exists(toDelete))
                     File.Delete(toDelete);
 
                 return null;

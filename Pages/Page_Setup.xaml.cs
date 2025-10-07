@@ -1,21 +1,9 @@
-﻿using GameLibary.Source.Database.Tables;
-using GameLibary.Source;
+﻿using GameLibary.Source;
+using GameLibary.Source.Database.Tables;
 using Microsoft.WindowsAPICodePack.Dialogs;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace GameLibary.Pages
 {
@@ -31,7 +19,6 @@ namespace GameLibary.Pages
         {
             InitializeComponent();
 
-            inp_DataRoot.Content = MainWindow.GameRootLocation ?? "Set Location";
             inp_Emulator.Content = MainWindow.EmulatorLocation ?? "Set Location";
         }
 

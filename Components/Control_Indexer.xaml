@@ -16,7 +16,7 @@
 
             <Border VerticalAlignment="Bottom" Height="60" Background="{DynamicResource BG_3}">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                    <Common:CommonControl_Button Margin="5" x:Name="btn_Search" Height="40" Width="200" Label="Search" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    <Common:CommonControl_Button Margin="5" x:Name="btn_Search" Height="40" Width="200" Label="Search Folder" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <Common:CommonControl_Button Margin="5" x:Name="btn_Import" Height="40" Width="200" Label="Import" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                 </StackPanel>
             </Border>

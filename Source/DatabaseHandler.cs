@@ -1,18 +1,11 @@
 ﻿using GameLibary.Source.Database;
 using GameLibary.Source.Database.Migrations;
 using GameLibary.Source.Database.Tables;
-using System;
-using System.Collections.Generic;
 using System.Data.SQLite;
 using System.IO;
-using System.Linq;
 using System.Reflection;
 using System.Text;
-using System.Threading.Tasks;
-using System.Transactions;
 using System.Windows;
-using System.Windows.Documents;
-using System.Windows.Media.Animation;
 
 namespace GameLibary.Source
 {
@@ -63,7 +56,7 @@ namespace GameLibary.Source
             Type[] migrations = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(MigrationBase))).ToArray();
 
             long? lastMigration = null;
-            string? id = GetItems<dbo_Config>(new QueryBuilder().SearchEquals(nameof(dbo_Config.key), MigrationBase.CONFIG_MIGRATIONID)).FirstOrDefault()?.value ?? null;
+            string? id = (await GetItem<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), MigrationBase.CONFIG_MIGRATIONID)))?.value ?? null;
 
             if (!string.IsNullOrEmpty(id))
             {
@@ -102,7 +95,7 @@ namespace GameLibary.Source
 
             if (lastMigration.HasValue)
             {
-                await DeleteFromTable<dbo_Config>(new QueryBuilder().SearchEquals(nameof(dbo_Config.key), MigrationBase.CONFIG_MIGRATIONID));
+                await DeleteFromTable<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), MigrationBase.CONFIG_MIGRATIONID));
                 await InsertIntoTable(new dbo_Config() { key = MigrationBase.CONFIG_MIGRATIONID, value = lastMigration.Value.ToString() });
             }
         }
@@ -113,12 +106,12 @@ namespace GameLibary.Source
             await TryExecute(value.GenerateInsertCommand());
         }
 
-        public static async Task DeleteFromTable<T>(QueryBuilder queryBuilder) where T: DatabaseTable
+        public static async Task DeleteFromTable<T>(QueryBuilder.InternalAccessor queryBuilder) where T : DatabaseTable
         {
             await TryExecute($"DELETE FROM {GetTableNameFromGeneric<T>()} {queryBuilder?.BuildWhereClause() ?? ""}");
         }
 
-        public static async Task UpdateTableEntry<T>(T entry, QueryBuilder queryBuilder) where T : DatabaseTable
+        public static async Task UpdateTableEntry<T>(T entry, QueryBuilder.InternalAccessor queryBuilder) where T : DatabaseTable
         {
             string updateSQL = entry.GenerateUpdateCommand();
             await TryExecute($"{updateSQL} {queryBuilder?.BuildWhereClause() ?? ""}");
@@ -147,19 +140,64 @@ namespace GameLibary.Source
         }
 
 
-        public static T[] GetItems<T>(QueryBuilder? queryBuilder = null) where T : DatabaseTable
+        public static async Task<bool> Exists<T>(QueryBuilder.InternalAccessor? queryBuilder = null) where T : DatabaseTable
         {
             try
             {
-                List<T> val = new List<T>();
+                bool exists = false;
                 connection.Open();
 
-                using (SQLiteCommand cmd = new SQLiteCommand($"SELECT * FROM {GetTableNameFromGeneric<T>()} {queryBuilder?.BuildWhereClause() ?? ""}", connection))
-                using (SQLiteDataReader reader = cmd.ExecuteReader())
+                StringBuilder sql = new StringBuilder($"SELECT 1 FROM {GetTableNameFromGeneric<T>()}");
+
+                if (queryBuilder != null)
+                    sql.Append($" {queryBuilder?.BuildWhereClause()}");
+
+                sql.Append(" LIMIT 1;");
+
+                using (SQLiteCommand cmd = new SQLiteCommand(sql.ToString(), connection))
+                using (SQLiteDataReader reader = (SQLiteDataReader)await cmd.ExecuteReaderAsync())
                 {
-                    while (reader.Read())
+                    await reader.ReadAsync();
+                    exists = reader.HasRows;
+                }
+
+                connection.Close();
+                return exists;
+            }
+            catch (Exception e)
+            {
+                MessageBox.Show(e.Message, "Failed to get SQL");
+                return false;
+            }
+        }
+
+
+        public static async Task<T?> GetItem<T>(QueryBuilder.InternalAccessor? queryBuilder = null) where T : DatabaseTable
+            => (await GetItems<T>(queryBuilder, 1)).FirstOrDefault();
+
+        public static async Task<T[]> GetItems<T>(QueryBuilder.InternalAccessor? queryBuilder = null, int? limit = null) where T : DatabaseTable
+        {
+            try
+            {
+                List<T> val = new List<T>(limit ?? 10);
+                connection.Open();
+
+                StringBuilder sql = new StringBuilder($"SELECT * FROM {GetTableNameFromGeneric<T>()}");
+
+                if (queryBuilder != null)
+                    sql.Append($" {queryBuilder?.BuildWhereClause()}");
+
+                if (limit.HasValue)
+                    sql.Append($" LIMIT {limit.Value}");
+
+                sql.Append(";");
+
+                using (SQLiteCommand cmd = new SQLiteCommand(sql.ToString(), connection))
+                using (SQLiteDataReader reader = (SQLiteDataReader)await cmd.ExecuteReaderAsync())
+                {
+                    while (await reader.ReadAsync())
                     {
-                        T res = (T)Activator.CreateInstance(typeof(T));
+                        T res = (T)Activator.CreateInstance(typeof(T))!;
                         res.Map(reader);
 
                         val.Add(res);
@@ -172,19 +210,31 @@ namespace GameLibary.Source
             catch (Exception e)
             {
                 MessageBox.Show(e.Message, "Failed to get SQL");
-                return null;
+                return Array.Empty<T>();
             }
         }
 
         private static string GetTableNameFromGeneric<T>() where T : DatabaseTable
         {
-            T table = (T)Activator.CreateInstance(typeof(T));
+            T table = (T)Activator.CreateInstance(typeof(T))!;
             return table.tableName;
         }
+    }
 
 
 
-        public class QueryBuilder
+    public static class QueryBuilder
+    {
+        public static InternalAccessor SQLEquals(string column, string value)
+            => new InternalAccessor().SQLEquals(column, value);
+
+        public static InternalAccessor SQLEquals(string column, int value)
+            => new InternalAccessor().SQLEquals(column, value);
+
+        public static InternalAccessor In(string column, params int[] values)
+            => new InternalAccessor().In(column, values);
+
+        public class InternalAccessor
         {
             private string searchClause = "";
 
@@ -194,7 +244,7 @@ namespace GameLibary.Source
                     searchClause += " AND";
             }
 
-            public QueryBuilder SearchEquals(string column, string value)
+            public InternalAccessor SQLEquals(string column, string value)
             {
                 PrepSearch();
 
@@ -202,7 +252,7 @@ namespace GameLibary.Source
                 return this;
             }
 
-            public QueryBuilder SearchEquals(string column, int value)
+            public InternalAccessor SQLEquals(string column, int value)
             {
                 PrepSearch();
 
@@ -210,13 +260,13 @@ namespace GameLibary.Source
                 return this;
             }
 
-            public QueryBuilder SearchIn(string column, params int[] values)
+            public InternalAccessor In(string column, params int[] values)
             {
                 PrepSearch();
 
                 searchClause += $" {column} in ( ";
 
-                for(int i = 0; i < values.Length; i++)
+                for (int i = 0; i < values.Length; i++)
                 {
                     searchClause += $"{values[i]}";
 

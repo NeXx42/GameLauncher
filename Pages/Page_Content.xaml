@@ -17,7 +17,8 @@
             <Border VerticalAlignment="Top" Height="70">
                 <StackPanel Margin="8" Orientation="Horizontal">
                     <Label Margin="20, 0, 0, 0" FontSize="30" Content="Games" Foreground="White" HorizontalAlignment="Left"/>
-                    <ComboBox x:Name="combo_OrderType" Margin="20, 10, 0, 10" Width="200"/>
+                    <common:CommonControl_Button x:Name="btn_SortType" Margin="20, 0, 0, 0" Label="ID" Width="200" Height="40"/>
+                    <common:CommonControl_Button x:Name="btn_SortDir" Margin="10, 0, 0, 0" Label="Ascending" Width="200" Height="40"/>
                 </StackPanel>
             </Border>
 

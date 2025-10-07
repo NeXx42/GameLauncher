@@ -1,20 +1,8 @@
 ﻿using GameLibary.Components;
-using GameLibary.Source.Database.Tables;
 using GameLibary.Source;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using GameLibary.Source.Database.Tables;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
-using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
-using System.Windows.Shapes;
 
 namespace GameLibary.Pages
 {
@@ -30,25 +18,34 @@ namespace GameLibary.Pages
         private HashSet<int> activeTags = new HashSet<int>();
         private Dictionary<int, Element_Tag> existingTags = new Dictionary<int, Element_Tag>();
 
+        private bool currentSortAscending = true;
+        private LibaryHandler.OrderType currentSort = LibaryHandler.OrderType.Id;
+
 
         public Page_Content()
         {
             _ = LibaryHandler.Setup();
-            LibaryHandler.onGlobalImageSet += (i, b) => DrawGames();
+            LibaryHandler.onGlobalImageSet += async (i, b) => await DrawGames();
 
             InitializeComponent();
 
             BindButtons();
-
             ToggleMenu(false);
 
-            DrawGames();
-            DrawTags();
+            DrawEverything();
+        }
+
+        private async void DrawEverything()
+        {
+            await DrawGames();
+            await DrawTags();
+
+            RedrawSortNames();
         }
 
         private void BindButtons()
         {
-            Indexer.Setup(DrawGames);
+            Indexer.Setup(() => RefilterGames());
             GameViewer.Setup(this);
 
             GameViewer.MouseLeftButtonDown += (_, e) => e.Handled = true;
@@ -63,13 +60,13 @@ namespace GameLibary.Pages
 
             btn_Indexer.MouseLeftButtonDown += (_, __) => OpenIndexer();
 
-            combo_OrderType.ItemsSource = System.Enum.GetValues(typeof(LibaryHandler.OrderType));
-            combo_OrderType.SelectedIndex = 0;
 
-            combo_OrderType.SelectionChanged += (_, __) => RefilterGames();
+            btn_SortDir.RegisterClick(UpdateSortDirection);
+            btn_SortType.RegisterClick(UpdateSortType);
         }
 
-        public void DrawGames()
+
+        public async Task DrawGames()
         {
             const float ratio = 0.1927083333f;
             const int columnLimit = 5;
@@ -77,7 +74,7 @@ namespace GameLibary.Pages
             lbl_PageNum.Text = $"{(gamesSlide / getGamesPerPage) + 1}";
             cont_Games.Children.Clear();
 
-            int[] games = LibaryHandler.GetDrawList(gamesSlide, columnLimit * 3);
+            int[] games = await LibaryHandler.GetDrawList(gamesSlide, columnLimit * 3);
 
             foreach (int gameId in games)
                 DrawGame(gameId);
@@ -95,14 +92,14 @@ namespace GameLibary.Pages
             }
         }
 
-        public void DrawTags()
+        public async Task DrawTags()
         {
             existingTags.Clear();
             activeTags.Clear();
 
             cont_AllTags.Children.Clear();
 
-            int[] tagIds = LibaryHandler.GetAllTags();
+            int[] tagIds = await LibaryHandler.GetAllTags();
 
             foreach (int tagId in tagIds)
             {
@@ -126,7 +123,7 @@ namespace GameLibary.Pages
             }
         }
 
-        private void SwapTagMode(int tagId)
+        private async void SwapTagMode(int tagId)
         {
             if (existingTags.TryGetValue(tagId, out Element_Tag ui))
             {
@@ -142,25 +139,26 @@ namespace GameLibary.Pages
                 }
             }
 
-            RefilterGames();
+            await RefilterGames();
         }
 
-        private void RefilterGames()
+        private async Task RefilterGames(bool resetPage = true)
         {
-            LibaryHandler.RefilterGames(activeTags, (LibaryHandler.OrderType)combo_OrderType.SelectedIndex);
-            gamesSlide = 0;
+            if (resetPage)
+                gamesSlide = 0;
 
-            DrawGames();
+            await LibaryHandler.RefilterGames(activeTags, currentSort, currentSortAscending);
+            await DrawGames();
         }
 
 
-        private void ToggleGameView(int gameId)
+        private async void ToggleGameView(int gameId)
         {
             dbo_Game? game = LibaryHandler.GetGameFromId(gameId);
 
             if (game != null)
             {
-                GameViewer.Draw(game);
+                await GameViewer.Draw(game);
             }
 
             ToggleMenu(true);
@@ -207,8 +205,32 @@ namespace GameLibary.Pages
         {
             ToggleMenu(true);
             Indexer.Visibility = Visibility.Visible;
+            Indexer.OnOpen();
         }
 
+
+        // sort
+        private async void UpdateSortDirection()
+        {
+            currentSortAscending = !currentSortAscending;
+            RedrawSortNames();
+
+            await RefilterGames();
+        }
+
+        private async void UpdateSortType()
+        {
+            currentSort = (LibaryHandler.OrderType)(((int)currentSort + 1) % System.Enum.GetValues(typeof(LibaryHandler.OrderType)).Length);
+            RedrawSortNames();
+
+            await RefilterGames();
+        }
+
+        private void RedrawSortNames()
+        {
+            btn_SortDir.Label = currentSortAscending ? "Ascending" : "Descending";
+            btn_SortType.Label = $"{string.Join(' ', currentSort.ToString().Split(" "))}";
+        }
 
 
         // page controls

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace GameLibary.Source.Database.Migrations
+﻿namespace GameLibary.Source.Database.Migrations
 {
     public abstract class MigrationBase
     {

@@ -1,21 +1,10 @@
 ﻿using GameLibary.Pages;
 using GameLibary.Source;
 using GameLibary.Source.Database.Tables;
-using System;
-using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Data;
-using System.Windows.Documents;
-using System.Windows.Input;
-using System.Windows.Media;
 using System.Windows.Media.Imaging;
-using System.Windows.Navigation;
 
 namespace GameLibary.Components
 {
@@ -56,7 +45,7 @@ namespace GameLibary.Components
         }
 
 
-        public void Draw(dbo_Game game)
+        public async Task Draw(dbo_Game game)
         {
             inspectingGameId = game.id;
 
@@ -68,7 +57,7 @@ namespace GameLibary.Components
             inp_Emulate.IsChecked = game.useEmulator;
             lbl_Title.Content = game.gameName;
 
-            List<string> executableBinaries = GetBinaries(game.gameName);
+            List<string> executableBinaries = await GetBinaries(game);
 
             ignoredComboboxEvents = true;
             inp_binary.ItemsSource = executableBinaries.Select(x => Path.GetFileName(x));
@@ -84,15 +73,15 @@ namespace GameLibary.Components
             img_bg.Source = img;
         }
 
-        private List<string> GetBinaries(string gameName)
+        private async Task<List<string>> GetBinaries(dbo_Game game)
         {
-            string gameFolder = Path.Combine(FileManager.GetProcessGameLocation(), gameName);
+            string gameFolder = await game.GetFolderLocation();
             return Directory.GetFiles(gameFolder).Where(x => x.EndsWith(".exe", StringComparison.CurrentCultureIgnoreCase)).Select(x => Path.GetFileName(x)).ToList();
         }
 
-        private void RedrawSelectedTags()
+        private async Task RedrawSelectedTags()
         {
-            gameTags = LibaryHandler.GetGameTags(inspectingGameId).ToHashSet();
+            gameTags = (await LibaryHandler.GetGameTags(inspectingGameId)).ToHashSet();
 
             foreach (KeyValuePair<int, Element_Tag> tag in allTags)
             {
@@ -110,7 +99,7 @@ namespace GameLibary.Components
             allTags.Clear();
             cont_AllTags.Children.Clear();
 
-            foreach(int tagId in tags)
+            foreach (int tagId in tags)
             {
                 GenerateTag(tagId);
             }
@@ -145,7 +134,7 @@ namespace GameLibary.Components
 
         private void HandleEmulateToggle(bool to)
         {
-            LibaryHandler.UpdateGameEmulationStatus(inspectingGameId, to);           
+            LibaryHandler.UpdateGameEmulationStatus(inspectingGameId, to);
         }
 
         private void btn_Overlay_Click()
@@ -188,7 +177,7 @@ namespace GameLibary.Components
                     master.DrawGames();
                     master.ToggleMenu(false);
                 }
-                else if(MessageBox.Show(error.Message, "Retry", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                else if (MessageBox.Show(error.Message, "Retry", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
                 {
                     RetryLogic();
                 }

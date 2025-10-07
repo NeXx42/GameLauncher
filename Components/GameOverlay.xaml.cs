@@ -1,12 +1,8 @@
 ﻿using GameLibary.Source;
-using System.Windows;
-using System.Windows.Shapes;
-
-using System.Drawing;
-using System.Drawing.Imaging;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
-using System.Text;
+using System.Drawing;
+using System.Runtime.InteropServices;
+using System.Windows;
 using System.Windows.Interop;
 
 namespace GameLibary.Components
@@ -98,7 +94,7 @@ namespace GameLibary.Components
             btn_Process.Label = process?.MainWindowTitle ?? "unselected";
         }
 
-        private async void ChooseProcess() 
+        private async void ChooseProcess()
         {
             btn_Process.Label = "selecting...";
             process = await Task.Run(WaitForSelectionOfProcess);
@@ -107,7 +103,7 @@ namespace GameLibary.Components
 
         private async void btn_CaptureGame_Click()
         {
-            if((process?.MainWindowHandle ?? IntPtr.Zero) != IntPtr.Zero)
+            if ((process?.MainWindowHandle ?? IntPtr.Zero) != IntPtr.Zero)
             {
                 ShowWindow(process!.MainWindowHandle, SW_RESTORE);
                 await Task.Delay(50);
@@ -160,7 +156,7 @@ namespace GameLibary.Components
             {
                 g.CopyFromScreen(bounds.Left, bounds.Top, 0, 0, bounds.Size);
             }
-            
+
             FileManager.SaveScreenshot(bitmap);
             LibaryHandler.UpdateGameIcon(gameId);
         }
@@ -170,7 +166,7 @@ namespace GameLibary.Components
             RECT rect;
             int res = DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, out rect, Marshal.SizeOf(typeof(RECT)));
 
-            if (res != 0) 
+            if (res != 0)
             {
                 if (!GetWindowRect(hwnd, out rect))
                     return GetScreenBounds();

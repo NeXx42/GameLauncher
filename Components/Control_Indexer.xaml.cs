@@ -1,8 +1,7 @@
 ﻿using GameLibary.Components.Indexer;
 using GameLibary.Source;
 using GameLibary.Source.Database.Tables;
-using System;
-using System.Collections.Generic;
+using Microsoft.WindowsAPICodePack.Dialogs;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -15,7 +14,9 @@ namespace GameLibary.Components
     public partial class Control_Indexer : UserControl
     {
         private Stack<GameFolder> avalibleImports = new Stack<GameFolder>();
-        private Action onReimportGames;
+        private Func<Task> onReimportGames;
+
+        private dbo_Libraries[] possibleLibaries;
 
         public Control_Indexer()
         {
@@ -23,38 +24,56 @@ namespace GameLibary.Components
 
             cont_FoundGames.Children.Clear();
 
-            btn_Search.MouseLeftButtonDown += (_, __) => ScanDirectory();
+            btn_Search.MouseLeftButtonDown += async (_, __) => await ScanDirectory();
             btn_Import.MouseLeftButtonDown += async (_, __) => await AttemptImport();
         }
 
-        public void Setup(Action onReimport)
+        public void Setup(Func<Task> onReimport)
         {
             onReimportGames = onReimport;
         }
 
-
-        private void ScanDirectory()
+        public async void OnOpen()
         {
-            List<GameFolder> foundGames = CrawlGames();
+            possibleLibaries = await DatabaseHandler.GetItems<dbo_Libraries>();
 
-            cont_FoundGames.Children.Clear();
+            this.Visibility = Visibility.Visible;
+        }
 
-            foreach (GameFolder gameFolder in foundGames)
+
+        private async Task ScanDirectory()
+        {
+            var dlg = new CommonOpenFileDialog
             {
-                Control_Indexer_Entry ui = new Control_Indexer_Entry();
-                ui.Draw(gameFolder);
+                IsFolderPicker = true,
+                Title = "Search Folder"
+            };
 
-                ui.Height = 30;
-                ui.Margin = new System.Windows.Thickness(0, 0, 0, 5);
+            if (dlg.ShowDialog() == CommonFileDialogResult.Ok && Directory.Exists(dlg.FileName))
+            {
+                List<GameFolder> foundGames = await CrawlGames(dlg.FileName!);
 
-                cont_FoundGames.Children.Add(ui);
-                avalibleImports.Push(gameFolder);
+                cont_FoundGames.Children.Clear();
+
+                foreach (GameFolder gameFolder in foundGames)
+                {
+                    Control_Indexer_Entry ui = new Control_Indexer_Entry();
+                    ui.Draw(gameFolder);
+
+                    ui.Height = 30;
+                    ui.Margin = new System.Windows.Thickness(0, 0, 0, 5);
+
+                    cont_FoundGames.Children.Add(ui);
+                    avalibleImports.Push(gameFolder);
+                }
             }
         }
 
         private async Task AttemptImport()
         {
-            if(MessageBox.Show("Are you sure you want to import the following games?", "Import", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
+            dbo_Libraries chosenLibary = possibleLibaries.First();
+
+            if (MessageBox.Show($"Are you sure you want to import the following games into the libary \n'{chosenLibary.rootPath}'?", "Import", MessageBoxButton.YesNo) != MessageBoxResult.Yes)
             {
                 return;
             }
@@ -63,12 +82,11 @@ namespace GameLibary.Components
             {
                 try
                 {
-                    string exectuable = folder.exectuables.FirstOrDefault() ?? "";
-
                     dbo_Game newGame = new dbo_Game
                     {
-                        gameName = Path.GetFileName(folder.path),
-                        executablePath = exectuable
+                        gameName = CorrectGameName(Path.GetFileName(folder.path)),
+                        executablePath = TryFindBestExecutable(folder.exectuables),
+                        libaryId = chosenLibary.libaryId
                     };
 
                     (bool isInvalid, _) = await FileManager.TryMigrate(newGame);
@@ -86,18 +104,35 @@ namespace GameLibary.Components
 
             MessageBox.Show("Done", "Done", MessageBoxButton.OK);
 
-            ScanDirectory();
+            await ScanDirectory();
             await LibaryHandler.RedetectGames();
 
-            onReimportGames?.Invoke();
+            await onReimportGames();
+
+            string TryFindBestExecutable(string[] possible)
+            {
+                string? bestPossible = possible.Where(x =>
+                {
+                    string name = Path.GetFileName(x).ToLower();
+                    return !name.Contains("crash", StringComparison.InvariantCulture)
+                            && !name.Contains("crash", StringComparison.InvariantCulture);
+                }).FirstOrDefault();
+
+                return bestPossible ?? possible.FirstOrDefault() ?? "";
+            }
+
+            string CorrectGameName(string existing)
+            {
+                return existing.Replace("'", "");
+            }
         }
 
-        private static List<GameFolder> CrawlGames()
+        private static async Task<List<GameFolder>> CrawlGames(string path)
         {
             List<GameFolder> foundGameFolders = new List<GameFolder>();
             List<GameZip> foundZips = new List<GameZip>();
 
-            Craw(MainWindow.GameRootLocation);
+            Craw(path);
 
             foreach (GameZip zip in foundZips)
             {
@@ -110,9 +145,6 @@ namespace GameLibary.Components
 
             void Craw(string path)
             {
-                if (string.Equals(path, FileManager.GetProcessGameLocation(), StringComparison.CurrentCultureIgnoreCase))
-                    return;
-
                 string[] allFiles = Directory.GetFiles(path);
                 string[] binaries = allFiles.Where(x => x.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase)).ToArray();
 
