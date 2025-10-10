@@ -6,10 +6,16 @@
              xmlns:local="clr-namespace:GameLibary.Components"
              mc:Ignorable="d" 
              d:DesignHeight="400" d:DesignWidth="800">
-    <Border Margin="5" Background="{DynamicResource BG_2}">
+    <Border Margin="5" Background="#1B1B1B" CornerRadius="10">
         <Grid>
             <Image x:Name="img" Margin="10" VerticalAlignment="Top"/>
-            <Border Background="#7F000000" VerticalAlignment="Bottom" Height="50">
+            <Border VerticalAlignment="Bottom" Height="50" CornerRadius="10">
+                <Border.Background>
+                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                        <GradientStop Color="Black" Offset="1"/>
+                        <GradientStop Color="#00000000" Offset="0"/>
+                    </LinearGradientBrush>
+                </Border.Background>
                 <TextBlock FontSize="18" x:Name="title" Text="Test" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
             </Border>
         </Grid>

@@ -289,8 +289,8 @@ namespace GameLibary.Source
                 Exception? fileDeletionFail = await FileManager.DeleteGame(game);
 
                 if (fileDeletionFail != null &&
-                    MessageBox.Show($"Continue with delete?\n\n{fileDeletionFail.Message}", "Skip Folder Cleanup?", MessageBoxButton.YesNo, MessageBoxImage.Warning) == MessageBoxResult.No)
-                    return fileDeletionFail;
+                    MessageBox.Show($"The folder deletion failed, Do you want to still remove the record?\n\n{fileDeletionFail.Message}", "Folder Delete Failed", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
+                    return null;
 
                 await DatabaseHandler.DeleteFromTable<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), game.id));
                 await DatabaseHandler.DeleteFromTable<dbo_Game>(QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));

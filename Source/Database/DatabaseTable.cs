@@ -142,7 +142,7 @@ namespace GameLibary.Source.Database
 
         private void DeserializeRow(Row r, object o)
         {
-            PropertyInfo prop = GetType().GetProperty(r.name);
+            PropertyInfo prop = GetType().GetProperty(r.name)!;
 
             if (o == DBNull.Value)
             {
@@ -150,22 +150,29 @@ namespace GameLibary.Source.Database
                 return;
             }
 
-            switch (r.type)
+            try
             {
-                case DataType.INTEGER:
-                    o = Convert.ToInt32(o);
-                    break;
+                switch (r.type)
+                {
+                    case DataType.INTEGER:
+                        o = Convert.ToInt32(o);
+                        break;
 
-                case DataType.BIT:
-                    o = Convert.ToInt64(o) == 1;
-                    break;
+                    case DataType.BIT:
+                        o = Convert.ToInt64(o) == 1;
+                        break;
 
-                case DataType.DATETIME:
-                    o = DateTime.ParseExact((string)o, "yyyy/MM/dd HH:mm:ss", CultureInfo.InvariantCulture);
-                    break;
+                    case DataType.DATETIME:
+                        o = DateTime.Parse((string)o);
+                        break;
+                }
+
+                prop.SetValue(this, o);
             }
-
-            prop.SetValue(this, o);
+            catch
+            {
+                prop.SetValue(this, null);
+            }
         }
 
 

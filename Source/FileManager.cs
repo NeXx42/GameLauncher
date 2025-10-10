@@ -81,7 +81,7 @@ namespace GameLibary.Source
 
         public static async Task BrowseToGame(dbo_Game game)
         {
-            string folder = Path.GetDirectoryName(await game.GetFolderLocation()) ?? string.Empty;
+            string folder = Path.GetDirectoryName(await game.GetExecutableLocation()) ?? string.Empty;
 
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 return;
@@ -93,10 +93,10 @@ namespace GameLibary.Source
         {
             try
             {
-                string toDelete = Path.GetDirectoryName(await game.GetFolderLocation()!) ?? string.Empty;
+                string toDelete = await game.GetFolderLocation();
 
                 if (!string.IsNullOrEmpty(toDelete) && Directory.Exists(toDelete))
-                    File.Delete(toDelete);
+                    Directory.Delete(toDelete, true);
 
                 return null;
             }

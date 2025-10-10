@@ -8,71 +8,100 @@
       d:DesignHeight="1230" d:DesignWidth="1920"
       Title="Page_Content">
 
-    <Grid>
+    <Grid Background="#121212">
         <Grid>
             <Grid.Effect>
                 <BlurEffect x:Name="effect_blur" Radius="0"/>
             </Grid.Effect>
 
-            <Border VerticalAlignment="Top" Height="70">
-                <StackPanel Margin="8" Orientation="Horizontal">
-                    <Label Margin="20, 0, 0, 0" FontSize="30" Content="Games" Foreground="White" HorizontalAlignment="Left"/>
-                    <common:CommonControl_Button x:Name="btn_SortType" Margin="20, 0, 0, 0" Label="ID" Width="200" Height="40"/>
-                    <common:CommonControl_Button x:Name="btn_SortDir" Margin="10, 0, 0, 0" Label="Ascending" Width="200" Height="40"/>
-                </StackPanel>
-            </Border>
+            <StackPanel>
+                <Border VerticalAlignment="Top" Height="60" Background="#1E1E1E">
+                    <Grid>
+                        <Label Margin="20, 0, 0, 0" FontSize="30" Content="Games" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                        <StackPanel Margin="15,15,15,15" Orientation="Horizontal" HorizontalAlignment="Right">
+                            <common:CommonControl_Button Label="+ Add Games" x:Name="btn_Indexer"  HorizontalAlignment="Center" Width="100" Margin="0,0,10,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
 
-            <Border Margin="0,70,0,25">
-                <WrapPanel x:Name="cont_Games" Margin="0,25,0,25" HorizontalAlignment="Center">
+                <!-- Tags -->
+                <Border VerticalAlignment="Top" Height="50" Background="#181818" BorderBrush="#FF333333" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <StackPanel Orientation="Horizontal" Margin="10, 8, 0, 8">
+                            <common:CommonControl_Button x:Name="btn_OpenTagCreator" Label="+ Add Tags"   HorizontalAlignment="Left" Width="100" Margin="0, 0, 15, 0"/>
+                            <StackPanel Orientation="Horizontal" x:Name="cont_AllTags" VerticalAlignment="Center">
+                                <components:Element_Tag VerticalAlignment="Center"/>
+                                <components:Element_Tag VerticalAlignment="Center"/>
+                                <components:Element_Tag VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
 
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                    <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
-                </WrapPanel>
-            </Border>
+                        <!-- Tag creator -->
+                        <Border x:Name="cont_TagCreator" Background="#181818" BorderBrush="#FF333333" BorderThickness="0,0,1,0" HorizontalAlignment="Left" Margin="120,0,0,0">
+                            <StackPanel Orientation="Horizontal" Margin="8">
+                                <TextBox x:Name="inp_TagName" Width="250" HorizontalAlignment="Left" Background="#FF2C2C2C" BorderBrush="#FF444444" Foreground="White"/>
+                                <common:CommonControl_Button Label="+ Create Tag" x:Name="btn_CreateTag"  HorizontalAlignment="Right" Width="100" Margin="7,0,0,0"/>
+                            </StackPanel>
+                        </Border>
+                    </Grid>
+                </Border>
 
-            <Border CornerRadius="5" VerticalAlignment="Bottom" Height="130" Margin="10,0,10,70" Background="{DynamicResource BG_3}">
-                <WrapPanel x:Name="cont_AllTags" Margin="10,10,10,10"/>
-            </Border>
+                <!-- Sort -->
+                <Border VerticalAlignment="Top" Height="40" Background="#181818" BorderBrush="#FF333333" BorderThickness="0,0,0,1">
+                    <Grid>
+                        <StackPanel Margin="15,5,5,5" Orientation="Horizontal">
+                            <Label Content="Sort By: " Foreground="#FFEEEEC3" VerticalAlignment="Center"/>
+                            <common:CommonControl_Button x:Name="btn_SortType" Margin="0, 0, 0, 0" Label="ID" Width="100"/>
+
+                            <Label Content="Order: " Foreground="#FFEEEEC3" VerticalAlignment="Center" Margin="15,0,0,0"/>
+                            <common:CommonControl_Button x:Name="btn_SortDir" Margin="0, 0, 0, 0" Label="Ascending" Width="100"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Games -->
+            
+                <Border Margin="0,0,0,25">
+                    <WrapPanel x:Name="cont_Games" Margin="0,25,0,25" HorizontalAlignment="Center">
+
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                        <components:Control_Game Margin="0,0,2,0" Width="370" Height="227.85" />
+                    </WrapPanel>
+                </Border>
+            </StackPanel>
+
+            <!-- Controls -->
 
             <Border VerticalAlignment="Bottom" Height="40" Margin="10,0,10,10">
-                <Grid>
-                    <Grid HorizontalAlignment="Left" Width="460">
-                        <TextBox x:Name="inp_TagName" Width="250" HorizontalAlignment="Left"/>
-                        <common:CommonControl_Button Label="Create Tag" x:Name="btn_CreateTag"  HorizontalAlignment="Right" Width="200"/>
-                    </Grid>
+                <StackPanel Orientation="Horizontal" Width="270" HorizontalAlignment="Center">
 
-                    <common:CommonControl_Button Label="Open Indexer" x:Name="btn_Indexer"  HorizontalAlignment="Center" Width="200"/>
+                    <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_FirstPage" Label="&lt;&lt;" HorizontalAlignment="Right" Width="50"/>
+                    <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_PrevPage" Label="&lt;" HorizontalAlignment="Right" Width="50"/>
 
-                    <StackPanel Orientation="Horizontal" Width="270" HorizontalAlignment="Right">
+                    <Border  CornerRadius="5" HorizontalAlignment="Right" Width="50" Margin="2">
+                        <TextBlock x:Name="lbl_PageNum" Text="5" Foreground="White" HorizontalAlignment="Center" FontSize="30" VerticalAlignment="Center"/>
+                    </Border>
 
-                        <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_FirstPage" Label="&lt;&lt;" HorizontalAlignment="Right" Width="50"/>
-                        <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_PrevPage" Label="&lt;" HorizontalAlignment="Right" Width="50"/>
- 
-                        <Border  CornerRadius="5" HorizontalAlignment="Right" Width="50" Margin="2">
-                            <TextBlock x:Name="lbl_PageNum" Text="5" Foreground="White" HorizontalAlignment="Center" FontSize="30" VerticalAlignment="Center"/>
-                        </Border>
-
-                        <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_NextPage" Label=">" HorizontalAlignment="Right" Width="50"/>
-                        <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_LastPage" Label=">>" HorizontalAlignment="Right" Width="50"/>
-                    </StackPanel>
-                </Grid>
+                    <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_NextPage" Label=">" HorizontalAlignment="Right" Width="50"/>
+                    <common:CommonControl_Button Margin="0, 0, 5, 0" x:Name="btn_LastPage" Label=">>" HorizontalAlignment="Right" Width="50"/>
+                </StackPanel>
             </Border>
         </Grid>
 
-        <Grid  x:Name="cont_MenuView" Background="#3F000000" Visibility="Visible" MouseLeftButtonDown="cont_MenuView_MouseLeftButtonDown">
+        <Grid  x:Name="cont_MenuView" Background="#7F000000" Visibility="Hidden" MouseLeftButtonDown="cont_MenuView_MouseLeftButtonDown">
             <components:Control_GameView x:Name="GameViewer" Width="1200" Visibility="Hidden" HorizontalAlignment="Center" Margin="0, 100, 0, 0"/>
             <components:Control_Indexer x:Name="Indexer" Width="1200" Visibility="Hidden" HorizontalAlignment="Center" Margin="0, 100, 0, 0"/>
         </Grid>

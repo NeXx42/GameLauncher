@@ -17,9 +17,6 @@ namespace GameLibary.Components
             InitializeComponent();
             border.MouseLeftButtonDown += (_, __) => clickEvent?.Invoke();
             border.Margin = new Thickness(0, 0, 5, 5);
-
-            this.Width = 150;
-            this.Height = 40;
         }
 
         public void Draw(dbo_Tag tag, Action<int> onClick)
@@ -32,7 +29,7 @@ namespace GameLibary.Components
 
         public void Toggle(bool to)
         {
-            border.Background = to ? new SolidColorBrush(Color.FromRgb(54, 94, 144)) : new SolidColorBrush(Color.FromRgb(0, 0, 0));
+            border.Background = to ? new SolidColorBrush(Color.FromRgb(183, 156, 0)) : new SolidColorBrush(Color.FromRgb(51, 51, 51));
         }
     }
 }

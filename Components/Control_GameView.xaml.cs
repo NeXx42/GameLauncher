@@ -26,7 +26,6 @@ namespace GameLibary.Components
             InitializeComponent();
 
             btn_Delete.RegisterClick(DeleteGame);
-            btn_RegenMedia.RegisterClick(btn_RegenMedia_Click);
             btn_Overlay.RegisterClick(btn_Overlay_Click);
 
             btn_Browse.RegisterClick(BrowseToGame);
@@ -49,10 +48,10 @@ namespace GameLibary.Components
         {
             inspectingGameId = game.id;
 
-            img_bg.Source = null;
+            img_bg.ImageSource = null;
             LibaryHandler.GetGameImage(game, UpdateGameIcon);
 
-            RedrawSelectedTags();
+            await RedrawSelectedTags();
 
             inp_Emulate.IsChecked = game.useEmulator;
             lbl_Title.Content = game.gameName;
@@ -61,7 +60,7 @@ namespace GameLibary.Components
 
             ignoredComboboxEvents = true;
             inp_binary.ItemsSource = executableBinaries.Select(x => Path.GetFileName(x));
-            inp_binary.SelectedIndex = executableBinaries.IndexOf(game.executablePath.Substring(1));
+            inp_binary.SelectedIndex = executableBinaries.IndexOf(game.executablePath!);
             ignoredComboboxEvents = false;
         }
 
@@ -70,7 +69,7 @@ namespace GameLibary.Components
             if (inspectingGameId != gameId)
                 return;
 
-            img_bg.Source = img;
+            img_bg.ImageSource = img;
         }
 
         private async Task<List<string>> GetBinaries(dbo_Game game)
@@ -106,17 +105,20 @@ namespace GameLibary.Components
 
             void GenerateTag(int tagId)
             {
-                dbo_Tag tag = LibaryHandler.GetTagById(tagId);
+                dbo_Tag? tag = LibaryHandler.GetTagById(tagId);
 
-                Element_Tag tagUI = new Element_Tag();
-                tagUI.Draw(tag, HandleTagToggle);
+                if(tag != null)
+                {
+                    Element_Tag tagUI = new Element_Tag();
+                    tagUI.Draw(tag, HandleTagToggle);
 
-                cont_AllTags.Children.Add(tagUI);
-                allTags.Add(tagId, tagUI);
+                    cont_AllTags.Children.Add(tagUI);
+                    allTags.Add(tagId, tagUI);
+                }
             }
         }
 
-        private void HandleTagToggle(int tagId)
+        private async void HandleTagToggle(int tagId)
         {
             if (gameTags.Contains(tagId))
             {
@@ -129,7 +131,7 @@ namespace GameLibary.Components
                 LibaryHandler.AddTagToGame(inspectingGameId, tagId);
             }
 
-            RedrawSelectedTags();
+            await RedrawSelectedTags();
         }
 
         private void HandleEmulateToggle(bool to)
@@ -141,29 +143,22 @@ namespace GameLibary.Components
         {
             GameLauncher.RequestOverlay(inspectingGameId, null);
         }
-        private void btn_RegenMedia_Click()
-        {
-            UpdateGameIcon(inspectingGameId, null);
 
-            LibaryHandler.UpdateGameIcon(inspectingGameId, "");
-            Draw(LibaryHandler.GetGameFromId(inspectingGameId));
-        }
-
-        private void BrowseToGame() => FileManager.BrowseToGame(LibaryHandler.GetGameFromId(inspectingGameId)!);
-        private void HandleBinaryChange()
+        private async void BrowseToGame() => await FileManager.BrowseToGame(LibaryHandler.GetGameFromId(inspectingGameId)!);
+        private async void HandleBinaryChange()
         {
             if (ignoredComboboxEvents)
                 return;
 
-            LibaryHandler.ChangeBinaryLocation(inspectingGameId, inp_binary.SelectedValue?.ToString());
-            Draw(LibaryHandler.GetGameFromId(inspectingGameId)!);
+            await LibaryHandler.ChangeBinaryLocation(inspectingGameId, inp_binary.SelectedValue?.ToString());
+            await Draw(LibaryHandler.GetGameFromId(inspectingGameId)!);
         }
 
         private async void DeleteGame()
         {
             dbo_Game? game = LibaryHandler.GetGameFromId(inspectingGameId);
 
-            if (game != null && MessageBox.Show($"Are you sure you want to delete '{game.gameName}'", "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
+            if (game != null && MessageBox.Show($"Are you sure you want to delete '{game.gameName}'\n'{await game.GetFolderLocation()}'", "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
             {
                 RetryLogic();
             }
@@ -174,12 +169,12 @@ namespace GameLibary.Components
 
                 if (error == null)
                 {
-                    master.DrawGames();
+                    await master.DrawGames();
                     master.ToggleMenu(false);
                 }
-                else if (MessageBox.Show(error.Message, "Retry", MessageBoxButton.YesNo) == MessageBoxResult.Yes)
+                else
                 {
-                    RetryLogic();
+                    MessageBox.Show(error.Message, "Failed to delete record", MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
         }

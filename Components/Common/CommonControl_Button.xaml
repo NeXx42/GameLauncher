@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:GameLibary.Components.Common"
              mc:Ignorable="d" 
              d:DesignHeight="30" d:DesignWidth="200">
-    <Border x:Name="ctrl" CornerRadius="15" Background="{DynamicResource Accent_1}">
+    <Border x:Name="ctrl" CornerRadius="2" Background="#2C2C2C" BorderBrush="#FF444444" BorderThickness="1,1,1,1">
         <Border.Effect>
             <DropShadowEffect BlurRadius="10" Direction="0" Opacity="0.1"/>
         </Border.Effect>

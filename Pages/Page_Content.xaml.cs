@@ -37,6 +37,8 @@ namespace GameLibary.Pages
 
         private async void DrawEverything()
         {
+            ToggleTagCreator(false);
+
             await DrawGames();
             await DrawTags();
 
@@ -51,6 +53,7 @@ namespace GameLibary.Pages
             GameViewer.MouseLeftButtonDown += (_, e) => e.Handled = true;
             Indexer.MouseLeftButtonDown += (_, e) => e.Handled = true;
 
+            btn_OpenTagCreator.RegisterClick(() => ToggleTagCreator(null));
             btn_CreateTag.MouseLeftButtonDown += (_, __) => CreateTag();
 
             btn_FirstPage.MouseLeftButtonDown += (_, __) => FirstPage();
@@ -116,6 +119,8 @@ namespace GameLibary.Pages
                 dbo_Tag? tag = LibaryHandler.GetTagById(tagId);
 
                 Element_Tag ui = new Element_Tag();
+                ui.VerticalContentAlignment = VerticalAlignment.Center;
+
                 ui.Draw(tag, SwapTagMode);
 
                 cont_AllTags.Children.Add(ui);
@@ -140,6 +145,25 @@ namespace GameLibary.Pages
             }
 
             await RefilterGames();
+        }
+
+        private async void CreateTag()
+        {
+            string newTagName = inp_TagName.Text;
+
+            if (string.IsNullOrEmpty(newTagName))
+                return;
+
+            inp_TagName.Text = "";
+
+            await DatabaseHandler.InsertIntoTable(new dbo_Tag()
+            {
+                TagName = newTagName,
+            });
+
+            LibaryHandler.MarkTagsAsDirty();
+
+            DrawTags();
         }
 
         private async Task RefilterGames(bool resetPage = true)
@@ -175,24 +199,6 @@ namespace GameLibary.Pages
             Indexer.Visibility = Visibility.Hidden;
         }
 
-        private async void CreateTag()
-        {
-            string newTagName = inp_TagName.Text;
-
-            if (string.IsNullOrEmpty(newTagName))
-                return;
-
-            inp_TagName.Text = "";
-
-            await DatabaseHandler.InsertIntoTable(new dbo_Tag()
-            {
-                TagName = newTagName,
-            });
-
-            LibaryHandler.MarkTagsAsDirty();
-
-            DrawTags();
-        }
 
         private void cont_MenuView_MouseLeftButtonDown(object sender, System.Windows.Input.MouseButtonEventArgs e)
         {
@@ -206,6 +212,17 @@ namespace GameLibary.Pages
             ToggleMenu(true);
             Indexer.Visibility = Visibility.Visible;
             Indexer.OnOpen();
+        }
+
+        private void ToggleTagCreator(bool? to)
+        {
+            if(!to.HasValue)
+            {
+                to = !(cont_TagCreator.Visibility == Visibility.Visible);
+            }
+
+            cont_TagCreator.Visibility = to.Value ? Visibility.Visible : Visibility.Hidden;
+            btn_OpenTagCreator.Label = to.Value ? $"Close" : "+ Add Tag";
         }
 
 
