@@ -271,6 +271,7 @@ namespace GameLibary.Source
             if (game != null)
             {
                 string existing = game.executablePath ?? "";
+                game.executablePath = path;
 
                 if (!File.Exists(await game.GetExecutableLocation()))
                 {

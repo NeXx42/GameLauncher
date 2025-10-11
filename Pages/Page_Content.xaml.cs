@@ -11,7 +11,8 @@ namespace GameLibary.Pages
     /// </summary>
     public partial class Page_Content : Page
     {
-        private static int getGamesPerPage => 5 * 3;
+        public static (int x, int y) ContentPerPage = (5, 4);
+        public int getTotalContentPerPage => ContentPerPage.x * ContentPerPage.y;
 
         private int gamesSlide;
 
@@ -72,12 +73,11 @@ namespace GameLibary.Pages
         public async Task DrawGames()
         {
             const float ratio = 0.1927083333f;
-            const int columnLimit = 5;
 
-            lbl_PageNum.Text = $"{(gamesSlide / getGamesPerPage) + 1}";
+            lbl_PageNum.Text = $"{(gamesSlide / getTotalContentPerPage) + 1}";
             cont_Games.Children.Clear();
 
-            int[] games = await LibaryHandler.GetDrawList(gamesSlide, columnLimit * 3);
+            int[] games = await LibaryHandler.GetDrawList(gamesSlide, getTotalContentPerPage);
 
             foreach (int gameId in games)
                 DrawGame(gameId);
@@ -85,8 +85,8 @@ namespace GameLibary.Pages
             void DrawGame(int gameId)
             {
                 Control_Game ui = new Control_Game();
-                ui.Width = (1920 * ratio) + 5;
-                ui.Height = (1080 * ratio) + 5 + 50; // + padding + title
+                ui.Width = (1920 * ratio);
+                ui.Height = (1080 * ratio); // + padding + title
                 ui.Margin = new Thickness(0, 0, 2, 0);
 
                 ui.Draw(gameId, ToggleGameView);
@@ -119,8 +119,7 @@ namespace GameLibary.Pages
                 dbo_Tag? tag = LibaryHandler.GetTagById(tagId);
 
                 Element_Tag ui = new Element_Tag();
-                ui.VerticalContentAlignment = VerticalAlignment.Center;
-
+                ui.VerticalContentAlignment = VerticalAlignment.Stretch;
                 ui.Draw(tag, SwapTagMode);
 
                 cont_AllTags.Children.Add(ui);
@@ -255,7 +254,7 @@ namespace GameLibary.Pages
 
         private void PrePage()
         {
-            gamesSlide -= getGamesPerPage;
+            gamesSlide -= getTotalContentPerPage;
             gamesSlide = Math.Max(0, gamesSlide);
 
             DrawGames();
@@ -263,9 +262,9 @@ namespace GameLibary.Pages
 
         private void NextPage()
         {
-            int maxSlide = ((int)Math.Floor(LibaryHandler.GetFilteredGameCount() / (float)getGamesPerPage)) * getGamesPerPage;
+            int maxSlide = ((int)Math.Floor(LibaryHandler.GetFilteredGameCount() / (float)getTotalContentPerPage)) * getTotalContentPerPage;
 
-            gamesSlide += (int)getGamesPerPage;
+            gamesSlide += (int)getTotalContentPerPage;
             gamesSlide = Math.Min(gamesSlide, maxSlide);
 
             DrawGames();
@@ -279,7 +278,7 @@ namespace GameLibary.Pages
 
         private void LastPage()
         {
-            gamesSlide = ((int)Math.Floor(LibaryHandler.GetFilteredGameCount() / (float)getGamesPerPage)) * getGamesPerPage;
+            gamesSlide = ((int)Math.Floor(LibaryHandler.GetFilteredGameCount() / (float)getTotalContentPerPage)) * getTotalContentPerPage;
             DrawGames();
         }
     }

@@ -56,7 +56,7 @@ namespace GameLibary.Components
         static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out RECT rect, int cbAttribute);
 
 
-        private Process process;
+        private Process? process;
         private int gameId;
 
         public GameOverlay()
@@ -86,7 +86,7 @@ namespace GameLibary.Components
         }
 
 
-        public void Prep(Process window, int gameId)
+        public void Prep(Process? window, int gameId)
         {
             this.process = window;
             this.gameId = gameId;
@@ -147,7 +147,7 @@ namespace GameLibary.Components
             this.Close();
         }
 
-        private void ScreenShot(System.Drawing.Rectangle bounds)
+        private async void ScreenShot(System.Drawing.Rectangle bounds)
         {
             this.Visibility = Visibility.Hidden;
             Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height);
@@ -158,7 +158,7 @@ namespace GameLibary.Components
             }
 
             FileManager.SaveScreenshot(bitmap);
-            LibaryHandler.UpdateGameIcon(gameId);
+            await LibaryHandler.UpdateGameIcon(gameId);
         }
 
         private System.Drawing.Rectangle GetBoundsForProcess(nint hwnd)

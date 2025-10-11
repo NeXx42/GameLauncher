@@ -6,7 +6,7 @@
              xmlns:local="clr-namespace:GameLibary.Components" xmlns:indexer="clr-namespace:GameLibary.Components.Indexer"
              mc:Ignorable="d" 
               d:DesignHeight="900" d:DesignWidth="1200">
-    <Border Background="{DynamicResource BG_2}" CornerRadius="5,5,0,0">
+    <Border Background="#1E1E1E" CornerRadius="10,10,0,0">
         <Grid Margin="20">
             <Label Content="Indexer" Foreground="White" VerticalAlignment="Top" HorizontalAlignment="Center" FontSize="30"/>
 
@@ -14,7 +14,7 @@
                 <indexer:Control_Indexer_Entry/>
             </StackPanel>
 
-            <Border VerticalAlignment="Bottom" Height="60" Background="{DynamicResource BG_3}">
+            <Border VerticalAlignment="Bottom" Height="60">
                 <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                     <Common:CommonControl_Button Margin="5" x:Name="btn_Search" Height="40" Width="200" Label="Search Folder" HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     <Common:CommonControl_Button Margin="5" x:Name="btn_Import" Height="40" Width="200" Label="Import" HorizontalAlignment="Center" VerticalAlignment="Center"/>

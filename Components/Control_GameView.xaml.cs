@@ -18,7 +18,6 @@ namespace GameLibary.Components
         private HashSet<int> gameTags;
         private Dictionary<int, Element_Tag> allTags = new Dictionary<int, Element_Tag>();
 
-        private bool ignoredComboboxEvents;
         private Page_Content master;
 
         public Control_GameView()
@@ -31,10 +30,7 @@ namespace GameLibary.Components
             btn_Browse.RegisterClick(BrowseToGame);
             btn_Launch.RegisterClick(HandleLaunch);
 
-            inp_Emulate.Checked += (_, __) => HandleEmulateToggle(true);
-            inp_Emulate.Unchecked += (_, __) => HandleEmulateToggle(false);
-
-            inp_binary.SelectionChanged += (_, __) => HandleBinaryChange();
+            inp_Emulate.RegisterOnChange(HandleEmulateToggle);
         }
 
         public void Setup(Page_Content master)
@@ -53,15 +49,11 @@ namespace GameLibary.Components
 
             await RedrawSelectedTags();
 
-            inp_Emulate.IsChecked = game.useEmulator;
+            inp_Emulate.ToggleSilent(game.useEmulator);
             lbl_Title.Content = game.gameName;
 
             List<string> executableBinaries = await GetBinaries(game);
-
-            ignoredComboboxEvents = true;
-            inp_binary.ItemsSource = executableBinaries.Select(x => Path.GetFileName(x));
-            inp_binary.SelectedIndex = executableBinaries.IndexOf(game.executablePath!);
-            ignoredComboboxEvents = false;
+            inp_binary.Setup(executableBinaries.Select(x => Path.GetFileName(x)), executableBinaries.IndexOf(game.executablePath!), HandleBinaryChange);
         }
 
         private void UpdateGameIcon(int gameId, BitmapImage? img)
@@ -84,6 +76,7 @@ namespace GameLibary.Components
 
             foreach (KeyValuePair<int, Element_Tag> tag in allTags)
             {
+                tag.Value.Margin = new Thickness(0, 0, 0, 5);
                 tag.Value.Toggle(gameTags.Contains(tag.Key));
             }
         }
@@ -145,12 +138,10 @@ namespace GameLibary.Components
         }
 
         private async void BrowseToGame() => await FileManager.BrowseToGame(LibaryHandler.GetGameFromId(inspectingGameId)!);
+
         private async void HandleBinaryChange()
         {
-            if (ignoredComboboxEvents)
-                return;
-
-            await LibaryHandler.ChangeBinaryLocation(inspectingGameId, inp_binary.SelectedValue?.ToString());
+            await LibaryHandler.ChangeBinaryLocation(inspectingGameId, inp_binary.selectedValue?.ToString());
             await Draw(LibaryHandler.GetGameFromId(inspectingGameId)!);
         }
 

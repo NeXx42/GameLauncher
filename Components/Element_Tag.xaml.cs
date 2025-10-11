@@ -16,7 +16,7 @@ namespace GameLibary.Components
         {
             InitializeComponent();
             border.MouseLeftButtonDown += (_, __) => clickEvent?.Invoke();
-            border.Margin = new Thickness(0, 0, 5, 5);
+            //border.Margin = new Thickness(0, 0, 5, 5);
         }
 
         public void Draw(dbo_Tag tag, Action<int> onClick)
@@ -24,7 +24,7 @@ namespace GameLibary.Components
             Toggle(false);
 
             clickEvent = () => onClick?.Invoke(tag.TagId);
-            txt.Content = tag.TagName;
+            txt.Text = tag.TagName.Replace("\n", "");
         }
 
         public void Toggle(bool to)

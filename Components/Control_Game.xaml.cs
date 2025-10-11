@@ -24,6 +24,8 @@ namespace GameLibary.Components
             if (this.gameId == gameId)
                 return;
 
+            img.ImageSource = null;
+
             this.gameId = gameId;
             dbo_Game? game = LibaryHandler.GetGameFromId(gameId);
 
@@ -41,7 +43,7 @@ namespace GameLibary.Components
             if (this.gameId != gameId)
                 return;
 
-            img.Source = bitmapImg;
+            img.ImageSource = bitmapImg;
         }
     }
 }

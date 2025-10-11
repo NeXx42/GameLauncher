@@ -86,7 +86,7 @@ namespace GameLibary.Source
             });
         }
 
-        public static void RequestOverlay(int gameId, Process process)
+        public static void RequestOverlay(int gameId, Process? process)
         {
             if (overlay != null)
             {

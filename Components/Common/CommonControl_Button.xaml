@@ -6,10 +6,10 @@
              xmlns:local="clr-namespace:GameLibary.Components.Common"
              mc:Ignorable="d" 
              d:DesignHeight="30" d:DesignWidth="200">
-    <Border x:Name="ctrl" CornerRadius="2" Background="#2C2C2C" BorderBrush="#FF444444" BorderThickness="1,1,1,1">
+    <Border x:Name="ctrl" CornerRadius="2" Background="#2C2C2C" BorderBrush="#FF444444" BorderThickness="1,1,1,1" ClipToBounds="False">
         <Border.Effect>
             <DropShadowEffect BlurRadius="10" Direction="0" Opacity="0.1"/>
         </Border.Effect>
-        <Label Content="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+        <TextBlock Text="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}}" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" />
     </Border>
 </UserControl>

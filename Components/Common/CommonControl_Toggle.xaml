@@ -1,0 +1,20 @@
+﻿<UserControl x:Class="GameLibary.Components.Common.CommonControl_Toggle"
+             xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" 
+             xmlns:d="http://schemas.microsoft.com/expression/blend/2008" 
+             xmlns:local="clr-namespace:GameLibary.Components.Common"
+             mc:Ignorable="d" 
+             d:DesignWidth="800">
+    <Grid>
+        <StackPanel Orientation="Horizontal">
+            <Border x:Name="control" CornerRadius="15" Background="#333333" HorizontalAlignment="Left">
+                <StackPanel Orientation="Horizontal" Margin="4">
+                    <Ellipse x:Name="opt_Disabled" Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" Fill="Red" Visibility="hidden"/>
+                    <Ellipse x:Name="opt_Enabled" Width="{Binding ActualHeight, RelativeSource={RelativeSource Self}}" Fill="#4CAF50"/>
+                </StackPanel>
+            </Border>
+            <TextBlock Text="{Binding Label, RelativeSource={RelativeSource AncestorType=UserControl}}" Margin="5,0,0,0" Foreground="White" VerticalAlignment="Center" FontSize="24"/>
+        </StackPanel>
+    </Grid>
+</UserControl>
