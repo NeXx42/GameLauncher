@@ -100,7 +100,7 @@ namespace GameLibary.Components
             {
                 dbo_Tag? tag = LibaryHandler.GetTagById(tagId);
 
-                if(tag != null)
+                if (tag != null)
                 {
                     Element_Tag tagUI = new Element_Tag();
                     tagUI.Draw(tag, HandleTagToggle);

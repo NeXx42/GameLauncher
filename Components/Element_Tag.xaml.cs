@@ -1,5 +1,4 @@
 ﻿using GameLibary.Source.Database.Tables;
-using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Media;
 

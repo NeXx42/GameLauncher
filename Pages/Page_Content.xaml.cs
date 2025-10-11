@@ -215,7 +215,7 @@ namespace GameLibary.Pages
 
         private void ToggleTagCreator(bool? to)
         {
-            if(!to.HasValue)
+            if (!to.HasValue)
             {
                 to = !(cont_TagCreator.Visibility == Visibility.Visible);
             }
