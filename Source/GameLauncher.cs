@@ -3,6 +3,7 @@ using GameLibary.Source.Database.Tables;
 using System.Diagnostics;
 using System.IO;
 using System.Windows;
+using static Microsoft.WindowsAPICodePack.Shell.PropertySystem.SystemProperties.System;
 
 namespace GameLibary.Source
 {
@@ -34,23 +35,11 @@ namespace GameLibary.Source
 
                 try
                 {
-                    string realPath = await game.GetExecutableLocation();
+                    (string path, string args) = await GetFileToRun(game);
+                    (path, args) = await SandboxGame(path, args);
 
-                    if (!File.Exists(realPath))
-                    {
-                        throw new Exception("Path doesnt exist - " + realPath);
-                    }
-
-                    if (game.useEmulator)
-                    {
-                        activeGame.StartInfo.FileName = (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.EmulatorPath))?.value;
-                        activeGame.StartInfo.Arguments = $"-run \"{realPath}\"";
-                    }
-                    else
-                    {
-                        activeGame.StartInfo.FileName = realPath;
-                    }
-
+                    activeGame.StartInfo.FileName = path;
+                    activeGame.StartInfo.Arguments = args;
 
                     activeGame.EnableRaisingEvents = true;
 
@@ -72,6 +61,36 @@ namespace GameLibary.Source
                 }
 
             }
+        }
+
+        private static async Task<(string path, string args)> GetFileToRun(dbo_Game game)
+        {
+            string realPath = await game.GetExecutableLocation();
+
+            if (!File.Exists(realPath))
+            {
+                throw new Exception("Path doesnt exist - " + realPath);
+            }
+
+            if (game.useEmulator)
+            {
+                string emulatorPath = (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.EmulatorPath))?.value ?? "";
+                return (emulatorPath, $"-run \"{realPath}\"");
+            }
+
+
+            return (realPath, "");
+        }
+
+        private static async Task<(string path, string args)> SandboxGame(string path, string args)
+        {
+            dbo_Config? sandboxieLoc = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.SandieboxLocation);
+            dbo_Config? sandboxieBox = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.SandieboxBox);
+
+            if (sandboxieBox == null || sandboxieLoc == null)
+                return (path, args);
+
+            return (sandboxieLoc.value, $"/box:{sandboxieBox.value} \"{path}\" {args}");
         }
 
         private static void OnGameClose()

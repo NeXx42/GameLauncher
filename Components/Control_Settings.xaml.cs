@@ -72,6 +72,9 @@ namespace GameLibary.Components
                 case ConfigHandler.ConfigSettingType.File:
                 case ConfigHandler.ConfigSettingType.Folder:
                     return new SettingControl_Location();
+
+                case ConfigHandler.ConfigSettingType.String:
+                    return new SettingControl_String();
             }
 
             return null;

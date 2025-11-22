@@ -13,7 +13,9 @@ namespace GameLibary.Source
         {
             RootPath,
             EmulatorPath,
-            PasswordHash
+            PasswordHash,
+            SandieboxBox,
+            SandieboxLocation
         }
 
         public enum ConfigSettingType
@@ -29,7 +31,10 @@ namespace GameLibary.Source
 
         public static ConfigSetting[] configSettings = [
             new ConfigSetting("Paths", ConfigValues.RootPath, ConfigSettingType.Folder),
+
             new ConfigSetting("Emulation", ConfigValues.EmulatorPath, ConfigSettingType.File),
+            new ConfigSetting("Emulation", ConfigValues.SandieboxBox, ConfigSettingType.String),
+            new ConfigSetting("Emulation", ConfigValues.SandieboxLocation, ConfigSettingType.File),
         ];
 
 
