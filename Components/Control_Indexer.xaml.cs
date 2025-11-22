@@ -82,9 +82,12 @@ namespace GameLibary.Components
             {
                 try
                 {
+                    string gameFolderName = CorrectGameName(Path.GetFileName(folder.path));
+
                     dbo_Game newGame = new dbo_Game
                     {
-                        gameName = CorrectGameName(Path.GetFileName(folder.path)),
+                        gameName = gameFolderName,
+                        gameFolder = gameFolderName,
                         executablePath = TryFindBestExecutable(folder.exectuables),
                         libaryId = chosenLibary.libaryId
                     };
@@ -104,9 +107,7 @@ namespace GameLibary.Components
 
             MessageBox.Show("Done", "Done", MessageBoxButton.OK);
 
-            await ScanDirectory();
             await LibaryHandler.RedetectGames();
-
             await onReimportGames();
 
             string TryFindBestExecutable(string[] possible)
