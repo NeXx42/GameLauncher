@@ -11,10 +11,6 @@ namespace GameLibary
     /// </summary>
     public partial class MainWindow : Window
     {
-        public const string CONFIG_ROOTLOCATION = "RootPath";
-        public const string CONFIG_EMULATORLOCATION = "EmulatorPath";
-        public const string CONFIG_PASSWORD = "PasswordHash";
-
         private static bool requiresPassword;
         public static string? EmulatorLocation;
 
@@ -48,7 +44,7 @@ namespace GameLibary
                 return;
             }
 
-            if (await DatabaseHandler.Exists<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), CONFIG_PASSWORD)))
+            if (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.PasswordHash) != null)
             {
                 LoadPage<Page_Lock>();
             }
@@ -61,7 +57,7 @@ namespace GameLibary
         public async Task<bool> IsSaveValid()
         {
             bool libaryExists = await DatabaseHandler.Exists<dbo_Libraries>();
-            EmulatorLocation = (await DatabaseHandler.GetItem<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), CONFIG_EMULATORLOCATION)))?.value;
+            EmulatorLocation = (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.EmulatorPath))?.value;
 
             return libaryExists && EmulatorLocation != null;
         }

@@ -18,4 +18,10 @@
     <Resource Include="Components\temp.jpeg" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Compile Update="Components\Control_Settings.xaml.cs">
+      <SubType>Code</SubType>
+    </Compile>
+  </ItemGroup>
+
 </Project>

@@ -27,12 +27,12 @@ namespace GameLibary.Pages
             if (!CanContinue())
                 return;
 
-            await DatabaseHandler.InsertIntoTable(new dbo_Config() { key = MainWindow.CONFIG_ROOTLOCATION, value = dataRoot });
-            await DatabaseHandler.InsertIntoTable(new dbo_Config() { key = MainWindow.CONFIG_EMULATORLOCATION, value = emulator });
+            await ConfigHandler.SaveConfigValue(ConfigHandler.ConfigValues.RootPath, dataRoot);
+            await ConfigHandler.SaveConfigValue(ConfigHandler.ConfigValues.EmulatorPath, emulator);
 
             if (!string.IsNullOrEmpty(inp_Password.Text))
             {
-                await DatabaseHandler.InsertIntoTable(new dbo_Config() { key = MainWindow.CONFIG_PASSWORD, value = EncryptionHelper.EncryptPassword(inp_Password.Text) });
+                await ConfigHandler.SaveConfigValue(ConfigHandler.ConfigValues.PasswordHash, EncryptionHelper.EncryptPassword(inp_Password.Text));
             }
 
             MainWindow.window!.CheckForSetup();

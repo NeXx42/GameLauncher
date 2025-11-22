@@ -67,6 +67,10 @@ namespace GameLibary.Components
         private async Task<List<string>> GetBinaries(dbo_Game game)
         {
             string gameFolder = await game.GetFolderLocation();
+
+            if (!Directory.Exists(gameFolder))
+                return new List<string>();
+
             return Directory.GetFiles(gameFolder).Where(x => x.EndsWith(".exe", StringComparison.CurrentCultureIgnoreCase)).Select(x => Path.GetFileName(x)).ToList();
         }
 

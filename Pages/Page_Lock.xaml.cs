@@ -18,7 +18,7 @@ namespace GameLibary.Pages
 
         public async Task AttemptLogin()
         {
-            dbo_Config? password = await DatabaseHandler.GetItem<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), MainWindow.CONFIG_PASSWORD));
+            dbo_Config? password = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.PasswordHash);
             string testPassword = inp_password.Text;
 
             if (EncryptionHelper.TestPassword(testPassword, password?.value))

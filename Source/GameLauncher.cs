@@ -43,7 +43,7 @@ namespace GameLibary.Source
 
                     if (game.useEmulator)
                     {
-                        activeGame.StartInfo.FileName = MainWindow.EmulatorLocation;
+                        activeGame.StartInfo.FileName = (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.EmulatorPath))?.value;
                         activeGame.StartInfo.Arguments = $"-run \"{realPath}\"";
                     }
                     else

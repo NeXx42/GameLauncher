@@ -53,6 +53,7 @@ namespace GameLibary.Pages
 
             GameViewer.MouseLeftButtonDown += (_, e) => e.Handled = true;
             Indexer.MouseLeftButtonDown += (_, e) => e.Handled = true;
+            Settings.MouseLeftButtonDown += (_, e) => e.Handled = true;
 
             btn_OpenTagCreator.RegisterClick(() => ToggleTagCreator(null));
             btn_CreateTag.MouseLeftButtonDown += (_, __) => CreateTag();
@@ -63,10 +64,10 @@ namespace GameLibary.Pages
             btn_LastPage.MouseLeftButtonDown += (_, __) => LastPage();
 
             btn_Indexer.MouseLeftButtonDown += (_, __) => OpenIndexer();
-
+            btn_Settings.MouseLeftButtonDown += (_, __) => OpenSettings();
 
             btn_SortDir.RegisterClick(UpdateSortDirection);
-            btn_SortType.RegisterClick(UpdateSortType);
+            inp_SortType.Setup(Enum.GetValues(typeof(LibaryHandler.OrderType)), 0, UpdateSortType);
         }
 
 
@@ -195,6 +196,7 @@ namespace GameLibary.Pages
             cont_MenuView.Visibility = to ? Visibility.Visible : Visibility.Hidden;
 
             GameViewer.Visibility = Visibility.Hidden;
+            Settings.Visibility = Visibility.Hidden;
             Indexer.Visibility = Visibility.Hidden;
         }
 
@@ -211,6 +213,12 @@ namespace GameLibary.Pages
             ToggleMenu(true);
             Indexer.Visibility = Visibility.Visible;
             Indexer.OnOpen();
+        }
+        private void OpenSettings()
+        {
+            ToggleMenu(true);
+            Settings.Visibility = Visibility.Visible;
+            Settings.OnOpen();
         }
 
         private void ToggleTagCreator(bool? to)
@@ -236,16 +244,13 @@ namespace GameLibary.Pages
 
         private async void UpdateSortType()
         {
-            currentSort = (LibaryHandler.OrderType)(((int)currentSort + 1) % System.Enum.GetValues(typeof(LibaryHandler.OrderType)).Length);
-            RedrawSortNames();
-
+            currentSort = (LibaryHandler.OrderType)inp_SortType.selectedIndex;
             await RefilterGames();
         }
 
         private void RedrawSortNames()
         {
             btn_SortDir.Label = currentSortAscending ? "Ascending" : "Descending";
-            btn_SortType.Label = $"{string.Join(' ', currentSort.ToString().Split(" "))}";
         }
 
 
