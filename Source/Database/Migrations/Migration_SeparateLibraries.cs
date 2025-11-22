@@ -11,7 +11,7 @@ namespace GameLibary.Source.Database.Migrations
         {
             StringBuilder sql = new StringBuilder();
 
-            dbo_Game template = new dbo_Game() { gameName = "", libaryId = 0 };
+            dbo_Game template = new dbo_Game() { gameName = "", libaryId = 0, gameFolder = "" };
             string rowSQL = template.BuildRowCreation(template.GetRow(nameof(template.libaryId))!);
 
             sql.Append($"ALTER TABLE {template.tableName} ADD COLUMN {rowSQL} DEFAULT 1;");

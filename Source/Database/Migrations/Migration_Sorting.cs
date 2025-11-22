@@ -13,7 +13,7 @@ namespace GameLibary.Source.Database.Migrations
 
         public override string Up()
         {
-            dbo_Game template = new dbo_Game() { gameName = "", libaryId = 0 };
+            dbo_Game template = new dbo_Game() { gameName = "", libaryId = 0, gameFolder = "" };
             string rowSQL = template.BuildRowCreation(template.GetRow(nameof(template.lastPlayed))!);
 
             return $"ALTER TABLE {template.tableName} ADD COLUMN {rowSQL};";

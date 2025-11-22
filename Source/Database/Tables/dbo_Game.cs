@@ -15,6 +15,7 @@ namespace GameLibary.Source.Database.Tables
         public bool useEmulator { get; set; }
         public DateTime? lastPlayed { get; set; }
         public required int libaryId { get; set; }
+        public required string gameFolder { get; set; }
 
 
         private BitmapImage? cachedImage;
@@ -26,7 +27,7 @@ namespace GameLibary.Source.Database.Tables
 
             if (libary != null)
             {
-                return Path.Combine(libary.rootPath, gameName);
+                return Path.Combine(libary.rootPath, gameFolder);
             }
             else
             {
@@ -36,8 +37,6 @@ namespace GameLibary.Source.Database.Tables
 
         public async Task<string> GetIconLocation() => !string.IsNullOrEmpty(iconPath) ? Path.Combine(await GetFolderLocation(), iconPath) : "";
         public async Task<string> GetExecutableLocation() => !string.IsNullOrEmpty(executablePath) ? Path.Combine(await GetFolderLocation(), executablePath) : "";
-
-
 
 
         public BitmapImage? GetCachedImage() => cachedImage;
@@ -55,6 +54,8 @@ namespace GameLibary.Source.Database.Tables
 
             new Row() {  name = nameof(lastPlayed), type = DataType.DATETIME, isNullable = true },
             new Row() {  name = nameof(libaryId), type = DataType.INTEGER, isNullable = false },
+
+            new Row() {  name = nameof(gameFolder), type = DataType.TEXT, isNullable = true },
         };
     }
 }
