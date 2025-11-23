@@ -71,7 +71,13 @@ namespace GameLibary.Components
             if (!Directory.Exists(gameFolder))
                 return new List<string>();
 
-            return Directory.GetFiles(gameFolder).Where(x => x.EndsWith(".exe", StringComparison.CurrentCultureIgnoreCase)).Select(x => Path.GetFileName(x)).ToList();
+            return Directory.GetFiles(gameFolder).Where(FilterFile).Select(x => Path.GetFileName(x)).ToList();
+
+            bool FilterFile(string dir)
+            {
+                return dir.EndsWith(".exe", StringComparison.CurrentCultureIgnoreCase) ||
+                    dir.EndsWith(".lnk", StringComparison.CurrentCultureIgnoreCase);
+            }
         }
 
         private async Task RedrawSelectedTags()
