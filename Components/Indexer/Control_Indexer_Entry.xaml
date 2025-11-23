@@ -6,7 +6,9 @@
              xmlns:local="clr-namespace:GameLibary.Components.Indexer"
              mc:Ignorable="d" 
              d:DesignHeight="50" d:DesignWidth="800">
-    <Border Background="#FF484848">
-        <Label x:Name="loc" Content="dir" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+    <Border Background="#FF484848" CornerRadius="5">
+        <Grid>
+            <Label x:Name="loc" Content="dir" HorizontalAlignment="Left" VerticalAlignment="Center" Foreground="White" FontSize="14"/>
+        </Grid>
     </Border>
 </UserControl>

@@ -1,9 +1,13 @@
 ﻿using GameLibary.Source;
 using System.Diagnostics;
 using System.Drawing;
+using System.IO;
 using System.Runtime.InteropServices;
+using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
 using System.Windows.Interop;
+using System.Windows.Media.Imaging;
 
 namespace GameLibary.Components
 {
@@ -13,8 +17,7 @@ namespace GameLibary.Components
     public partial class GameOverlay : Window
     {
         [DllImport("user32.dll")]
-        [return: MarshalAs(UnmanagedType.Bool)]
-        static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
+        public static extern bool GetWindowRect(IntPtr hWnd, out RECT lpRect);
 
         [StructLayout(LayoutKind.Sequential)]
         public struct RECT
@@ -26,155 +29,195 @@ namespace GameLibary.Components
         }
 
 
+        [DllImport("user32.dll")]
+        [return: MarshalAs(UnmanagedType.Bool)]
+        public static extern bool SetForegroundWindow(IntPtr hWnd);
 
         [DllImport("user32.dll")]
-        private static extern IntPtr GetForegroundWindow();
+        public static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
+
+        public const int SW_RESTORE = 9;
+
 
         [DllImport("user32.dll")]
-        private static extern uint GetWindowThreadProcessId(IntPtr hWnd, out uint processId);
+        private static extern void keybd_event(byte bVk, byte bScan, uint dwFlags, UIntPtr dwExtraInfo);
 
-        [DllImport("user32.dll")]
-        private static extern bool SetForegroundWindow(IntPtr hWnd);
-
-        [DllImport("user32.dll")]
-        private static extern bool ShowWindow(IntPtr hWnd, int nCmdShow);
-
-        private const int SW_RESTORE = 9;
-
-        private const int GWL_EXSTYLE = -20;
-        private const int WS_EX_NOACTIVATE = 0x08000000;
-
-        const int DWMWA_EXTENDED_FRAME_BOUNDS = 9;
-
-        [DllImport("user32.dll")]
-        private static extern int GetWindowLong(IntPtr hWnd, int nIndex);
-
-        [DllImport("user32.dll")]
-        private static extern int SetWindowLong(IntPtr hWnd, int nIndex, int dwNewLong);
-
-        [DllImport("dwmapi.dll")]
-        static extern int DwmGetWindowAttribute(IntPtr hwnd, int dwAttribute, out RECT rect, int cbAttribute);
+        private const int KEYEVENTF_KEYUP = 0x0002;
+        private const byte VK_SNAPSHOT = 0x2C; // Print Screen key
 
 
-        private Process? process;
-        private int gameId;
+
+
+
+        private Process?[] processList;
+        private RECT? screenshotRect;
+
+        private int? gameId;
 
         public GameOverlay()
         {
             InitializeComponent();
 
-            btn_CaptureGame.RegisterClick(btn_CaptureGame_Click);
-            btn_CaptureScreen.RegisterClick(btn_CaptureScreen_Click);
-            btn_Process.RegisterClick(ChooseProcess);
+            btn_Close.RegisterClick(Close);
+            btn_Refresh.RegisterClick(RefreshProcessList);
+            btn_Capture.RegisterClick(CaptureScreenshot);
 
-            Left = 0;
-            Top = 0;
-
-            Width = 450;
-            Height = 40;
-
-            Loaded += OverlayWindow_Loaded;
+            RefreshProcessList();
         }
 
-
-        private void OverlayWindow_Loaded(object sender, RoutedEventArgs e)
+        public void Prep(int gameId)
         {
-            var hwnd = new WindowInteropHelper(this).Handle;
-
-            int exStyle = GetWindowLong(hwnd, GWL_EXSTYLE);
-            SetWindowLong(hwnd, GWL_EXSTYLE, exStyle | WS_EX_NOACTIVATE);
-        }
-
-
-        public void Prep(Process? window, int gameId)
-        {
-            this.process = window;
             this.gameId = gameId;
-
-            btn_Process.Label = process?.MainWindowTitle ?? "unselected";
         }
 
-        private async void ChooseProcess()
+
+        private void RefreshProcessList()
         {
-            btn_Process.Label = "selecting...";
-            process = await Task.Run(WaitForSelectionOfProcess);
-            btn_Process.Label = process?.MainWindowTitle ?? "unselected";
+            processList = [null, ..GetProcesses().ToArray()];
+
+            inp_Process.Setup(processList.Select(x => x?.ProcessName ?? "==[ Screen ]=="), 0, SelectProcess);
+            SelectProcess();
         }
 
-        private async void btn_CaptureGame_Click()
+        private List<Process> GetProcesses()
         {
-            if ((process?.MainWindowHandle ?? IntPtr.Zero) != IntPtr.Zero)
+            int sessionId = Process.GetCurrentProcess().SessionId;
+            List<Process> p =new List<Process>();
+
+            foreach (Process proc in Process.GetProcesses())
             {
-                ShowWindow(process!.MainWindowHandle, SW_RESTORE);
-                await Task.Delay(50);
-
-                SetForegroundWindow(process!.MainWindowHandle);
-                await Task.Delay(50);
-
-                ScreenShot(GetBoundsForProcess(process!.MainWindowHandle));
-            }
-            else
-            {
-
-                ScreenShot(GetScreenBounds());
-            }
-
-            this.Close();
-        }
-
-        private async Task<Process> WaitForSelectionOfProcess()
-        {
-            // doesnt work properly for emulated games .... WHY
-            IntPtr current = GetForegroundWindow();
-
-            while (true)
-            {
-                IntPtr next = GetForegroundWindow();
-                if (next != current)
+                try
                 {
-                    GetWindowThreadProcessId(next, out uint pid);
-                    return Process.GetProcessById((int)pid);
-                }
+                    // Only processes in the same session as the current user
+                    if (proc.SessionId != sessionId)
+                        continue;
 
-                await Task.Delay(50);
+                    // Only processes with a visible main window
+                    if (proc.MainWindowHandle != IntPtr.Zero && !string.IsNullOrEmpty(proc.MainWindowTitle))
+                    {
+                        p.Add(proc);
+                        Console.WriteLine($"{proc.ProcessName} (ID: {proc.Id}) - Title: {proc.MainWindowTitle}");
+                    }
+                }
+                catch
+                {
+                    // Some system processes might throw exceptions when accessing properties
+                }
+            }
+
+            return p;
+        }
+
+        private void SelectProcess()
+        {
+            Process? p = processList[inp_Process.selectedIndex];
+
+            if(p == null)
+            {
+                Higlight.Visibility = Visibility.Hidden;
+                return;
+            }
+
+            Higlight.Visibility = Visibility.Visible;
+            if (GetWindowRect(p.MainWindowHandle, out RECT rect))
+            {
+                Canvas.SetTop(Higlight, rect.Top);
+                Canvas.SetLeft(Higlight, rect.Left);
+
+                Higlight.Width = rect.Right - rect.Left;
+                Higlight.Height = rect.Bottom - rect.Top;
+
+                screenshotRect = rect;
+            }
+
+            ShowWindow(p.MainWindowHandle, SW_RESTORE);
+            SetForegroundWindow(p.MainWindowHandle);
+        }
+
+
+
+        private async void CaptureScreenshot()
+        {
+            if(gameId == null)
+            {
+                Close();
+                return;
+            }
+
+
+            this.Visibility = Visibility.Hidden;
+            Higlight.Visibility = Visibility.Hidden;
+            
+            this.Dispatcher.Invoke(System.Windows.Threading.DispatcherPriority.Render, new Action(() => { }));
+
+            Rectangle bounds;
+
+            if(screenshotRect == null)
+            {
+                bounds = new Rectangle(0, 0, (int)Math.Round(this.Width), (int)Math.Round(this.Height));
+            }
+            else 
+            {
+                bounds = new Rectangle(screenshotRect.Value.Left, screenshotRect.Value.Top, screenshotRect.Value.Right - screenshotRect.Value.Left, screenshotRect.Value.Bottom - screenshotRect.Value.Top);
+            }
+
+            await Screenshot_GDI(bounds, SaveResult);
+            //await Screenshot_PrntScreen(bounds, SaveResult);
+
+            Close();
+
+            async Task SaveResult(Bitmap bitmap)
+            {
+                FileManager.SaveScreenshot(bitmap);
+                await LibaryHandler.UpdateGameIcon(gameId.Value);
             }
         }
 
-
-        private void btn_CaptureScreen_Click()
+        private async Task Screenshot_GDI(Rectangle bounds, Func<Bitmap, Task> saveFunc)
         {
-            ScreenShot(GetScreenBounds());
-            this.Close();
-        }
-
-        private async void ScreenShot(System.Drawing.Rectangle bounds)
-        {
-            this.Visibility = Visibility.Hidden;
-            Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height);
-
+            using (Bitmap bitmap = new Bitmap(bounds.Width, bounds.Height))
             using (Graphics g = Graphics.FromImage(bitmap))
             {
                 g.CopyFromScreen(bounds.Left, bounds.Top, 0, 0, bounds.Size);
+                await saveFunc(bitmap);
             }
-
-            FileManager.SaveScreenshot(bitmap);
-            await LibaryHandler.UpdateGameIcon(gameId);
         }
 
-        private System.Drawing.Rectangle GetBoundsForProcess(nint hwnd)
+        private async Task Screenshot_PrntScreen(Rectangle bounds, Func<Bitmap, Task> saveFunc)
         {
-            RECT rect;
-            int res = DwmGetWindowAttribute(hwnd, DWMWA_EXTENDED_FRAME_BOUNDS, out rect, Marshal.SizeOf(typeof(RECT)));
+            IDataObject oldObj = Clipboard.GetDataObject();
 
-            if (res != 0)
+            keybd_event(VK_SNAPSHOT, 0, 0, UIntPtr.Zero);           // key down
+            keybd_event(VK_SNAPSHOT, 0, KEYEVENTF_KEYUP, UIntPtr.Zero); // key up
+
+            BitmapSource screenshot = null;
+
+            for (int i = 0; i < 10; i++)
             {
-                if (!GetWindowRect(hwnd, out rect))
-                    return GetScreenBounds();
+                if (Clipboard.ContainsImage())
+                {
+                    screenshot = Clipboard.GetImage();
+                    break;
+                }
+                await Task.Delay(50);
             }
 
-            return new System.Drawing.Rectangle(rect.Left, rect.Top, rect.Right - rect.Left, rect.Bottom - rect.Top);
-        }
+            if (screenshot != null)
+            {
+                using (MemoryStream ms = new MemoryStream())
+                {
+                    BitmapEncoder encoder = new BmpBitmapEncoder();
+                    encoder.Frames.Add(BitmapFrame.Create(screenshot));
+                    encoder.Save(ms);
 
-        private System.Drawing.Rectangle GetScreenBounds() => new System.Drawing.Rectangle(0, 0, 1920, 1080);
+                    using var bmp = new Bitmap(ms);
+                    using var cropped = bmp.Clone(bounds, bmp.PixelFormat);
+
+                    await saveFunc(cropped);
+                }
+            }
+
+            Clipboard.SetDataObject(oldObj);
+        }
     }
 }

@@ -1,0 +1,18 @@
+﻿<Window x:Class="GameLibary.Components.GameOverlay_RectSelector"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:GameLibary.Components"
+        mc:Ignorable="d"
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="#01FFFFFF"
+        Topmost="True"
+        ShowInTaskbar="False"
+        WindowState="Maximized"
+        Title="GameOverlay_RectSelector" Height="450" Width="800">
+    <Canvas x:Name="OverlayCanvas">
+        <Rectangle x:Name="SelectionRectangle" Stroke="Red" StrokeThickness="2" Fill="#40FF0000" Visibility="Collapsed"/>
+    </Canvas>
+</Window>

@@ -107,6 +107,9 @@ namespace GameLibary.Components
 
             MessageBox.Show("Done", "Done", MessageBoxButton.OK);
 
+            cont_FoundGames.Children.Clear();
+            avalibleImports.Clear();
+
             await LibaryHandler.RedetectGames();
             await onReimportGames();
 

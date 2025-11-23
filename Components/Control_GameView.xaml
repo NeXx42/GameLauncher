@@ -9,21 +9,24 @@
     <Border Background="#1E1E1E" CornerRadius="10,10,0,0">
         <Grid>
             <StackPanel>
-                <Border VerticalAlignment="Top" CornerRadius="10" ClipToBounds="True" Height="670">
-                    <Border.Background>
-                        <ImageBrush x:Name="img_bg" ImageSource="/Components/temp.jpeg"/>
-                    </Border.Background>
-                    <Border VerticalAlignment="Bottom">
+                <Grid VerticalAlignment="Top" ClipToBounds="True" Height="670">
+                    <Border CornerRadius="10" Background="Black" />
+                    <Border CornerRadius="10">
                         <Border.Background>
-                            <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                                <GradientStop Color="Black" Offset="0.616"/>
-                                <GradientStop Color="#00000000" Offset="0"/>
-                            </LinearGradientBrush>
+                            <ImageBrush x:Name="img_bg" ImageSource="/Components/temp.jpeg" Stretch="Uniform"/>
                         </Border.Background>
-                        <Label x:Name="lbl_Title" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="#FFFFCC00" FontSize="32" Margin="15" FontWeight="Bold">Game Name</Label>
+                        <Border VerticalAlignment="Bottom">
+                            <Border.Background>
+                                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                                    <GradientStop Color="Black" Offset="0.616"/>
+                                    <GradientStop Color="#00000000" Offset="0"/>
+                                </LinearGradientBrush>
+                            </Border.Background>
+                            <Label x:Name="lbl_Title" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="#FFFFCC00" FontSize="32" Margin="15" FontWeight="Bold">Game Name</Label>
 
+                        </Border>
                     </Border>
-                </Border>
+                </Grid>
 
                     <!-- TAGS -->
                 <WrapPanel Orientation="Horizontal" x:Name="cont_AllTags" VerticalAlignment="Top" Margin="20">

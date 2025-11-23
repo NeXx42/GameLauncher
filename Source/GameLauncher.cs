@@ -100,7 +100,6 @@ namespace GameLibary.Source
 
             Application.Current.Dispatcher.Invoke(() =>
             {
-                overlay?.Close();
                 MainWindow.window!.UpdateActiveBanner();
             });
         }
@@ -113,10 +112,17 @@ namespace GameLibary.Source
                 overlay = null;
             }
 
-            overlay ??= new GameOverlay();
-            overlay.Owner = MainWindow.window;
+            overlay = new GameOverlay();
+            //overlay.Owner = MainWindow.window;
 
-            overlay.Prep(process, gameId);
+            overlay.Left = 0;
+            overlay.Top = 0;
+            overlay.Width = SystemParameters.PrimaryScreenWidth;
+            overlay.Height = SystemParameters.PrimaryScreenHeight;
+            overlay.Topmost = true;
+            overlay.ShowActivated = false;
+
+            overlay.Prep(gameId);
             overlay.Show();
         }
 

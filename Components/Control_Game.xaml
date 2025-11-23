@@ -6,24 +6,27 @@
              xmlns:local="clr-namespace:GameLibary.Components"
              mc:Ignorable="d" 
              d:DesignHeight="450" d:DesignWidth="800">
-    <Border Margin="5" CornerRadius="10">
-        <Border.Effect>
-            <DropShadowEffect Opacity="0.5" ShadowDepth="0" BlurRadius="25"/>
-        </Border.Effect>
-        <Border.Background>
-            <ImageBrush x:Name="img" ImageSource="/Components/temp.jpeg"/>
-        </Border.Background>
-        <Grid>
-            <Border VerticalAlignment="Bottom" Height="50" CornerRadius="10">
-                <Border.Background>
-                    <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                        <GradientStop Color="Black" Offset="1"/>
-                        <GradientStop Color="#00000000" Offset="0"/>
-                        <GradientStop Color="#F8000000" Offset="0.779"/>
-                    </LinearGradientBrush>
-                </Border.Background>
-                <TextBlock FontSize="18" x:Name="title" Text="Test" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
-            </Border>
-        </Grid>
-    </Border>
+    <Grid>
+        <Border Margin="5" CornerRadius="10" Background="Black"/>
+        <Border Margin="5" CornerRadius="10">
+            <Border.Effect>
+                <DropShadowEffect Opacity="0.5" ShadowDepth="0" BlurRadius="25"/>
+            </Border.Effect>
+            <Border.Background>
+                <ImageBrush x:Name="img" ImageSource="/Components/temp.jpeg" Stretch="Uniform"/>
+            </Border.Background>
+            <Grid>
+                <Border VerticalAlignment="Bottom" Height="50" CornerRadius="10">
+                    <Border.Background>
+                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                            <GradientStop Color="Black" Offset="1"/>
+                            <GradientStop Color="#00000000" Offset="0"/>
+                            <GradientStop Color="#F8000000" Offset="0.779"/>
+                        </LinearGradientBrush>
+                    </Border.Background>
+                    <TextBlock FontSize="18" x:Name="title" Text="Test" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>
+                </Border>
+            </Grid>
+        </Border>
+    </Grid>
 </UserControl>
