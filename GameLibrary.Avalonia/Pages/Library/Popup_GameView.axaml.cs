@@ -81,7 +81,7 @@ public partial class Popup_GameView : UserControl
 
     private async Task<List<string>> GetBinaries(dbo_Game game)
     {
-        string gameFolder = await game.GetFolderLocation();
+        string gameFolder = await game.GetAbsoluteFolderLocation();
 
         if (!Directory.Exists(gameFolder))
             return new List<string>();
@@ -175,28 +175,5 @@ public partial class Popup_GameView : UserControl
         await Draw(LibraryHandler.GetGameFromId(inspectingGameId)!);
     }
 
-    private async void DeleteGame()
-    {
-        dbo_Game? game = LibraryHandler.GetGameFromId(inspectingGameId);
-
-        //if (game != null && MessageBox.Show($"Are you sure you want to delete '{game.gameName}'\n'{await game.GetFolderLocation()}'", "Delete", MessageBoxButton.YesNo, MessageBoxImage.Question) == MessageBoxResult.Yes)
-        //{
-        //    RetryLogic();
-        //}
-
-        async void RetryLogic()
-        {
-            Exception? error = await LibraryHandler.DeleteGame(game!);
-
-            if (error == null)
-            {
-                //await master.DrawGames();
-                master.ToggleMenu(false);
-            }
-            else
-            {
-                //MessageBox.Show(error.Message, "Failed to delete record", MessageBoxButton.OK, MessageBoxImage.Error);
-            }
-        }
-    }
+    private async void DeleteGame() => await FileManager.DeleteGame(LibraryHandler.GetGameFromId(inspectingGameId)!);
 }

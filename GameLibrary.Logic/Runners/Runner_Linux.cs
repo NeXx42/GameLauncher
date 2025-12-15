@@ -48,11 +48,11 @@ public class Runner_Linux : IRunner
         {
 
             info.FileName = "wine";
-            info.Arguments = await game.GetExecutableLocation();
+            info.Arguments = await game.GetAbsoluteExecutableLocation();
         }
         else
         {
-            string gamePath = await game.GetExecutableLocation();
+            string gamePath = await game.GetAbsoluteExecutableLocation();
 
             // if (useRelativeDir)
             // {

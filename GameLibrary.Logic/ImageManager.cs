@@ -46,7 +46,7 @@ public static class ImageManager
         }
         else
         {
-            string iconPath = await game.GetIconLocation();
+            string iconPath = await game.GetAbsoluteIconLocation();
 
             if (!File.Exists(iconPath))
             {
@@ -59,7 +59,7 @@ public static class ImageManager
             queuedImageFetch.TryAdd(game.id, new ImageFetchRequest()
             {
                 gameId = game.id,
-                absoluteImagePath = await game.GetIconLocation(),
+                absoluteImagePath = await game.GetAbsoluteIconLocation(),
                 callback = MediateReturn
             });
         }

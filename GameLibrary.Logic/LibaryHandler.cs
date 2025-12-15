@@ -169,7 +169,7 @@ namespace GameLibrary.Logic
         public static async Task UpdateGameIcon(int gameId, string path)
         {
             dbo_Game? game = GetGameFromId(gameId);
-            string requiresCleanup = await game!.GetIconLocation();
+            string requiresCleanup = await game!.GetAbsoluteIconLocation();
 
             if (game != null)
             {
@@ -209,7 +209,7 @@ namespace GameLibrary.Logic
                 string existing = game.executablePath ?? "";
                 game.executablePath = path;
 
-                if (!File.Exists(await game.GetExecutableLocation()))
+                if (!File.Exists(await game.GetAbsoluteExecutableLocation()))
                 {
                     game.executablePath = existing;
                     return;

@@ -21,7 +21,7 @@ namespace GameLibrary.Logic
             string extension = Path.GetExtension(path);
             string newName = $"{Guid.NewGuid()}{extension}";
 
-            string folderName = await LibraryHandler.GetGameFromId(gameId)!.GetFolderLocation();
+            string folderName = await LibraryHandler.GetGameFromId(gameId)!.GetAbsoluteFolderLocation();
             File.Move(path, Path.Combine(folderName, newName));
             return newName;
         }
@@ -37,7 +37,7 @@ namespace GameLibrary.Logic
             {
                 string parentExecutableFolder = Path.GetDirectoryName(game.executablePath)!;
 
-                Directory.Move(parentExecutableFolder, await game.GetFolderLocation());
+                Directory.Move(parentExecutableFolder, await game.GetAbsoluteFolderLocation());
                 game.executablePath = $"{Path.GetFileName(game.executablePath)}";
 
                 return (false, true);
@@ -51,19 +51,35 @@ namespace GameLibrary.Logic
 
         public static async Task BrowseToGame(dbo_Game game)
         {
-            string folder = Path.GetDirectoryName(await game.GetExecutableLocation()) ?? string.Empty;
+            // do retry and stuff here, need a global way of showing dialogs and the like
+
+            return;
+
+            string folder = Path.GetDirectoryName(await game.GetAbsoluteExecutableLocation()) ?? string.Empty;
 
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
                 return;
 
-            Process.Start("explorer.exe", folder);
+            if (ConfigHandler.isOnLinux)
+            {
+                Process.Start(new ProcessStartInfo
+                {
+                    FileName = "xdg-open",
+                    Arguments = folder,
+                    UseShellExecute = false
+                });
+            }
+            else
+            {
+                Process.Start("explorer.exe", folder);
+            }
         }
 
         public static async Task<Exception?> DeleteGame(dbo_Game game)
         {
             try
             {
-                string toDelete = await game.GetFolderLocation();
+                string toDelete = await game.GetAbsoluteFolderLocation();
 
                 if (!string.IsNullOrEmpty(toDelete) && Directory.Exists(toDelete))
                     Directory.Delete(toDelete, true);

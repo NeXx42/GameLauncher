@@ -15,7 +15,7 @@ public class Runner_Windows : IRunner
 
     private static async Task<ProcessStartInfo> GetFileToRun(dbo_Game game)
     {
-        string realPath = await game.GetExecutableLocation();
+        string realPath = await game.GetAbsoluteExecutableLocation();
 
         if (!File.Exists(realPath))
         {

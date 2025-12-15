@@ -2,6 +2,7 @@
 using System.Diagnostics;
 using System.IO;
 using System.Runtime.InteropServices;
+using System.Text;
 using System.Windows;
 using GameLibrary.DB;
 using GameLibrary.DB.Tables;
@@ -56,6 +57,13 @@ namespace GameLibrary.Logic
             game.lastPlayed = DateTime.UtcNow;
             await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), gameId));
 
+            string? logFile = null;
+
+            if (true)
+            {
+                logFile = Path.Combine(await game.GetAbsoluteFolderLocation(), $"{game.gameName.Replace(" ", "")}_log.txt");
+            }
+
             try
             {
                 ProcessStartInfo info = await runner!.Run(game);
@@ -68,8 +76,8 @@ namespace GameLibrary.Logic
 
                 //MainWindow.window!.UpdateActiveBanner($"Playing - {game.gameName}");
 
-                gameProcess.Exited += (a, b) => OnGameClose(game.id, a, b);
-                activeProcesses.TryAdd(gameId, new ActiveGame(gameProcess));
+                gameProcess.Exited += async (a, b) => await OnGameClose(game.id, a, b);
+                activeProcesses.TryAdd(gameId, new ActiveGame(logFile, gameProcess));
 
                 if (string.IsNullOrEmpty(game.iconPath))
                 {
@@ -78,16 +86,16 @@ namespace GameLibrary.Logic
             }
             catch (Exception e)
             {
-                OnGameClose(game.id, null, null);
+                await OnGameClose(game.id, null, null);
                 //MessageBox.Show(e.Message);
             }
         }
 
-        private static void OnGameClose(int gameId, object? obj, EventArgs args)
+        private static async Task OnGameClose(int gameId, object? obj, EventArgs args)
         {
             if (activeProcesses.TryRemove(gameId, out ActiveGame p))
             {
-
+                await p.OutputLogFile();
             }
 
             //Application.Current.Dispatcher.Invoke(() =>
@@ -141,8 +149,23 @@ namespace GameLibrary.Logic
             public Process process;
             public int? groupId;
 
-            public ActiveGame(Process p)
+            private string? logFile;
+
+            public ActiveGame(string logPath, Process p)
             {
+                if (!string.IsNullOrEmpty(logPath))
+                {
+                    logFile = logPath;
+
+                    p.StartInfo.RedirectStandardOutput = true;
+                    p.StartInfo.RedirectStandardError = true;
+
+                    if (!File.Exists(logFile))
+                        File.Delete(logFile!);
+
+                    File.Create(logFile!)?.Dispose();
+                }
+
                 process = p;
                 process.Start();
 
@@ -153,8 +176,10 @@ namespace GameLibrary.Logic
                 }
             }
 
-            public void Kill()
+            public async Task Kill()
             {
+                await OutputLogFile();
+
                 try
                 {
                     if (groupId.HasValue)
@@ -177,6 +202,25 @@ namespace GameLibrary.Logic
                             process.Kill();
                     }
                     catch { }
+                }
+            }
+
+            public async Task OutputLogFile()
+            {
+                try
+                {
+                    if (process != null && !string.IsNullOrEmpty(logFile))
+                    {
+                        StringBuilder output = new StringBuilder((await process?.StandardOutput?.ReadToEndAsync()) ?? string.Empty);
+                        output.Append((await process?.StandardError?.ReadToEndAsync()) ?? string.Empty);
+
+                        await File.WriteAllTextAsync(logFile, output.ToString());
+                    }
+
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e);
                 }
             }
         }

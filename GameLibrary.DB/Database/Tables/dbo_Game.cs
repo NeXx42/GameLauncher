@@ -17,11 +17,11 @@ namespace GameLibrary.DB.Tables
         public required string gameFolder { get; set; }
         public int? wineProfile { get; set; }
 
-        public async Task<string> GetFolderLocation() => Path.Combine(await GetLibraryLocation(), gameFolder);
         public async Task<string> GetLibraryLocation() => (await DatabaseHandler.GetItem<dbo_Libraries>(QueryBuilder.SQLEquals(nameof(dbo_Libraries.libaryId), libaryId)))?.rootPath ?? string.Empty;
+        public async Task<string> GetAbsoluteFolderLocation() => Path.Combine(await GetLibraryLocation(), gameFolder);
+        public async Task<string> GetAbsoluteExecutableLocation() => !string.IsNullOrEmpty(executablePath) ? Path.Combine(await GetAbsoluteFolderLocation(), executablePath) : "";
 
-        public async Task<string> GetIconLocation() => !string.IsNullOrEmpty(iconPath) ? Path.Combine(await GetFolderLocation(), iconPath) : "";
-        public async Task<string> GetExecutableLocation() => !string.IsNullOrEmpty(executablePath) ? Path.Combine(await GetFolderLocation(), executablePath) : "";
+        public async Task<string> GetAbsoluteIconLocation() => !string.IsNullOrEmpty(iconPath) ? Path.Combine(await GetAbsoluteFolderLocation(), iconPath) : "";
 
 
         public override Row[] GetRows() => new[]
