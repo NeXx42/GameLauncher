@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Platform.Storage;
 using GameLibrary.Avalonia.Helpers;
+using GameLibrary.Logic;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
 
@@ -33,8 +34,7 @@ public partial class Control_Settings_DirectorySelector : UserControl, ISettingC
         if (setting == null)
             return;
 
-        object o = await setting.LoadSetting();
-        UpdateLabel((string)o);
+        UpdateLabel(await setting.LoadSetting<string>());
     }
 
     private async Task SelectDirectory()
@@ -61,7 +61,7 @@ public partial class Control_Settings_DirectorySelector : UserControl, ISettingC
         }
     }
 
-    private void UpdateLabel(string to)
+    private void UpdateLabel(string? to)
     {
         btn.Label = string.IsNullOrEmpty(to) ? "Select Folder" : to;
     }

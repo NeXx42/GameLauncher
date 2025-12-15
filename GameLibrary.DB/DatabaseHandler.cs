@@ -41,13 +41,13 @@ namespace GameLibrary.DB
         {
             // cannot add or modify existing columns. way too advanced for this
 
-            Type[] tables = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(DatabaseTable))).ToArray();
+            Type[] tables = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Database_Table))).ToArray();
 
             await connection!.OpenAsync();
 
             foreach (Type tableType in tables)
             {
-                DatabaseTable? table = Activator.CreateInstance(tableType) as DatabaseTable;
+                Database_Table? table = Activator.CreateInstance(tableType) as Database_Table;
 
                 using (SQLiteCommand command = new SQLiteCommand(table!.GenerateCreateCommand(), connection))
                 {
@@ -60,17 +60,17 @@ namespace GameLibrary.DB
 
         private static async Task HandleMigrations()
         {
-            Type[] migrations = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(MigrationBase))).ToArray();
+            Type[] migrations = Assembly.GetExecutingAssembly().GetTypes().Where(t => t.IsClass && !t.IsAbstract && t.IsSubclassOf(typeof(Database_MigrationBase))).ToArray();
 
             long? lastMigration = null;
-            string? id = (await GetItem<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), MigrationBase.CONFIG_MIGRATIONID)))?.value ?? null;
+            string? id = (await GetItem<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), Database_MigrationBase.CONFIG_MIGRATIONID)))?.value ?? null;
 
             if (!string.IsNullOrEmpty(id))
             {
                 lastMigration = long.Parse(id);
             }
 
-            MigrationBase[] migrationsToApply = migrations.Select(x => (MigrationBase)Activator.CreateInstance(x)!)
+            Database_MigrationBase[] migrationsToApply = migrations.Select(x => (Database_MigrationBase)Activator.CreateInstance(x)!)
                 .Where(x => x.migrationId > (lastMigration ?? 0))
                 .OrderBy(x => x.migrationId).ToArray();
 
@@ -80,7 +80,7 @@ namespace GameLibrary.DB
 
                 await connection!.OpenAsync();
 
-                foreach (MigrationBase migration in migrationsToApply)
+                foreach (Database_MigrationBase migration in migrationsToApply)
                 {
                     lastMigration = migration.migrationId;
 
@@ -102,23 +102,23 @@ namespace GameLibrary.DB
 
             if (lastMigration.HasValue)
             {
-                await DeleteFromTable<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), MigrationBase.CONFIG_MIGRATIONID));
-                await InsertIntoTable(new dbo_Config() { key = MigrationBase.CONFIG_MIGRATIONID, value = lastMigration.Value.ToString() });
+                await DeleteFromTable<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), Database_MigrationBase.CONFIG_MIGRATIONID));
+                await InsertIntoTable(new dbo_Config() { key = Database_MigrationBase.CONFIG_MIGRATIONID, value = lastMigration.Value.ToString() });
             }
         }
 
 
-        public static async Task InsertIntoTable(DatabaseTable value)
+        public static async Task InsertIntoTable(Database_Table value)
         {
             await TryExecute(value.GenerateInsertCommand());
         }
 
-        public static async Task DeleteFromTable<T>(QueryBuilder.InternalAccessor queryBuilder) where T : DatabaseTable
+        public static async Task DeleteFromTable<T>(QueryBuilder.InternalAccessor queryBuilder) where T : Database_Table
         {
             await TryExecute($"DELETE FROM {GetTableNameFromGeneric<T>()} {queryBuilder?.BuildWhereClause() ?? ""}");
         }
 
-        public static async Task UpdateTableEntry<T>(T entry, QueryBuilder.InternalAccessor queryBuilder) where T : DatabaseTable
+        public static async Task UpdateTableEntry<T>(T entry, QueryBuilder.InternalAccessor queryBuilder) where T : Database_Table
         {
             string updateSQL = entry.GenerateUpdateCommand();
             await TryExecute($"{updateSQL} {queryBuilder?.BuildWhereClause() ?? ""}");
@@ -148,7 +148,7 @@ namespace GameLibrary.DB
         }
 
 
-        public static async Task<bool> Exists<T>(QueryBuilder.InternalAccessor? queryBuilder = null) where T : DatabaseTable
+        public static async Task<bool> Exists<T>(QueryBuilder.InternalAccessor? queryBuilder = null) where T : Database_Table
         {
             try
             {
@@ -185,10 +185,10 @@ namespace GameLibrary.DB
         }
 
 
-        public static async Task<T?> GetItem<T>(QueryBuilder.InternalAccessor? queryBuilder = null) where T : DatabaseTable
+        public static async Task<T?> GetItem<T>(QueryBuilder.InternalAccessor? queryBuilder = null) where T : Database_Table
             => (await GetItems<T>(queryBuilder, 1)).FirstOrDefault();
 
-        public static async Task<T[]> GetItems<T>(QueryBuilder.InternalAccessor? queryBuilder = null, int? limit = null) where T : DatabaseTable
+        public static async Task<T[]> GetItems<T>(QueryBuilder.InternalAccessor? queryBuilder = null, int? limit = null) where T : Database_Table
         {
             try
             {
@@ -230,10 +230,28 @@ namespace GameLibrary.DB
             }
         }
 
-        private static string GetTableNameFromGeneric<T>() where T : DatabaseTable
+        private static string GetTableNameFromGeneric<T>() where T : Database_Table
         {
             T table = (T)Activator.CreateInstance(typeof(T))!;
             return table.tableName;
+        }
+
+
+        public static async Task AddOrUpdate<T>(T[] changes, Func<T, QueryBuilder.InternalAccessor> match) where T : Database_Table
+        {
+            foreach (T change in changes)
+            {
+                QueryBuilder.InternalAccessor query = match(change);
+
+                if (await Exists<T>(query))
+                {
+                    await UpdateTableEntry(change, query);
+                }
+                else
+                {
+                    await InsertIntoTable(change);
+                }
+            }
         }
     }
 

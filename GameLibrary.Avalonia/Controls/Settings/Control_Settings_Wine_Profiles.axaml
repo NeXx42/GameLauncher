@@ -1,0 +1,17 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.Avalonia.Controls.Settings.Control_Settings_Wine_Profiles"
+  xmlns:Controls="clr-namespace:GameLibrary.Avalonia.Controls">
+  <Border CornerRadius="5">
+    <Grid>
+      <StackPanel Background="Red" x:Name="container" Margin="5">
+
+      </StackPanel>
+      <StackPanel Height="30" Margin="0,10,0,0" Orientation="Horizontal">
+        <Controls:Common_Button Width="200" Label="Add"/>
+        <Controls:Common_Button Width="200" Label="Edit"/>
+      </StackPanel>
+    </Grid>
+  </Border>
+</UserControl>

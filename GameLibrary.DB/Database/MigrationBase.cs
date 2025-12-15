@@ -1,6 +1,6 @@
-﻿namespace GameLibrary.DB.Migrations
+﻿namespace GameLibrary.DB
 {
-    public abstract class MigrationBase
+    public abstract class Database_MigrationBase
     {
         public const string CONFIG_MIGRATIONID = "MIGRATIONID";
 

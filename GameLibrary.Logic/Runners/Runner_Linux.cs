@@ -1,4 +1,6 @@
 using System.Diagnostics;
+using GameLibrary.DB;
+using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
 
 namespace GameLibrary.Logic.Runners;
@@ -13,7 +15,7 @@ public class Runner_Linux : IRunner
         (bool didSandbox, bool useRelativePath) = await Sandbox(info, game);
 
         await EmulateRegion(info, game);
-        await EmbedWine(info, game, didSandbox, useRelativePath);
+        await EmbedWine(info, game, didSandbox);
 
         return info;
     }
@@ -30,13 +32,16 @@ public class Runner_Linux : IRunner
         return Task.CompletedTask;
     }
 
-    private async Task EmbedWine(ProcessStartInfo info, dbo_Game game, bool didSandbox, bool useRelativeDir)
+    private async Task EmbedWine(ProcessStartInfo info, dbo_Game game, bool didSandbox)
     {
-        string winePrefix = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Wine_IsolationDirectory, string.Empty);
-
-        if (!string.IsNullOrEmpty(winePrefix))
+        if (game.wineProfile.HasValue)
         {
-            info.EnvironmentVariables["WINEPREFIX"] = Path.Combine(winePrefix, ".wine");
+            dbo_WineProfile? profile = await DatabaseHandler.GetItem<dbo_WineProfile>(QueryBuilder.SQLEquals(nameof(dbo_WineProfile.id), game.wineProfile.Value));
+
+            if (profile == null)
+                throw new Exception($"Profile doesn't exist");
+
+            info.EnvironmentVariables["WINEPREFIX"] = profile!.profileDirectory!;
         }
 
         if (!didSandbox)
@@ -49,13 +54,13 @@ public class Runner_Linux : IRunner
         {
             string gamePath = await game.GetExecutableLocation();
 
-            if (useRelativeDir)
-            {
-                string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-                info.EnvironmentVariables["WINEPREFIX"] = Path.Combine(userPath, ".wine");
+            // if (useRelativeDir)
+            // {
+            //     string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            //     info.EnvironmentVariables["WINEPREFIX"] = Path.Combine(userPath, ".wine");
 
-                gamePath = Path.Combine(userPath, game.gameFolder, game.executablePath);
-            }
+            //     gamePath = Path.Combine(userPath, game.gameFolder, game.executablePath);
+            // }
 
             info.Arguments += $" wine \"{gamePath}\"";
         }

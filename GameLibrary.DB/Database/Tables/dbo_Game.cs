@@ -2,7 +2,7 @@
 
 namespace GameLibrary.DB.Tables
 {
-    public class dbo_Game : DatabaseTable
+    public class dbo_Game : Database_Table
     {
         public override string tableName => "Games";
 
@@ -15,6 +15,7 @@ namespace GameLibrary.DB.Tables
         public DateTime? lastPlayed { get; set; }
         public required int libaryId { get; set; }
         public required string gameFolder { get; set; }
+        public int? wineProfile { get; set; }
 
         public async Task<string> GetFolderLocation() => Path.Combine(await GetLibraryLocation(), gameFolder);
         public async Task<string> GetLibraryLocation() => (await DatabaseHandler.GetItem<dbo_Libraries>(QueryBuilder.SQLEquals(nameof(dbo_Libraries.libaryId), libaryId)))?.rootPath ?? string.Empty;
@@ -36,6 +37,8 @@ namespace GameLibrary.DB.Tables
             new Row() {  name = nameof(libaryId), type = DataType.INTEGER, isNullable = false },
 
             new Row() {  name = nameof(gameFolder), type = DataType.TEXT, isNullable = true },
+
+            new Row() {  name = nameof(wineProfile), type = DataType.INTEGER, isNullable = true },
         };
     }
 }

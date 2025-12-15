@@ -7,7 +7,7 @@ using GameLibrary.DB.Tables;
 
 namespace GameLibrary.DB.Migrations
 {
-    internal class Migration_Nicknames : MigrationBase
+    internal class Migration_Nicknames : Database_MigrationBase
     {
         public override long migrationId => new DateTime(2025, 11, 22, 16, 03, 15, DateTimeKind.Utc).Ticks;
 

@@ -1,6 +1,6 @@
 ﻿namespace GameLibrary.DB.Tables
 {
-    public class dbo_Config : DatabaseTable
+    public class dbo_Config : Database_Table
     {
         public override string tableName => "Config";
 

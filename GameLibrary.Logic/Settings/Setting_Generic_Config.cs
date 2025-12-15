@@ -25,6 +25,6 @@ public class Setting_Generic_Config : SettingBase
 
     public override ISettingsUI GetUI() => uiSettings;
 
-    public override async Task<object> LoadSetting() => await LoadSettingAsConfig(configValue);
+    public override async Task<T?> LoadSetting<T>() where T : default => await LoadSettingAsConfig<T>(configValue);
     public override async Task<bool> SaveSetting(object val) => await SaveSettingAsConfig(configValue, val, serializationType);
 }

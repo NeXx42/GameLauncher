@@ -1,6 +1,6 @@
 ﻿namespace GameLibrary.DB.Tables
 {
-    public class dbo_Tag : DatabaseTable
+    public class dbo_Tag : Database_Table
     {
         public override string tableName => "Tag";
 

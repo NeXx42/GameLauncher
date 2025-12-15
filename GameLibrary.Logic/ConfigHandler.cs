@@ -29,16 +29,15 @@ namespace GameLibrary.Logic
             EmulatorPath,
             PasswordHash,
 
+            Launcher_Concurrency,
+
             Sandbox_Windows_SandieboxBox,
             Sandbox_Windows_SandieboxLocation,
             Sandbox_Linux_Firejail_Enabled,
             Sandbox_Linux_Firejail_FileSystemIsolation,
             Sandbox_Linux_Firejail_Networking,
 
-            Import_GUIDFolderNames,
-
-            Wine_UniqueGameIsolation,
-            Wine_IsolationDirectory,
+            Import_GUIDFolderNames
         }
         public const string APPLICATION_NAME = "MyLibraryApplication";
         public const string DB_POINTER_FILE = "dblink";
@@ -79,9 +78,13 @@ namespace GameLibrary.Logic
                 new Setting_Generic_Config("Unique folder import", SettingOSCompatibility.Universal, ConfigValues.Import_GUIDFolderNames, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
             ]);
 
+            settings.Add("Runner", [
+                new Setting_Generic_Config("Concurrency", SettingOSCompatibility.Universal, ConfigValues.Launcher_Concurrency, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
+            ]);
+
+
             settings.Add("Wine", [
-                new Setting_Generic_Config("Unique isolation folders", SettingOSCompatibility.Linux, ConfigValues.Wine_UniqueGameIsolation, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
-                new Setting_Generic_Config("Isolation directory", SettingOSCompatibility.Linux, ConfigValues.Wine_IsolationDirectory, new SettingsUI_DirectorySelector(){ folder = true}, ConfigSerialization.FolderDirectory),
+                new Setting_Wine_Profiles(),
             ]);
 
             settings.Add("Sandboxing", [
@@ -125,6 +128,9 @@ namespace GameLibrary.Logic
 
             return null;
         }
+
+        public static T DeserializeConfigValue<T>(object inp)
+            => DeserializeConfigValue<T>((string)inp);
 
         public static T DeserializeConfigValue<T>(string inp)
         {

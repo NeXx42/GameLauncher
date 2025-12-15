@@ -4,7 +4,7 @@ using System.Text;
 
 namespace GameLibrary.DB
 {
-    public abstract class DatabaseTable
+    public abstract class Database_Table
     {
         public abstract string tableName { get; }
 

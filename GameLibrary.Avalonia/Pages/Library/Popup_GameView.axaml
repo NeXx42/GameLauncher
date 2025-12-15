@@ -76,6 +76,7 @@
         <StackPanel Orientation="Horizontal" Margin="0, 15, 0, 0" Height="40">
           <Label Content="Emulate"/>
           <common:Common_Toggle x:Name="inp_Emulate" />
+          <common:Common_Dropdown x:Name="inp_WineProfile"/>
         </StackPanel>
       </StackPanel>
     </Grid>

@@ -3,6 +3,7 @@ using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using GameLibrary.Logic;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
 
@@ -29,9 +30,7 @@ public partial class Control_Settings_Toggle : UserControl, ISettingControl
 
     public async Task LoadValue()
     {
-        object o = await setting.LoadSetting();
-        selectedOption = ((string)o ?? "") == "1";
-
+        selectedOption = await setting.LoadSetting<bool>();
         RedrawButton();
     }
 

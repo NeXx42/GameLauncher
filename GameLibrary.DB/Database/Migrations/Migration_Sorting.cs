@@ -2,7 +2,7 @@
 
 namespace GameLibrary.DB.Migrations
 {
-    internal class Migration_Sorting : MigrationBase
+    internal class Migration_Sorting : Database_MigrationBase
     {
         public override long migrationId => new DateTime(2025, 09, 21, 12, 30, 15, DateTimeKind.Utc).Ticks;
 

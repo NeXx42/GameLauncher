@@ -7,6 +7,8 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using GameLibrary.DB;
+using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
 
@@ -55,6 +57,18 @@ public partial class Popup_GameView : UserControl
 
         List<string> executableBinaries = await GetBinaries(game);
         inp_binary.Setup(executableBinaries.Select(x => Path.GetFileName(x)), executableBinaries.IndexOf(game.executablePath!), HandleBinaryChange);
+
+        if (ConfigHandler.isOnLinux)
+        {
+            dbo_WineProfile[] profiles = await DatabaseHandler.GetItems<dbo_WineProfile>();
+
+            inp_WineProfile.IsVisible = true;
+            inp_WineProfile.Setup(profiles.Select(x => x.profileName), game.wineProfile, HandleWineProfileChange);
+        }
+        else
+        {
+            inp_WineProfile.IsVisible = false;
+        }
     }
 
     private void UpdateGameIcon(int gameId, ImageBrush? img)
@@ -141,6 +155,11 @@ public partial class Popup_GameView : UserControl
     private void HandleEmulateToggle(bool to)
     {
         LibraryHandler.UpdateGameEmulationStatus(inspectingGameId, to);
+    }
+
+    private void HandleWineProfileChange()
+    {
+
     }
 
     private void btn_Overlay_Click()

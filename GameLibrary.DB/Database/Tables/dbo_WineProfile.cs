@@ -1,6 +1,6 @@
 namespace GameLibrary.DB.Database.Tables;
 
-public class dbo_WineProfile : DatabaseTable
+public class dbo_WineProfile : Database_Table
 {
     public override string tableName => "dbo_WineProfiles";
 
