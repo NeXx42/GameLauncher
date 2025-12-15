@@ -14,7 +14,6 @@ public partial class Common_Toggle : UserControl
     {
         InitializeComponent();
         inp.IsCheckedChanged += (_, __) => ChangeCallback();
-        inp.Content = "";
     }
 
     public void SilentSetValue(bool to)

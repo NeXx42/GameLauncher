@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.Avalonia.Pages.Library.Popup_GameView"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080" x:Class="GameLibrary.Avalonia.Pages.Library.Popup_GameView"
   xmlns:common="clr-namespace:GameLibrary.Avalonia.Controls"
   xmlns:local="clr-namespace:GameLibrary.Avalonia.Pages.Library">
   <Border Background="#1E1E1E" CornerRadius="10,10,0,0">
@@ -15,35 +15,65 @@
       <Grid VerticalAlignment="Top" ClipToBounds="True" Height="670" Grid.Row="0">
         <Border CornerRadius="10" Background="Black" />
         <Border x:Name="img_bg" CornerRadius="10">
-          <Border VerticalAlignment="Bottom">
+
+          <Border VerticalAlignment="Bottom" Height="80">
             <Border.Background>
-              <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                <GradientStop Color="Black" Offset="0.616"/>
-                <GradientStop Color="#00000000" Offset="0"/>
+              <LinearGradientBrush EndPoint="0%,0%" StartPoint="0%,100%">
+                <GradientStop Color="Black" Offset="0.5"/>
+                <GradientStop Color="#00000000" Offset="1.0"/>
               </LinearGradientBrush>
             </Border.Background>
             <Label x:Name="lbl_Title" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="#FFFFCC00" FontSize="32" Margin="15" FontWeight="Bold">Game Name</Label>
           </Border>
+
         </Border>
       </Grid>
 
-      <Grid Background="Red" Grid.Row="1" Margin="15">
-        <!-- TAGS -->
-        <WrapPanel Orientation="Horizontal" x:Name="cont_AllTags" VerticalAlignment="Top" Margin="20">
-          <local:Library_Tag/>
-        </WrapPanel>
+      <Grid Grid.Row="1" Margin="20">
 
-        <!-- Options -->
-        <StackPanel Orientation="Horizontal" Margin="0, 15, 0, 0" Height="40">
-          <Label Content="Emulate"/>
-          <common:Common_Toggle x:Name="inp_Emulate" />
-          <common:Common_Dropdown x:Name="inp_WineProfile"/>
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Top" Height="30" HorizontalAlignment="Left" Margin="0,0,0,0">
+          <Border x:Name="btn_tab_Tags" Background="#ff161617" CornerRadius="5, 0, 0, 0">
+            <Label Content="Tags" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="15, 0"/>
+          </Border>
+          <Border x:Name="btn_tab_Options" Background="#ff404040" CornerRadius="0, 5, 0, 0">
+            <Label Content="Launch Settings" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="15, 0"/>
+          </Border>
         </StackPanel>
+
+        <Border CornerRadius="0, 5, 5, 5" Background="#121212" Margin="0, 30, 0, 0">
+          <Grid Margin="15">
+
+            <!-- TAGS -->
+            <Grid x:Name="tab_Tags" IsVisible="True">
+              <WrapPanel Orientation="Horizontal" x:Name="cont_AllTags" VerticalAlignment="Top">
+                <local:Library_Tag/>
+              </WrapPanel>
+            </Grid>
+
+            <!-- Options -->
+            <Grid x:Name="tab_Settings" IsVisible="False">
+              <StackPanel Orientation="Vertical" Spacing="15">
+
+                <StackPanel Orientation="Vertical">
+                  <Label Content="Emulation" VerticalAlignment="Center"/>
+                  <common:Common_Toggle x:Name="inp_Emulate" />
+                </StackPanel>
+
+                <StackPanel Orientation="Vertical">
+                  <Label Content="Wine Profile" VerticalAlignment="Center"/>
+                  <common:Common_Dropdown x:Name="inp_WineProfile" Width="200" HorizontalAlignment="Left"/>
+                </StackPanel>
+
+              </StackPanel>
+            </Grid>
+          </Grid>
+
+        </Border>
 
       </Grid>
 
       <!-- Controls -->
-      <StackPanel VerticalAlignment="Bottom" Margin="20" Grid.Row="2">
+      <StackPanel VerticalAlignment="Bottom" Margin="20, 0, 20, 20" Grid.Row="2">
 
         <Grid>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">

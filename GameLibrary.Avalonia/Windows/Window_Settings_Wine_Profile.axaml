@@ -1,0 +1,40 @@
+<Window xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GameLibrary.Avalonia.Windows.Window_Settings_Wine_Profile" Title="Window_Settings_Wine_Profile"
+  xmlns:common="clr-namespace:GameLibrary.Avalonia.Controls">
+  <Grid Margin="25">
+    <Grid.RowDefinitions >
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="40"/>
+    </Grid.RowDefinitions>
+
+    <StackPanel>
+      <!-- Name -->
+      <Grid Height="30">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="200"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Profile Name"/>
+        <TextBox Grid.Column="1" x:Name="inp_Name"/>
+      </Grid>
+
+      <!-- Dir -->
+      <Grid Height="30" Margin="0, 5, 0, 0">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="200"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Label Content="Directory"/>
+        <common:Common_Button Grid.Column="1" x:Name="btn_SelectDir" Label="Select"/>
+      </Grid>
+    </StackPanel>
+
+    <Grid/>
+    <StackPanel Grid.Row="1" VerticalAlignment="Stretch" Orientation="Horizontal" HorizontalAlignment="Right">
+      <common:Common_Button Width="150" x:Name="btn_Cancel" Label="Cancel"/>
+      <common:Common_Button Width="150" x:Name="btn_Save" Label="Save"/>
+    </StackPanel>
+  </Grid>
+</Window>

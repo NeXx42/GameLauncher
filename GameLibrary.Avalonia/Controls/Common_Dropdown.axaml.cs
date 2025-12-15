@@ -1,5 +1,6 @@
 using System;
 using System.Collections;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Interactivity;
@@ -23,6 +24,9 @@ public partial class Common_Dropdown : UserControl
         ignoreEvents = false;
         inp.SelectionChanged += (_, __) => OnChangeCallback();
     }
+
+    public void SetupAsync(IEnumerable collection, int? defaultOption, Func<Task> onChange)
+        => Setup(collection, defaultOption, async () => await onChange());
 
     public void Setup(IEnumerable collection, int? defaultOption, Action onChange)
     {

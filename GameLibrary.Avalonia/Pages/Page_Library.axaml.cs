@@ -48,7 +48,6 @@ public partial class Page_Library : UserControl
     private void BindButtons()
     {
         Indexer.Setup(() => gameList.RefilterGames());
-        GameViewer.Setup(this);
 
         GameViewer.PointerPressed += (_, e) => e.Handled = true;
         Indexer.PointerPressed += (_, e) => e.Handled = true;
@@ -92,8 +91,6 @@ public partial class Page_Library : UserControl
 
             existingTags.Add(tagId, CreateTagUI(tagId));
         }
-
-        GameViewer.RedrawTags(tagIds);
 
         Library_Tag CreateTagUI(int tagId)
         {
