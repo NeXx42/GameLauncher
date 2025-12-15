@@ -1,0 +1,83 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.Avalonia.Pages.Library.Popup_GameView"
+  xmlns:common="clr-namespace:GameLibrary.Avalonia.Controls"
+  xmlns:local="clr-namespace:GameLibrary.Avalonia.Pages.Library">
+  <Border Background="#1E1E1E" CornerRadius="10,10,0,0">
+    <Grid>
+      <StackPanel>
+        <Grid VerticalAlignment="Top" ClipToBounds="True" Height="670">
+          <Border CornerRadius="10" Background="Black" />
+          <Border x:Name="img_bg" CornerRadius="10">
+            <Border VerticalAlignment="Bottom">
+              <Border.Background>
+                <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
+                  <GradientStop Color="Black" Offset="0.616"/>
+                  <GradientStop Color="#00000000" Offset="0"/>
+                </LinearGradientBrush>
+              </Border.Background>
+              <Label x:Name="lbl_Title" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="#FFFFCC00" FontSize="32" Margin="15" FontWeight="Bold">Game Name</Label>
+            </Border>
+          </Border>
+        </Grid>
+
+        <!-- TAGS -->
+        <WrapPanel Orientation="Horizontal" x:Name="cont_AllTags" VerticalAlignment="Top" Margin="20">
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+          <local:Library_Tag/>
+        </WrapPanel>
+      </StackPanel>
+
+      <!-- Controls -->
+      <StackPanel VerticalAlignment="Bottom" Margin="20">
+        <Grid Margin="0, 15, 0, 0" Height="40">
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+            <common:Common_Button Margin="0,0,5,0" x:Name="btn_Delete" Width="90" Label="🗑 Delete"/>
+            <common:Common_Button Margin="0,0,5,0" x:Name="btn_Overlay" Width="120" Label="🧩 Open Overlay"/>
+            <common:Common_Dropdown Margin="0,0,5,0" x:Name="inp_binary" Width="355"/>
+            <common:Common_Button Margin="0,0,5,0" x:Name="btn_Browse" Width="120" Label="📁 Browse"/>
+          </StackPanel>
+
+          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+            <common:Common_Button x:Name="btn_Launch" Width="150" Label="▶ Launch"/>
+          </StackPanel>
+        </Grid>
+
+        <!-- Options -->
+        <StackPanel Orientation="Horizontal" Margin="0, 15, 0, 0" Height="40">
+          <Label Content="Emulate"/>
+          <common:Common_Toggle x:Name="inp_Emulate" />
+        </StackPanel>
+      </StackPanel>
+    </Grid>
+  </Border>
+</UserControl>
