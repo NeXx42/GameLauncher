@@ -14,6 +14,16 @@ public static class DialogHelper
         return await MainWindow.instance!.StorageProvider.OpenFolderPickerAsync(options);
     }
 
+    public static async Task<T> OpenDialog<T>(Func<T, Task> setup) where T : Window
+    {
+        T dialog = Activator.CreateInstance<T>();
+
+        await setup(dialog);
+        await dialog.ShowDialog<T>(MainWindow.instance!);
+
+        return dialog;
+    }
+
     public static async Task<bool> OpenDialog(string header, string description, string positiveButton, string negativeButton)
     {
         Window_Dialog dialog = new Window_Dialog();

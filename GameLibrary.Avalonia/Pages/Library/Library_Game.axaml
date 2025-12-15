@@ -4,17 +4,13 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.Avalonia.Controls.Library_Game">
     <Grid>
         <Border Margin="5" CornerRadius="10" Background="Black"/>
-        <Border Margin="5" CornerRadius="10" x:Name="img">
-            <Border.Background>
-                <ImageBrush Source="resm:Avalonia.Skia.Assets.NoiseAsset_256X256_PNG.png?assembly=Avalonia.Skia"/>
-            </Border.Background>
+        <Border Margin="10" CornerRadius="5" x:Name="img" ClipToBounds="True" Background="Red">
             <Grid>
-                <Border VerticalAlignment="Bottom" Height="50" CornerRadius="10">
+                <Border VerticalAlignment="Bottom" Height="50" CornerRadius="0">
                     <Border.Background>
-                        <LinearGradientBrush EndPoint="0.5,1" StartPoint="0.5,0">
-                            <GradientStop Color="Black" Offset="1"/>
-                            <GradientStop Color="#00000000" Offset="0"/>
-                            <GradientStop Color="#F8000000" Offset="0.779"/>
+                        <LinearGradientBrush EndPoint="0%,0%" StartPoint="0%,100%">
+                            <GradientStop Color="Black" Offset="0.3"/>
+                            <GradientStop Color="#00000000" Offset="1.0"/>
                         </LinearGradientBrush>
                     </Border.Background>
                     <TextBlock FontSize="18" x:Name="title" Text="Test" Foreground="White" VerticalAlignment="Center" HorizontalAlignment="Center" TextAlignment="Center"/>

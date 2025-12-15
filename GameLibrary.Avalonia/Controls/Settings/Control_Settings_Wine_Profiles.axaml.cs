@@ -1,8 +1,14 @@
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
+using Avalonia.Media;
+using Avalonia.Media.Immutable;
+using GameLibrary.Avalonia.Helpers;
 using GameLibrary.Avalonia.Settings;
+using GameLibrary.Avalonia.Windows;
+using GameLibrary.DB;
 using GameLibrary.DB.Database.Tables;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
@@ -13,9 +19,42 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
 {
     private SettingBase? setting;
 
+    private Border[]? profileUIS;
+    private dbo_WineProfile[]? existingProfiles;
+
+    private ImmutableSolidColorBrush selectedBrush;
+    private ImmutableSolidColorBrush unselectedBrush;
+
+    private int? selectedProfile
+    {
+        set
+        {
+            if (m_selectedProfile.HasValue)
+            {
+                profileUIS![m_selectedProfile.Value].Background = unselectedBrush;
+            }
+
+            m_selectedProfile = value;
+            btn_Add.Label = value.HasValue ? "Edit" : "Add";
+
+            if (m_selectedProfile.HasValue)
+            {
+                profileUIS![m_selectedProfile.Value].Background = selectedBrush;
+            }
+        }
+        get => m_selectedProfile;
+    }
+    private int? m_selectedProfile;
+
     public Control_Settings_Wine_Profiles()
     {
         InitializeComponent();
+
+        selectedBrush = new ImmutableSolidColorBrush(Color.FromRgb(0, 0, 0));
+        unselectedBrush = new ImmutableSolidColorBrush(Color.FromArgb(0, 0, 0, 0));
+
+        selectedProfile = null;
+        btn_Add.RegisterClick(OpenEditMenu);
     }
 
     public ISettingControl Draw(SettingBase setting, SettingsUI_Wine_Profiles ui)
@@ -26,39 +65,60 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
 
     public async Task LoadValue()
     {
-        dbo_WineProfile[]? profiles = await setting!.LoadSetting<dbo_WineProfile[]>();
+        existingProfiles = await setting!.LoadSetting<dbo_WineProfile[]>();
+        profileUIS = new Border[existingProfiles?.Length ?? 0];
 
         container.Children.Clear();
 
-        if (profiles != null)
+        if (existingProfiles != null)
         {
-            foreach (dbo_WineProfile profile in profiles)
+            for (int i = 0; i < existingProfiles.Length; i++)
             {
-                DrawProfile(profile);
+                DrawProfile(i);
             }
         }
     }
 
-    private void DrawProfile(dbo_WineProfile profile)
+    private void DrawProfile(int profileIndex)
     {
-        Grid grid = new Grid();
-        grid.ColumnDefinitions.Add(new ColumnDefinition());
-        grid.ColumnDefinitions.Add(new ColumnDefinition(200, GridUnitType.Pixel));
+        Border grid = new Border();
 
-        grid.Height = 40;
+        grid.CornerRadius = new CornerRadius(2);
+        grid.Height = 30;
+        grid.HorizontalAlignment = HorizontalAlignment.Stretch;
+        grid.Background = unselectedBrush;
 
         Label l = new Label();
-        l.Content = profile.profileName;
+        l.Content = existingProfiles![profileIndex].profileName;
+        l.VerticalAlignment = VerticalAlignment.Center;
+        l.Margin = new Thickness(5);
 
-        Common_Button btn = new Common_Button();
-        btn.Content = "Edit";
-
-        grid.Children.Add(l);
-        grid.Children.Add(btn);
-
-        Grid.SetColumn(l, 0);
-        Grid.SetColumn(btn, 1);
+        grid.Child = l;
+        grid.PointerPressed += (_, __) => SelectProfile(profileIndex);
 
         container.Children.Add(grid);
+        profileUIS![profileIndex] = grid;
+    }
+
+    private void SelectProfile(int profileId)
+    {
+        if (selectedProfile == profileId)
+        {
+            selectedProfile = null;
+            return;
+        }
+
+        selectedProfile = profileId;
+    }
+
+    private async Task OpenEditMenu()
+    {
+        await DialogHelper.OpenDialog<Window_Settings_Wine_Profile>(SetupCall);
+
+        Task SetupCall(Window_Settings_Wine_Profile dialog)
+        {
+            dialog.Setup(selectedProfile.HasValue ? existingProfiles![selectedProfile.Value] : null);
+            return Task.CompletedTask;
+        }
     }
 }

@@ -75,6 +75,9 @@ public partial class Popup_AddGames : UserControl
 
     private async Task AttemptImport()
     {
+        if (possibleLibraries == null)
+            return;
+
         // move me into the file manager please
 
         dbo_Libraries chosenLibary = possibleLibraries!.First();

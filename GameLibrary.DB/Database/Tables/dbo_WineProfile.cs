@@ -2,7 +2,7 @@ namespace GameLibrary.DB.Database.Tables;
 
 public class dbo_WineProfile : Database_Table
 {
-    public override string tableName => "dbo_WineProfiles";
+    public override string tableName => "WineProfiles";
 
     public int id { get; set; }
     public string? profileName { get; set; }

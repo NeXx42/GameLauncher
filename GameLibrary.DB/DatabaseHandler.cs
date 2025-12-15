@@ -237,20 +237,23 @@ namespace GameLibrary.DB
         }
 
 
+        public static async Task AddOrUpdate<T>(T change, QueryBuilder.InternalAccessor query) where T : Database_Table
+        {
+            if (await Exists<T>(query))
+            {
+                await UpdateTableEntry(change, query);
+            }
+            else
+            {
+                await InsertIntoTable(change);
+            }
+        }
+
         public static async Task AddOrUpdate<T>(T[] changes, Func<T, QueryBuilder.InternalAccessor> match) where T : Database_Table
         {
             foreach (T change in changes)
             {
-                QueryBuilder.InternalAccessor query = match(change);
-
-                if (await Exists<T>(query))
-                {
-                    await UpdateTableEntry(change, query);
-                }
-                else
-                {
-                    await InsertIntoTable(change);
-                }
+                await AddOrUpdate(change, match(change));
             }
         }
     }

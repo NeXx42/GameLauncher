@@ -8,19 +8,22 @@ namespace GameLibrary.Avalonia.Controls;
 public partial class Common_Toggle : UserControl
 {
     private bool activeValue;
+
+    private bool ignoreEvents;
     private Action<bool> listeningEvent;
 
     public Common_Toggle()
     {
         InitializeComponent();
         inp.IsCheckedChanged += (_, __) => ChangeCallback();
-        inp.Content = "";
     }
 
     public void SilentSetValue(bool to)
     {
+        ignoreEvents = true;
         activeValue = to;
         inp.IsChecked = to;
+        ignoreEvents = false;
     }
 
     public void RegisterOnChange(Action<bool> onChange)
@@ -30,6 +33,9 @@ public partial class Common_Toggle : UserControl
 
     private void ChangeCallback()
     {
+        if (ignoreEvents)
+            return;
+
         activeValue = inp.IsChecked ?? false;
         listeningEvent?.Invoke(activeValue);
     }

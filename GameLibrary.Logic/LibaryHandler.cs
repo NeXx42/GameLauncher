@@ -143,7 +143,6 @@ namespace GameLibrary.Logic
             return (await DatabaseHandler.GetItems<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), gameId))).Select(x => x.TagId).ToArray();
         }
 
-
         public static async void RemoveTagFromGame(int gameId, int tagId)
         {
             await DatabaseHandler.DeleteFromTable<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), gameId).SQLEquals(nameof(dbo_GameTag.TagId), tagId));
@@ -215,6 +214,17 @@ namespace GameLibrary.Logic
                     return;
                 }
 
+                await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
+            }
+        }
+
+        public static async Task ChangeWineProfile(int gameId, int? wineProfile)
+        {
+            dbo_Game? game = GetGameFromId(gameId);
+
+            if (game != null)
+            {
+                game.wineProfile = wineProfile;
                 await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
             }
         }

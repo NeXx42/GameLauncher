@@ -54,15 +54,8 @@ public class Runner_Linux : IRunner
         {
             string gamePath = await game.GetAbsoluteExecutableLocation();
 
-            // if (useRelativeDir)
-            // {
-            //     string userPath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
-            //     info.EnvironmentVariables["WINEPREFIX"] = Path.Combine(userPath, ".wine");
-
-            //     gamePath = Path.Combine(userPath, game.gameFolder, game.executablePath);
-            // }
-
-            info.Arguments += $" wine \"{gamePath}\"";
+            info.ArgumentList.Add("wine");
+            info.ArgumentList.Add(gamePath);
         }
     }
 
@@ -71,21 +64,19 @@ public class Runner_Linux : IRunner
         if (!await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Enabled, false))
             return (false, false);
 
-        string firejailArguments = "";
         bool isolateFileSystem = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, false);
 
-        if (isolateFileSystem)
+        if (false)
         {
-            firejailArguments += $" --private=\"{await game.GetLibraryLocation()}\"";
+            info.ArgumentList.Add($"--private=\"{await game.GetLibraryLocation()}\"");
         }
 
         if (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Networking, true))
         {
-            firejailArguments += " --net=none";
+            info.ArgumentList.Add("--net=none");
         }
 
         info.FileName = "firejail";
-        info.Arguments = $"{firejailArguments}";
         return (true, isolateFileSystem);
     }
 }

@@ -23,7 +23,7 @@ namespace GameLibrary.Logic
         [DllImport(Libc, SetLastError = true)]
         public static extern int killpg(int pgid, int sig);
 
-
+        public static Action<int, bool>? OnGameRunStateChange;
 
         private static IRunner? runner;
         private static ConcurrentDictionary<int, ActiveGame> activeProcesses = new ConcurrentDictionary<int, ActiveGame>();
@@ -40,9 +40,19 @@ namespace GameLibrary.Logic
             }
         }
 
+        public static bool IsRunning(int id) => activeProcesses.ContainsKey(id);
+
 
         public static async void LaunchGame(int gameId)
         {
+            if (IsRunning(gameId))
+            {
+                // say game is already running?
+                OnGameRunStateChange?.Invoke(gameId, true); // make sure ui knows at least 
+
+                return;
+            }
+
             if (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Launcher_Concurrency, false))
             {
                 KillAllExistingProcesses();
@@ -76,8 +86,11 @@ namespace GameLibrary.Logic
 
                 //MainWindow.window!.UpdateActiveBanner($"Playing - {game.gameName}");
 
+                OnGameRunStateChange?.Invoke(game.id, true);
+
                 gameProcess.Exited += async (a, b) => await OnGameClose(game.id, a, b);
                 activeProcesses.TryAdd(gameId, new ActiveGame(logFile, gameProcess));
+
 
                 if (string.IsNullOrEmpty(game.iconPath))
                 {
@@ -93,15 +106,12 @@ namespace GameLibrary.Logic
 
         private static async Task OnGameClose(int gameId, object? obj, EventArgs args)
         {
+            OnGameRunStateChange?.Invoke(gameId, true);
+
             if (activeProcesses.TryRemove(gameId, out ActiveGame p))
             {
                 await p.OutputLogFile();
             }
-
-            //Application.Current.Dispatcher.Invoke(() =>
-            //{
-            //    MainWindow.window!.UpdateActiveBanner();
-            //});
         }
 
         public static void KillAllExistingProcesses()
@@ -160,7 +170,7 @@ namespace GameLibrary.Logic
                     p.StartInfo.RedirectStandardOutput = true;
                     p.StartInfo.RedirectStandardError = true;
 
-                    if (!File.Exists(logFile))
+                    if (File.Exists(logFile))
                         File.Delete(logFile!);
 
                     File.Create(logFile!)?.Dispose();
