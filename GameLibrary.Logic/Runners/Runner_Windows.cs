@@ -50,4 +50,18 @@ public class Runner_Windows : IRunner
         info.Arguments = $"/box:{sandboxieBox} \"{info.FileName}\" {info.Arguments}";
         info.FileName = sandboxieLoc;
     }
+
+    public Task<Runner_Game> LaunchGame(Process startInfo, string logPath)
+    {
+        return Task.FromResult((Runner_Game)new Runner_WindowsGame(logPath, startInfo));
+    }
+
+
+
+    public class Runner_WindowsGame : Runner_Game
+    {
+        public Runner_WindowsGame(string logPath, Process p) : base(logPath, p)
+        {
+        }
+    }
 }

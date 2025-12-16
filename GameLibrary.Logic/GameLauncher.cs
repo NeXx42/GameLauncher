@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.IO;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
@@ -12,24 +13,19 @@ namespace GameLibrary.Logic
 {
     public static class GameLauncher
     {
-        // libc (standard C library) on Linux/Unix
-        private const string Libc = "libc";
-
-        // setpgid(pid, pgid) — sets the process group of a process
-        [DllImport(Libc, SetLastError = true)]
-        public static extern int setpgid(int pid, int pgid);
-
-        // killpg(pgid, sig) — sends signal to a process group
-        [DllImport(Libc, SetLastError = true)]
-        public static extern int killpg(int pgid, int sig);
-
         public static Action<int, bool>? OnGameRunStateChange;
 
         private static IRunner? runner;
-        private static ConcurrentDictionary<int, ActiveGame> activeProcesses = new ConcurrentDictionary<int, ActiveGame>();
+        private static ConcurrentDictionary<int, Runner_Game> activeProcesses = new ConcurrentDictionary<int, Runner_Game>();
+
+        private static string getLogFolder => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location)!, "logs");
+
 
         public static void Init()
         {
+            if (!Directory.Exists(getLogFolder))
+                Directory.CreateDirectory(getLogFolder);
+
             if (ConfigHandler.isOnLinux)
             {
                 runner = new Runner_Linux();
@@ -71,7 +67,7 @@ namespace GameLibrary.Logic
 
             if (true)
             {
-                logFile = Path.Combine(await game.GetAbsoluteFolderLocation(), $"{game.gameName.Replace(" ", "")}_log.txt");
+                logFile = Path.Combine(getLogFolder, $"{game.id}.log");
             }
 
             try
@@ -89,7 +85,7 @@ namespace GameLibrary.Logic
                 OnGameRunStateChange?.Invoke(game.id, true);
 
                 gameProcess.Exited += async (a, b) => await OnGameClose(game.id, a, b);
-                activeProcesses.TryAdd(gameId, new ActiveGame(logFile, gameProcess));
+                activeProcesses.TryAdd(gameId, await runner.LaunchGame(gameProcess, logFile));
 
 
                 if (string.IsNullOrEmpty(game.iconPath))
@@ -108,9 +104,8 @@ namespace GameLibrary.Logic
         {
             OnGameRunStateChange?.Invoke(gameId, true);
 
-            if (activeProcesses.TryRemove(gameId, out ActiveGame p))
+            if (activeProcesses.TryRemove(gameId, out _))
             {
-                await p.OutputLogFile();
             }
         }
 
@@ -118,7 +113,7 @@ namespace GameLibrary.Logic
         {
             lock (activeProcesses)
             {
-                foreach (KeyValuePair<int, ActiveGame> activeProcess in activeProcesses)
+                foreach (KeyValuePair<int, Runner_Game> activeProcess in activeProcesses)
                 {
                     try
                     {
@@ -128,6 +123,20 @@ namespace GameLibrary.Logic
                 }
 
                 activeProcesses.Clear();
+            }
+        }
+
+        public static async Task<string> GetLatestLogs(int gameId)
+        {
+            string path = Path.Combine(getLogFolder, $"{gameId}.log");
+
+            if (!File.Exists(path))
+                return string.Empty;
+
+            using (FileStream stream = new FileStream(path, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                return await reader.ReadToEndAsync();
             }
         }
 
@@ -152,87 +161,5 @@ namespace GameLibrary.Logic
         //    overlay.Prep(gameId);
         //    overlay.Show();
         //}
-
-
-        struct ActiveGame
-        {
-            public Process process;
-            public int? groupId;
-
-            private string? logFile;
-
-            public ActiveGame(string logPath, Process p)
-            {
-                if (!string.IsNullOrEmpty(logPath))
-                {
-                    logFile = logPath;
-
-                    p.StartInfo.RedirectStandardOutput = true;
-                    p.StartInfo.RedirectStandardError = true;
-
-                    if (File.Exists(logFile))
-                        File.Delete(logFile!);
-
-                    File.Create(logFile!)?.Dispose();
-                }
-
-                process = p;
-                process.Start();
-
-                if (ConfigHandler.isOnLinux)
-                {
-                    groupId = process.Id;
-                    setpgid(groupId.Value, groupId.Value);
-                }
-            }
-
-            public async Task Kill()
-            {
-                await OutputLogFile();
-
-                try
-                {
-                    if (groupId.HasValue)
-                    {
-                        //killpg(groupId.Value, 9); // Linux
-                        process.Kill(entireProcessTree: true);
-                    }
-                    else
-                    {
-                        process.Kill(entireProcessTree: true); // Windows
-                    }
-
-                    process.WaitForExit();
-                }
-                catch
-                {
-                    try
-                    {
-                        if (!process.HasExited)
-                            process.Kill();
-                    }
-                    catch { }
-                }
-            }
-
-            public async Task OutputLogFile()
-            {
-                try
-                {
-                    if (process != null && !string.IsNullOrEmpty(logFile))
-                    {
-                        StringBuilder output = new StringBuilder((await process?.StandardOutput?.ReadToEndAsync()) ?? string.Empty);
-                        output.Append((await process?.StandardError?.ReadToEndAsync()) ?? string.Empty);
-
-                        await File.WriteAllTextAsync(logFile, output.ToString());
-                    }
-
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e);
-                }
-            }
-        }
     }
 }

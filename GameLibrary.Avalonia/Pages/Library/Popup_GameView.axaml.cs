@@ -9,6 +9,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using GameLibrary.Avalonia.Controls;
+using GameLibrary.Avalonia.Utils;
 using GameLibrary.DB;
 using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
@@ -34,11 +35,13 @@ public partial class Popup_GameView : UserControl
         btn_Launch.RegisterClick(HandleLaunch);
 
         ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateGameIcon);
-        //GameLauncher.OnGameRunStateChange += UpdateRunningGameStatus; // need to fix threading issue
+        GameLauncher.OnGameRunStateChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b)); // need to fix threading issue
     }
 
     public async Task Draw(dbo_Game game)
     {
+        await ValidateGame(game);
+
         inspectingGameId = game.id;
         img_bg.Background = null;
 
@@ -52,6 +55,30 @@ public partial class Popup_GameView : UserControl
 
         List<string> executableBinaries = await GetBinaries(game);
         inp_binary.Setup(executableBinaries.Select(x => Path.GetFileName(x)), executableBinaries.IndexOf(game.executablePath!), HandleBinaryChange);
+    }
+
+    private async Task ValidateGame(dbo_Game game)
+    {
+        bool isDirty = false;
+
+        if (ConfigHandler.isOnLinux)
+        {
+            if (game.wineProfile == null)
+            {
+                dbo_WineProfile? firstProfile = await DatabaseHandler.GetItem<dbo_WineProfile>();
+
+                if (firstProfile != null)
+                {
+                    game.wineProfile = firstProfile.id;
+                    isDirty = true;
+                }
+            }
+        }
+
+        if (isDirty)
+        {
+            await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_WineProfile.id), game.id));
+        }
     }
 
     private void UpdateGameIcon(int gameId, ImageBrush? img)
@@ -128,8 +155,9 @@ public partial class Popup_GameView : UserControl
             unselectedTabColour = new ImmutableSolidColorBrush(Color.FromRgb(25, 25, 25));
 
             tabs = [
-               CreateTab<Tab_Tags>(0, master.btn_tab_Tags, master.tab_Tags),
-               CreateTab<Tab_LaunchSettings>(1, master.btn_tab_Options, master.tab_Settings),
+                CreateTab<Tab_Tags>(0, master.btn_tab_Tags, master.tab_Tags),
+                CreateTab<Tab_LaunchSettings>(1, master.btn_tab_Options, master.tab_Settings),
+                CreateTab<Tab_Logs>(2, master.btn_tab_Logs, master.tab_Logs)
             ];
 
             activeTab = 0;
@@ -185,7 +213,7 @@ public partial class Popup_GameView : UserControl
                 container!.IsVisible = true;
                 lastGameId = gameId;
 
-                btn.Background = groupMaster.activeTabColour;
+                btn!.Background = groupMaster!.activeTabColour;
 
                 return Task.CompletedTask;
             }
@@ -193,7 +221,7 @@ public partial class Popup_GameView : UserControl
             public virtual void Close()
             {
                 container!.IsVisible = false;
-                btn.Background = groupMaster.unselectedTabColour;
+                btn!.Background = groupMaster!.unselectedTabColour;
             }
         }
 
@@ -202,7 +230,7 @@ public partial class Popup_GameView : UserControl
 
         internal class Tab_Tags : TabBase
         {
-            private HashSet<int> gameTags;
+            private HashSet<int>? gameTags;
             private Dictionary<int, Library_Tag> allTags = new Dictionary<int, Library_Tag>();
 
             public override async Task Open(int gameId)
@@ -259,7 +287,7 @@ public partial class Popup_GameView : UserControl
 
             private async void HandleTagToggle(int tagId)
             {
-                if (gameTags.Contains(tagId))
+                if (gameTags!.Contains(tagId))
                 {
                     gameTags.Remove(tagId);
                     LibraryHandler.RemoveTagFromGame(groupMaster!.master.inspectingGameId, tagId);
@@ -307,9 +335,34 @@ public partial class Popup_GameView : UserControl
                 await base.Open(gameId);
             }
 
-            private void HandleEmulateToggle(bool to) => LibraryHandler.UpdateGameEmulationStatus(lastGameId.Value, to);
-            private async Task HandleWineProfileChange() => await LibraryHandler.ChangeWineProfile(lastGameId.Value, possibleWineProfiles?.ElementAt(groupMaster!.master.inp_WineProfile.selectedIndex)?.id);
+            private void HandleEmulateToggle(bool to) => LibraryHandler.UpdateGameEmulationStatus(lastGameId!.Value, to);
+            private async Task HandleWineProfileChange() => await LibraryHandler.ChangeWineProfile(lastGameId!.Value, possibleWineProfiles?.ElementAt(groupMaster!.master.inp_WineProfile.selectedIndex)?.id);
+        }
 
+        internal class Tab_Logs : TabBase
+        {
+            public override TabBase Setup(Border btn, Grid container, TabGroup groupMaster)
+            {
+                groupMaster.master.btn_RefreshLogs.RegisterClick(async () =>
+                {
+                    if (lastGameId.HasValue)
+                        await RefreshLogs(lastGameId.Value);
+                });
+
+                return base.Setup(btn, container, groupMaster);
+            }
+
+            public override async Task Open(int gameId)
+            {
+                await base.Open(gameId);
+                await RefreshLogs(gameId);
+            }
+
+            private async Task RefreshLogs(int gameId)
+            {
+                string txt = await GameLauncher.GetLatestLogs(gameId);
+                groupMaster!.master.lbl_Logs.Text = txt;
+            }
         }
     }
 }

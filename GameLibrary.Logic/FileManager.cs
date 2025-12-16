@@ -51,10 +51,6 @@ namespace GameLibrary.Logic
 
         public static async Task BrowseToGame(dbo_Game game)
         {
-            // do retry and stuff here, need a global way of showing dialogs and the like
-
-            return;
-
             string folder = Path.GetDirectoryName(await game.GetAbsoluteExecutableLocation()) ?? string.Empty;
 
             if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
@@ -77,6 +73,10 @@ namespace GameLibrary.Logic
 
         public static async Task<Exception?> DeleteGame(dbo_Game game)
         {
+            // do retry and stuff here, need a global way of showing dialogs and the like
+
+            return null;
+
             try
             {
                 string toDelete = await game.GetAbsoluteFolderLocation();

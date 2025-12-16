@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using GameLibrary.DB;
 using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
@@ -7,14 +8,14 @@ namespace GameLibrary.Logic.Runners;
 
 public class Runner_Linux : IRunner
 {
-    public const string WINE_GLOBAL_ISOLATION_FOLDER_NAME = "_GlobalShare";
-
     public async Task<ProcessStartInfo> Run(dbo_Game game)
     {
         ProcessStartInfo info = new ProcessStartInfo();
-        (bool didSandbox, bool useRelativePath) = await Sandbox(info, game);
+
+        string[] requiredLocations = await GetRequiredWineDirectories(game);
 
         await EmulateRegion(info, game);
+        bool didSandbox = await Sandbox(info, requiredLocations);
         await EmbedWine(info, game, didSandbox);
 
         return info;
@@ -32,8 +33,10 @@ public class Runner_Linux : IRunner
         return Task.CompletedTask;
     }
 
-    private async Task EmbedWine(ProcessStartInfo info, dbo_Game game, bool didSandbox)
+    private async Task<string[]> GetRequiredWineDirectories(dbo_Game game)
     {
+        List<string> dirs = new List<string>();
+
         if (game.wineProfile.HasValue)
         {
             dbo_WineProfile? profile = await DatabaseHandler.GetItem<dbo_WineProfile>(QueryBuilder.SQLEquals(nameof(dbo_WineProfile.id), game.wineProfile.Value));
@@ -41,34 +44,42 @@ public class Runner_Linux : IRunner
             if (profile == null)
                 throw new Exception($"Profile doesn't exist");
 
-            info.EnvironmentVariables["WINEPREFIX"] = profile!.profileDirectory!;
+            dirs.Add(profile!.profileDirectory!);
         }
 
-        if (!didSandbox)
-        {
+        dirs.Add(await game.GetAbsoluteFolderLocation());
+        return dirs.ToArray();
+    }
 
-            info.FileName = "wine";
-            info.Arguments = await game.GetAbsoluteExecutableLocation();
+    private async Task EmbedWine(ProcessStartInfo info, dbo_Game game, bool didSandbox)
+    {
+        if (didSandbox)
+        {
+            info.ArgumentList.Add("wine");
         }
         else
         {
-            string gamePath = await game.GetAbsoluteExecutableLocation();
-
-            info.ArgumentList.Add("wine");
-            info.ArgumentList.Add(gamePath);
+            info.FileName = "wine";
         }
+
+        info.ArgumentList.Add(await game.GetAbsoluteExecutableLocation());
     }
 
-    private async Task<(bool, bool)> Sandbox(ProcessStartInfo info, dbo_Game game)
+    private async Task<bool> Sandbox(ProcessStartInfo info, string[] whitelistedLocation)
     {
         if (!await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Enabled, false))
-            return (false, false);
+            return false;
 
         bool isolateFileSystem = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, false);
 
-        if (false)
+        if (isolateFileSystem)
         {
-            info.ArgumentList.Add($"--private=\"{await game.GetLibraryLocation()}\"");
+            foreach (string str in whitelistedLocation)
+            {
+                info.ArgumentList.Add($"--whitelist={str}");
+            }
+
+            info.ArgumentList.Add("--private-dev");
         }
 
         if (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Networking, true))
@@ -77,6 +88,27 @@ public class Runner_Linux : IRunner
         }
 
         info.FileName = "firejail";
-        return (true, isolateFileSystem);
+        return true;
+    }
+
+    public Task<Runner_Game> LaunchGame(Process process, string logPath)
+    {
+        return Task.FromResult((Runner_Game)new Runner_LinuxGame(logPath, process));
+    }
+
+
+
+
+    public class Runner_LinuxGame : Runner_Game
+    {
+        public Runner_LinuxGame(string logPath, Process p) : base(logPath, p)
+        {
+        }
+
+        public override void PostRun()
+        {
+            groupId = process.Id;
+            //setpgid(groupId.Value, groupId.Value);
+        }
     }
 }
