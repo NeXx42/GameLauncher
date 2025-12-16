@@ -84,7 +84,7 @@
             </Grid>
 
             <!-- Logs -->
-            <Grid x:Name="tab_Logs" IsVisible="True" Background="Red" VerticalAlignment="Stretch">
+            <Grid x:Name="tab_Logs" IsVisible="True" VerticalAlignment="Stretch">
               <ScrollViewer>
                 <TextBlock x:Name="lbl_Logs" Text="YO"/>
               </ScrollViewer>

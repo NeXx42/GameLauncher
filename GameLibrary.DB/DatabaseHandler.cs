@@ -16,9 +16,9 @@ namespace GameLibrary.DB
 
         private static SQLiteConnection? connection;
 
-        private static Action<Exception>? errorCallback;
+        private static Func<Exception, Task>? errorCallback;
 
-        public static async Task Setup(string dbPath, Action<Exception>? errorCallback = null)
+        public static async Task Setup(string dbPath, Func<Exception, Task>? errorCallback = null)
         {
             if (string.IsNullOrEmpty(dbPath))
                 throw new Exception("Invalid path");
@@ -138,8 +138,7 @@ namespace GameLibrary.DB
             }
             catch (Exception e)
             {
-                errorCallback?.Invoke(e);
-                //MessageBox.Show($"{sql}\n{e.Message}", "Failed sql", MessageBoxButton.OK, MessageBoxImage.Error);
+                if (errorCallback != null) await errorCallback.Invoke(e);
             }
             finally
             {
@@ -174,8 +173,7 @@ namespace GameLibrary.DB
             }
             catch (Exception e)
             {
-                errorCallback?.Invoke(e);
-                //MessageBox.Show(e.Message, "Failed to get SQL");
+                if (errorCallback != null) await errorCallback.Invoke(e);
                 return false;
             }
             finally
@@ -223,9 +221,7 @@ namespace GameLibrary.DB
             catch (Exception e)
             {
                 await connection!.CloseAsync();
-                errorCallback?.Invoke(e);
-
-                //MessageBox.Show(e.Message, "Failed to get SQL");
+                if (errorCallback != null) await errorCallback.Invoke(e);
                 return Array.Empty<T>();
             }
         }

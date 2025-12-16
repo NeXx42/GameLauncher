@@ -18,7 +18,7 @@ public partial class Window_Dialog : Window
         btn_Negative.RegisterClick(() => OnSelectOption(false));
     }
 
-    public void Setup(string header, string description, string positiveButton, string negativeButton)
+    public void Setup(string header, string description, string positiveButton, string? negativeButton)
     {
         clickedButton = null;
 
@@ -26,7 +26,16 @@ public partial class Window_Dialog : Window
 
         lbl_Description.Text = description;
         btn_Positive.Label = positiveButton;
-        btn_Negative.Label = negativeButton;
+
+        if (string.IsNullOrEmpty(negativeButton))
+        {
+            btn_Negative.IsVisible = false;
+        }
+        else
+        {
+            btn_Negative.IsVisible = true;
+            btn_Negative.Label = negativeButton;
+        }
     }
 
     private void OnSelectOption(bool option)

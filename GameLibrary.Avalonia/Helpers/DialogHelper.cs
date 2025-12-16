@@ -24,7 +24,7 @@ public static class DialogHelper
         return dialog;
     }
 
-    public static async Task<bool> OpenDialog(string header, string description, string positiveButton, string negativeButton)
+    public static async Task<bool> OpenDialog(string header, string description, string positiveButton, string? negativeButton)
     {
         Window_Dialog dialog = new Window_Dialog();
 
@@ -34,8 +34,8 @@ public static class DialogHelper
         return dialog.didSelectPositive ?? false;
     }
 
-    public static void OpenExceptionDialog(Exception msg)
+    public static async Task OpenExceptionDialog(Exception msg)
     {
-
+        await OpenDialog("Exception", msg.Message, "Ok", null);
     }
 }

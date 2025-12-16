@@ -11,12 +11,11 @@ public class Runner_Linux : IRunner
     public async Task<ProcessStartInfo> Run(dbo_Game game)
     {
         ProcessStartInfo info = new ProcessStartInfo();
-
-        string[] requiredLocations = await GetRequiredWineDirectories(game);
+        LaunchOptions wineOptions = await GetWineOptions(game);
 
         await EmulateRegion(info, game);
-        bool didSandbox = await Sandbox(info, requiredLocations);
-        await EmbedWine(info, game, didSandbox);
+        await Sandbox(info, wineOptions);
+        await EmbedWine(info, wineOptions);
 
         return info;
     }
@@ -33,9 +32,9 @@ public class Runner_Linux : IRunner
         return Task.CompletedTask;
     }
 
-    private async Task<string[]> GetRequiredWineDirectories(dbo_Game game)
+    private async Task<LaunchOptions> GetWineOptions(dbo_Game game)
     {
-        List<string> dirs = new List<string>();
+        LaunchOptions options = new LaunchOptions();
 
         if (game.wineProfile.HasValue)
         {
@@ -44,16 +43,23 @@ public class Runner_Linux : IRunner
             if (profile == null)
                 throw new Exception($"Profile doesn't exist");
 
-            dirs.Add(profile!.profileDirectory!);
+            options.prefix = profile!.profileDirectory!;
         }
 
-        dirs.Add(await game.GetAbsoluteFolderLocation());
-        return dirs.ToArray();
+        options.gameFolder = await game.GetAbsoluteFolderLocation();
+        options.gameExecutable = Path.Combine(options.gameFolder, game.executablePath!);
+
+        return options;
     }
 
-    private async Task EmbedWine(ProcessStartInfo info, dbo_Game game, bool didSandbox)
+    private async Task EmbedWine(ProcessStartInfo info, LaunchOptions options)
     {
-        if (didSandbox)
+        if (!string.IsNullOrEmpty(options.prefix))
+        {
+            info.EnvironmentVariables["WINEPREFIX"] = options.prefix;
+        }
+
+        if (options.didSandbox)
         {
             info.ArgumentList.Add("wine");
         }
@@ -62,23 +68,27 @@ public class Runner_Linux : IRunner
             info.FileName = "wine";
         }
 
-        info.ArgumentList.Add(await game.GetAbsoluteExecutableLocation());
+        info.ArgumentList.Add(options.gameExecutable!);
     }
 
-    private async Task<bool> Sandbox(ProcessStartInfo info, string[] whitelistedLocation)
+    private async Task Sandbox(ProcessStartInfo info, LaunchOptions options)
     {
         if (!await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Enabled, false))
-            return false;
+        {
+            options.didSandbox = false;
+            return;
+        }
 
         bool isolateFileSystem = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, false);
 
         if (isolateFileSystem)
         {
-            foreach (string str in whitelistedLocation)
+            if (!string.IsNullOrEmpty(options.prefix))
             {
-                info.ArgumentList.Add($"--whitelist={str}");
+                info.ArgumentList.Add($"--whitelist={options.prefix}");
             }
 
+            info.ArgumentList.Add($"--whitelist={options.gameFolder}");
             info.ArgumentList.Add("--private-dev");
         }
 
@@ -88,7 +98,7 @@ public class Runner_Linux : IRunner
         }
 
         info.FileName = "firejail";
-        return true;
+        options.didSandbox = true;
     }
 
     public Task<Runner_Game> LaunchGame(Process process, string logPath)
@@ -96,7 +106,14 @@ public class Runner_Linux : IRunner
         return Task.FromResult((Runner_Game)new Runner_LinuxGame(logPath, process));
     }
 
+    private class LaunchOptions
+    {
+        public string? prefix;
+        public string? gameFolder;
+        public string? gameExecutable;
 
+        public bool didSandbox;
+    }
 
 
     public class Runner_LinuxGame : Runner_Game
