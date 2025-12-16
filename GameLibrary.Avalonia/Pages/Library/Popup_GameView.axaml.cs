@@ -21,10 +21,13 @@ public partial class Popup_GameView : UserControl
 {
     private int inspectingGameId;
     private TabGroup tabGroup;
+    private TabGroup tabGroup;
 
     public Popup_GameView()
     {
         InitializeComponent();
+
+        tabGroup = new TabGroup(this);
 
         tabGroup = new TabGroup(this);
 
@@ -48,6 +51,7 @@ public partial class Popup_GameView : UserControl
         UpdateRunningGameStatus(game.id, GameLauncher.IsRunning(game.id));
 
         await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
+        await tabGroup.OpenFresh();
         await tabGroup.OpenFresh();
 
         inp_Emulate.SilentSetValue(game.useEmulator);
@@ -262,17 +266,24 @@ public partial class Popup_GameView : UserControl
                 void GenerateTag(int tagId)
                 {
                     dbo_Tag? tag = LibraryHandler.GetTagById(tagId);
-
-                    if (tag != null)
+                    void GenerateTag(int tagId)
                     {
-                        Library_Tag tagUI = new Library_Tag();
-                        tagUI.Draw(tag, HandleTagToggle);
+                        dbo_Tag? tag = LibraryHandler.GetTagById(tagId);
 
-                        groupMaster!.master.cont_AllTags.Children.Add(tagUI);
-                        allTags.Add(tagId, tagUI);
+                        if (tag != null)
+                        {
+                            Library_Tag tagUI = new Library_Tag();
+                            tagUI.Draw(tag, HandleTagToggle);
+                            if (tag != null)
+                            {
+                                Library_Tag tagUI = new Library_Tag();
+                                tagUI.Draw(tag, HandleTagToggle);
+
+                                groupMaster!.master.cont_AllTags.Children.Add(tagUI);
+                                allTags.Add(tagId, tagUI);
+                            }
+                        }
                     }
-                }
-            }
 
             private async Task RedrawSelectedTags()
             {

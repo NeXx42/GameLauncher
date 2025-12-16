@@ -2,6 +2,7 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080" x:Class="GameLibrary.Avalonia.Pages.Library.Popup_GameView"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080" x:Class="GameLibrary.Avalonia.Pages.Library.Popup_GameView"
   xmlns:common="clr-namespace:GameLibrary.Avalonia.Controls"
   xmlns:local="clr-namespace:GameLibrary.Avalonia.Pages.Library">
   <Border Background="#1E1E1E" CornerRadius="10,10,0,0">
@@ -79,40 +80,54 @@
                   <Label Content="Wine Profile" VerticalAlignment="Center"/>
                   <common:Common_Dropdown x:Name="inp_WineProfile" Width="200" HorizontalAlignment="Left"/>
                 </StackPanel>
+                <!-- Options -->
+                <Grid x:Name="tab_Settings" IsVisible="False">
+                  <StackPanel Orientation="Vertical" Spacing="15">
 
-              </StackPanel>
-            </Grid>
+                    <StackPanel Orientation="Vertical">
+                      <Label Content="Emulation" VerticalAlignment="Center"/>
+                      <common:Common_Toggle x:Name="inp_Emulate" />
+                    </StackPanel>
 
-            <!-- Logs -->
-            <Grid x:Name="tab_Logs" IsVisible="True" Background="Red" VerticalAlignment="Stretch">
-              <ScrollViewer>
-                <TextBlock x:Name="lbl_Logs" Text="YO"/>
-              </ScrollViewer>
-              <common:Common_Button x:Name="btn_RefreshLogs" VerticalAlignment="Top" HorizontalAlignment="Right" Label="🔃" Height="30" Width="30"/>
-            </Grid>
+                    <StackPanel Orientation="Vertical">
+                      <Label Content="Wine Profile" VerticalAlignment="Center"/>
+                      <common:Common_Dropdown x:Name="inp_WineProfile" Width="200" HorizontalAlignment="Left"/>
+                    </StackPanel>
 
+                  </StackPanel>
+                </Grid>
+
+                <!-- Logs -->
+                <Grid x:Name="tab_Logs" IsVisible="True" Background="Red" VerticalAlignment="Stretch">
+                  <ScrollViewer>
+                    <TextBlock x:Name="lbl_Logs" Text="YO"/>
+                  </ScrollViewer>
+                  <common:Common_Button x:Name="btn_RefreshLogs" VerticalAlignment="Top" HorizontalAlignment="Right" Label="🔃" Height="30" Width="30"/>
+                </Grid>
+
+
+              </Grid>
+            </Border>
+          </Grid>
+
+          <!-- Controls -->
+          <StackPanel VerticalAlignment="Bottom" Margin="20, 0, 20, 20" Grid.Row="2">
+            <StackPanel VerticalAlignment="Bottom" Margin="20, 0, 20, 20" Grid.Row="2">
+
+              <Grid>
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
+                  <common:Common_Button Margin="0,0,5,0" x:Name="btn_Delete" Width="90" Label="🗑 Delete"/>
+                  <common:Common_Button Margin="0,0,5,0" x:Name="btn_Overlay" Width="120" Label="🧩 Open Overlay"/>
+                  <common:Common_Dropdown Margin="0,0,5,0" x:Name="inp_binary" Width="355"/>
+                  <common:Common_Button Margin="0,0,5,0" x:Name="btn_Browse" Width="120" Label="📁 Browse"/>
+                </StackPanel>
+
+                <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
+                  <common:Common_Button x:Name="btn_Launch" Width="150" Label="▶ Launch"/>
+                </StackPanel>
+              </Grid>
+            </StackPanel>
 
           </Grid>
         </Border>
-      </Grid>
-
-      <!-- Controls -->
-      <StackPanel VerticalAlignment="Bottom" Margin="20, 0, 20, 20" Grid.Row="2">
-
-        <Grid>
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
-            <common:Common_Button Margin="0,0,5,0" x:Name="btn_Delete" Width="90" Label="🗑 Delete"/>
-            <common:Common_Button Margin="0,0,5,0" x:Name="btn_Overlay" Width="120" Label="🧩 Open Overlay"/>
-            <common:Common_Dropdown Margin="0,0,5,0" x:Name="inp_binary" Width="355"/>
-            <common:Common_Button Margin="0,0,5,0" x:Name="btn_Browse" Width="120" Label="📁 Browse"/>
-          </StackPanel>
-
-          <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">
-            <common:Common_Button x:Name="btn_Launch" Width="150" Label="▶ Launch"/>
-          </StackPanel>
-        </Grid>
-      </StackPanel>
-
-    </Grid>
-  </Border>
-</UserControl>
+      </UserControl>
