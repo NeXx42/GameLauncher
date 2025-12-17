@@ -57,7 +57,7 @@ public partial class Page_Setup : UserControl
                     "Yes",
                     "No"))
                 {
-                    await ConfigHandler.CreateDBPointerFile(existingDB);
+                    await DatabaseManager.CreateDBPointerFile(existingDB);
                     setupCallback?.Invoke(new SetupRequest(existingDB));
 
                     return;

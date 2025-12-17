@@ -4,6 +4,7 @@ using System.Windows;
 using GameLibrary.DB;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Interfaces;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic
 {
@@ -16,7 +17,7 @@ namespace GameLibrary.Logic
             LastPlayed,
         }
 
-        private static dbo_Game[]? games;
+        private static GameDto[]? games;
         private static dbo_Tag[]? tags;
 
         private static int[]? gameFilterList;
@@ -52,8 +53,13 @@ namespace GameLibrary.Logic
 
         private static async Task FindGames_Internal()
         {
-            games = await DatabaseHandler.GetItems<dbo_Game>();
-            games ??= Array.Empty<dbo_Game>();
+            dbo_Game[] latestGames = await DatabaseHandler.GetItems<dbo_Game>();
+            games = latestGames.Select(x => new GameDto(x)).ToArray();
+
+            foreach (GameDto game in games)
+            {
+                await game.LoadAll();
+            }
         }
 
         private static async Task FindTags()
@@ -65,25 +71,77 @@ namespace GameLibrary.Logic
 
 
 
+        public static async Task ImportGames(Stack<FileManager.GameFolder> availableImports)
+        {
+            dbo_Libraries? chosenLibrary = await DatabaseHandler.GetItem<dbo_Libraries>();
+
+            if (chosenLibrary == null)
+            {
+                throw new Exception("No library to import into");
+            }
+
+            bool useGuidFolderNames = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Import_GUIDFolderNames, true);
+
+            for (int i = availableImports.Count - 1; i >= 0; i--)
+            {
+                FileManager.GameFolder folder = availableImports.Peek();
+                string gameFolderName = CorrectGameName(Path.GetFileName(folder.path));
+
+                dbo_Game newGame = new dbo_Game
+                {
+                    gameName = gameFolderName,
+                    gameFolder = useGuidFolderNames ? Guid.NewGuid().ToString() : gameFolderName,
+                    executablePath = Path.GetFileName(TryFindBestExecutable(folder.executables)),
+                    libaryId = chosenLibrary.libaryId
+                };
+
+                try
+                {
+                    await DatabaseHandler.InsertIntoTable(newGame);
+                    Directory.Move(folder.path, Path.Combine(chosenLibrary.rootPath, newGame.gameFolder));
+
+                    availableImports.Pop();
+                }
+                catch
+                {
+
+                }
+            }
+
+            string TryFindBestExecutable(string[] possible)
+            {
+                string? bestPossible = possible.Where(x =>
+                {
+                    string name = Path.GetFileName(x).ToLower();
+                    return !name.Contains("crash", StringComparison.InvariantCulture)
+                            && !name.Contains("crash", StringComparison.InvariantCulture);
+                }).FirstOrDefault();
+
+                return bestPossible ?? possible.FirstOrDefault() ?? "";
+            }
+
+            string CorrectGameName(string existing)
+            {
+                return existing.Replace("'", "");
+            }
+        }
 
 
 
 
 
+        public static GameDto? GetGameFromId(int id) => games!.FirstOrDefault(x => x.getGameId == id);
 
-        public static dbo_Game? GetGameFromId(int id) => games!.FirstOrDefault(x => x.id == id);
 
-
-        public static async Task RefilterGames(HashSet<int> tagFilter, OrderType orderType, bool isAsc)
+        public static void RefilterGames(HashSet<int> tagFilter, OrderType orderType, bool isAsc)
         {
             if ((tagFilter?.Count ?? 0) == 0)
             {
-                gameFilterList = OrderList(FilterList(games!.Select(x => x.id))).ToArray();
+                gameFilterList = OrderList(FilterList(games!.Select(x => x.getGameId))).ToArray();
                 return;
             }
 
-            dbo_GameTag[] gameTags = await DatabaseHandler.GetItems<dbo_GameTag>(QueryBuilder.In(nameof(dbo_GameTag.TagId), tagFilter!.ToArray()));
-            gameFilterList = OrderList(FilterList(gameTags.GroupBy(x => x.GameId).Where(x => x.Count() == tagFilter!.Count).Select(x => x.Key))).ToArray();
+            gameFilterList = OrderList(FilterList(games!.Where(x => x.IsInFilter(ref tagFilter)).Select(x => x.getGameId))).ToArray();
 
             IEnumerable<int> OrderList(IEnumerable<int> inp)
                 => isAsc ? inp : inp.Reverse();
@@ -93,34 +151,22 @@ namespace GameLibrary.Logic
                 switch (orderType)
                 {
                     case OrderType.Id: return inp.OrderBy(x => x);
-                    case OrderType.Name: return inp.OrderBy(x => GetGameFromId(x)!.gameName);
-                    case OrderType.LastPlayed: return inp.OrderBy(x => GetGameFromId(x)!.lastPlayed);
+                    case OrderType.Name: return inp.OrderBy(x => GetGameFromId(x)!.getGame.gameName);
+                    case OrderType.LastPlayed: return inp.OrderBy(x => GetGameFromId(x)!.getGame.lastPlayed);
                 }
 
                 return inp;
             }
         }
 
-        public static void OrderFilterList()
-        {
-            gameFilterList = gameFilterList!.OrderByDescending(x => GetGameFromId(x)!.gameName).ToArray();
-        }
+        public static int GetFilteredGameCount() => gameFilterList?.Length ?? games!.Length;
 
-        public static int GetFilteredGameCount() => gameFilterList!.Length;
-
-        public static async Task<int[]> GetDrawList(int offset, int take)
+        public static int[] GetDrawList(int offset, int take)
         {
             if (gameFilterList == null)
-                await RefilterGames(null!, OrderType.Name, true);
+                return games?.Skip(offset).Take(take).Select(x => x.getGameId).ToArray() ?? [];
 
-            List<int> res = new List<int>();
-
-            for (int i = offset; i < MathF.Min(offset + take, gameFilterList!.Length); i++)
-            {
-                res.Add(gameFilterList[i]);
-            }
-
-            return res.ToArray();
+            return gameFilterList.Skip(offset).Take(take).Select(x => x).ToArray();
         }
 
         public static async Task<int[]> GetAllTags()
@@ -143,16 +189,6 @@ namespace GameLibrary.Logic
             return (await DatabaseHandler.GetItems<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), gameId))).Select(x => x.TagId).ToArray();
         }
 
-        public static async void RemoveTagFromGame(int gameId, int tagId)
-        {
-            await DatabaseHandler.DeleteFromTable<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), gameId).SQLEquals(nameof(dbo_GameTag.TagId), tagId));
-        }
-
-        public static async void AddTagToGame(int gameId, int tagId)
-        {
-            await DatabaseHandler.InsertIntoTable(new dbo_GameTag() { GameId = gameId, TagId = tagId });
-        }
-
         public static void MarkTagsAsDirty() => m_AreTagsDirty = true;
 
 
@@ -165,75 +201,12 @@ namespace GameLibrary.Logic
             //}
         }
 
-        public static async Task UpdateGameIcon(int gameId, string path)
-        {
-            dbo_Game? game = GetGameFromId(gameId);
-            string requiresCleanup = await game!.GetAbsoluteIconLocation();
 
-            if (game != null)
-            {
-                game.iconPath = path;
-
-                ImageManager.ClearCache(game.id);
-                await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
-            }
-
-            if (File.Exists(requiresCleanup))
-            {
-                try
-                {
-                    File.Delete(requiresCleanup);
-                }
-                catch { }
-            }
-        }
-
-        public static async void UpdateGameEmulationStatus(int gameId, bool to)
-        {
-            dbo_Game? game = GetGameFromId(gameId);
-
-            if (game != null)
-            {
-                game.useEmulator = to;
-                await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
-            }
-        }
-
-        public static async Task ChangeBinaryLocation(int gameId, string? path)
-        {
-            dbo_Game? game = GetGameFromId(gameId);
-
-            if (game != null)
-            {
-                string existing = game.executablePath ?? "";
-                game.executablePath = path;
-
-                if (!File.Exists(await game.GetAbsoluteExecutableLocation()))
-                {
-                    game.executablePath = existing;
-                    return;
-                }
-
-                await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
-            }
-        }
-
-        public static async Task ChangeWineProfile(int gameId, int? wineProfile)
-        {
-            dbo_Game? game = GetGameFromId(gameId);
-
-            if (game != null)
-            {
-                game.wineProfile = wineProfile;
-                await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
-            }
-        }
-
-        public static async Task<Exception?> DeleteGame(dbo_Game game)
+        public static async Task<Exception?> DeleteGame(GameDto game)
         {
             try
             {
-                Exception? fileDeletionFail = await FileManager.DeleteGame(game);
+                Exception? fileDeletionFail = game.DeleteFiles();
 
                 if (fileDeletionFail != null)
                 {
@@ -243,8 +216,8 @@ namespace GameLibrary.Logic
                 //    MessageBox.Show($"The folder deletion failed, Do you want to still remove the record?\n\n{fileDeletionFail.Message}", "Folder Delete Failed", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
                 //    return null;
 
-                await DatabaseHandler.DeleteFromTable<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), game.id));
-                await DatabaseHandler.DeleteFromTable<dbo_Game>(QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
+                await DatabaseHandler.DeleteFromTable<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), game.getGameId));
+                await DatabaseHandler.DeleteFromTable<dbo_Game>(QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.getGameId));
 
                 await RedetectGames();
 

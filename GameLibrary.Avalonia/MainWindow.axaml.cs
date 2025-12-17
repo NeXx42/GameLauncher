@@ -25,23 +25,23 @@ public partial class MainWindow : Window
 
     private async void OnStart()
     {
-        await ConfigHandler.Init();
+        await DatabaseManager.Init();
 
-        if (ConfigHandler.cachedDBLocation == null)
+        if (DatabaseManager.cachedDBLocation == null)
         {
             EnterPage<Page_Setup>().Enter(CompleteSetup);
         }
         else
         {
-            await DatabaseHandler.Setup(ConfigHandler.cachedDBLocation, DialogHelper.OpenExceptionDialog);
+            await DatabaseManager.LoadDatabase(DialogHelper.OpenDatabaseExceptionDialog);
             await HandleAuthentication();
         }
     }
 
     private async void CompleteSetup(Page_Setup.SetupRequest req)
     {
-        await ConfigHandler.CreateDBPointerFile(req.dbFile);
-        await DatabaseHandler.Setup(ConfigHandler.cachedDBLocation!, DialogHelper.OpenExceptionDialog);
+        await DatabaseManager.CreateDBPointerFile(req.dbFile);
+        await DatabaseManager.LoadDatabase(DialogHelper.OpenDatabaseExceptionDialog);
 
         if (req.isExistingLoad)
         {
@@ -81,6 +81,8 @@ public partial class MainWindow : Window
 
     private async Task CompleteLoad()
     {
+        await ConfigHandler.Init();
+
         ImageManager.Init(new AvaloniaImageBrushFetcher());
         GameLauncher.Init();
 

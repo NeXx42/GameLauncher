@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Interfaces;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic;
 
@@ -32,34 +33,32 @@ public static class ImageManager
         onGlobalImageChange += (id, img) => callback?.Invoke(id, (T?)img);
     }
 
-    public static async Task GetGameImage<T>(dbo_Game game, Action<int, T?> onFetch)
+    public static async Task GetGameImage<T>(GameDto game, Action<int, T?> onFetch)
     {
-        if (cachedImages.TryGetValue(game.id, out object? res))
+        if (cachedImages.TryGetValue(game.getGameId, out object? res))
         {
-            onFetch?.Invoke(game.id, (T?)res);
+            onFetch?.Invoke(game.getGameId, (T?)res);
             return;
         }
 
-        if (queuedImageFetch.TryGetValue(game.id, out ImageFetchRequest existingFetchRequest))
+        if (queuedImageFetch.TryGetValue(game.getGameId, out ImageFetchRequest existingFetchRequest))
         {
             existingFetchRequest.callback += MediateReturn;
         }
         else
         {
-            string iconPath = await game.GetAbsoluteIconLocation();
-
-            if (!File.Exists(iconPath))
+            if (!File.Exists(game.getAbsoluteIconPath))
             {
-                cachedImages.TryAdd(game.id, null);
-                onFetch?.Invoke(game.id, default);
+                cachedImages.TryAdd(game.getGameId, null);
+                onFetch?.Invoke(game.getGameId, default);
 
                 return;
             }
 
-            queuedImageFetch.TryAdd(game.id, new ImageFetchRequest()
+            queuedImageFetch.TryAdd(game.getGameId, new ImageFetchRequest()
             {
-                gameId = game.id,
-                absoluteImagePath = await game.GetAbsoluteIconLocation(),
+                gameId = game.getGameId,
+                absoluteImagePath = game.getAbsoluteIconPath,
                 callback = MediateReturn
             });
         }

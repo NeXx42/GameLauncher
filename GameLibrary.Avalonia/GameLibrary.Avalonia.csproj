@@ -19,6 +19,5 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GameLibrary.Logic\GameLibrary.Logic.csproj" />
-    <ProjectReference Include="..\GameLibrary.DB\GameLibrary.DB.csproj" />
   </ItemGroup>
 </Project>

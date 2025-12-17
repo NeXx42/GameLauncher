@@ -3,12 +3,13 @@ using System.Runtime.InteropServices;
 using GameLibrary.DB;
 using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic.Runners;
 
 public class Runner_Linux : IRunner
 {
-    public async Task<ProcessStartInfo> Run(dbo_Game game)
+    public async Task<ProcessStartInfo> Run(GameDto game)
     {
         ProcessStartInfo info = new ProcessStartInfo();
         LaunchOptions wineOptions = await GetWineOptions(game);
@@ -20,9 +21,9 @@ public class Runner_Linux : IRunner
         return info;
     }
 
-    private Task EmulateRegion(ProcessStartInfo info, dbo_Game game)
+    private Task EmulateRegion(ProcessStartInfo info, GameDto game)
     {
-        if (game.useEmulator)
+        if (game.getGame.useEmulator)
         {
             info.EnvironmentVariables["LANG"] = "ja_JP.UTF-8";
             info.EnvironmentVariables["LC_ALL"] = "ja_JP.UTF-8";
@@ -32,22 +33,17 @@ public class Runner_Linux : IRunner
         return Task.CompletedTask;
     }
 
-    private async Task<LaunchOptions> GetWineOptions(dbo_Game game)
+    private async Task<LaunchOptions> GetWineOptions(GameDto game)
     {
         LaunchOptions options = new LaunchOptions();
 
-        if (game.wineProfile.HasValue)
+        if (game.getWineProfile != null)
         {
-            dbo_WineProfile? profile = await DatabaseHandler.GetItem<dbo_WineProfile>(QueryBuilder.SQLEquals(nameof(dbo_WineProfile.id), game.wineProfile.Value));
-
-            if (profile == null)
-                throw new Exception($"Profile doesn't exist");
-
-            options.prefix = profile!.profileDirectory!;
+            options.prefix = game.getWineProfile!.profileDirectory!;
         }
 
-        options.gameFolder = await game.GetAbsoluteFolderLocation();
-        options.gameExecutable = Path.Combine(options.gameFolder, game.executablePath!);
+        options.gameFolder = game.getAbsoluteFolderLocation;
+        options.gameExecutable = game.getAbsoluteBinaryLocation;
 
         return options;
     }

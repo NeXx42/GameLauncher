@@ -1,4 +1,4 @@
-OUTPUT_DIR = ./_Output/AvaloniaUI
+OUTPUT_DIR = ./_Output/
 
 publish:
 
@@ -10,4 +10,6 @@ publish:
 		--self-contained true \
 		/p:PublishSingleFile=true \
 		/p:IncludeAllContentForSelfExtract=true \
-		-o ${OUTPUT_DIR}
+		-o ${OUTPUT_DIR}/Avalonia
+		
+	tar -czvf ${OUTPUT_DIR}/GameLibrary.Avalonia.tar.gz -C ${OUTPUT_DIR} Avalonia

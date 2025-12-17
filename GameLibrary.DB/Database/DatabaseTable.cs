@@ -192,7 +192,7 @@ namespace GameLibrary.DB
                     break;
             }
 
-            return val;
+            return val ?? "NULL";
         }
 
 

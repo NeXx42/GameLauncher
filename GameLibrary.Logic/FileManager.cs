@@ -4,6 +4,7 @@ using System.Drawing.Imaging;
 using System.IO;
 using System.Windows;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic
 {
@@ -16,82 +17,10 @@ namespace GameLibrary.Logic
         //    bmp.Save(Path.Combine(GetTempLocation(), "temp.jpg"), ImageFormat.Jpeg);
         //}
 
-        public static async Task<string> PromoteTempFile(int gameId, string path)
+        public static async Task StartDeletion(GameDto game)
         {
-            string extension = Path.GetExtension(path);
-            string newName = $"{Guid.NewGuid()}{extension}";
 
-            string folderName = await LibraryHandler.GetGameFromId(gameId)!.GetAbsoluteFolderLocation();
-            File.Move(path, Path.Combine(folderName, newName));
-            return newName;
         }
-
-        public static async Task<(bool isInvalid, bool wasMigrated)> TryMigrate(dbo_Game game)
-        {
-            if (!File.Exists(game.executablePath))
-            {
-                return (true, false);
-            }
-
-            try
-            {
-                string parentExecutableFolder = Path.GetDirectoryName(game.executablePath)!;
-
-                Directory.Move(parentExecutableFolder, await game.GetAbsoluteFolderLocation());
-                game.executablePath = $"{Path.GetFileName(game.executablePath)}";
-
-                return (false, true);
-            }
-            catch (Exception e)
-            {
-                //MessageBox.Show(e.Message);
-                return (true, false);
-            }
-        }
-
-        public static async Task BrowseToGame(dbo_Game game)
-        {
-            string folder = Path.GetDirectoryName(await game.GetAbsoluteExecutableLocation()) ?? string.Empty;
-
-            if (string.IsNullOrEmpty(folder) || !Directory.Exists(folder))
-                return;
-
-            if (ConfigHandler.isOnLinux)
-            {
-                Process.Start(new ProcessStartInfo
-                {
-                    FileName = "xdg-open",
-                    Arguments = folder,
-                    UseShellExecute = false
-                });
-            }
-            else
-            {
-                Process.Start("explorer.exe", folder);
-            }
-        }
-
-        public static async Task<Exception?> DeleteGame(dbo_Game game)
-        {
-            // do retry and stuff here, need a global way of showing dialogs and the like
-
-            return null;
-
-            try
-            {
-                string toDelete = await game.GetAbsoluteFolderLocation();
-
-                if (!string.IsNullOrEmpty(toDelete) && Directory.Exists(toDelete))
-                    Directory.Delete(toDelete, true);
-
-                return null;
-            }
-            catch (Exception e)
-            {
-                return e;
-            }
-        }
-
 
 
         public static async Task<List<GameFolder>> CrawlGames(string[] paths)

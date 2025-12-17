@@ -1,12 +1,13 @@
 using System.Diagnostics;
 using System.Text;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic.Runners;
 
 public interface IRunner
 {
-    public Task<ProcessStartInfo> Run(dbo_Game game);
+    public Task<ProcessStartInfo> Run(GameDto game);
     public Task<Runner_Game> LaunchGame(Process startInfo, string logPath);
 }
 

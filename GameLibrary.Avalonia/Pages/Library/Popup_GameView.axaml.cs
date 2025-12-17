@@ -14,12 +14,13 @@ using GameLibrary.DB;
 using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Avalonia.Pages.Library;
 
 public partial class Popup_GameView : UserControl
 {
-    private int inspectingGameId;
+    private GameDto inspectingGame;
     private TabGroup tabGroup;
 
     public Popup_GameView()
@@ -38,76 +39,35 @@ public partial class Popup_GameView : UserControl
         GameLauncher.OnGameRunStateChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b)); // need to fix threading issue
     }
 
-    public async Task Draw(dbo_Game game)
+    public async Task Draw(GameDto game)
     {
-        await ValidateGame(game);
-
-        inspectingGameId = game.id;
+        inspectingGame = game;
         img_bg.Background = null;
 
-        UpdateRunningGameStatus(game.id, GameLauncher.IsRunning(game.id));
+        UpdateRunningGameStatus(game.getGameId, GameLauncher.IsRunning(game.getGameId));
 
         await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
         await tabGroup.OpenFresh();
 
-        inp_Emulate.SilentSetValue(game.useEmulator);
-        lbl_Title.Content = game.gameName;
+        inp_Emulate.SilentSetValue(game.getGame.useEmulator);
+        lbl_Title.Content = game.getGame.gameName;
 
-        List<string> executableBinaries = await GetBinaries(game);
-        inp_binary.Setup(executableBinaries.Select(x => Path.GetFileName(x)), executableBinaries.IndexOf(game.executablePath!), HandleBinaryChange);
-    }
-
-    private async Task ValidateGame(dbo_Game game)
-    {
-        bool isDirty = false;
-
-        if (ConfigHandler.isOnLinux)
-        {
-            if (game.wineProfile == null)
-            {
-                dbo_WineProfile? firstProfile = await DatabaseHandler.GetItem<dbo_WineProfile>();
-
-                if (firstProfile != null)
-                {
-                    game.wineProfile = firstProfile.id;
-                    isDirty = true;
-                }
-            }
-        }
-
-        if (isDirty)
-        {
-            await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_WineProfile.id), game.id));
-        }
+        (int? currentExecutable, string[] possibleBinaries) = game.GetPossibleBinaries();
+        inp_binary.Setup(possibleBinaries.Select(x => Path.GetFileName(x)), currentExecutable, HandleBinaryChange);
     }
 
     private void UpdateGameIcon(int gameId, ImageBrush? img)
     {
-        if (inspectingGameId != gameId)
+        if (inspectingGame?.getGameId != gameId)
             return;
 
         img_bg.Background = img;
     }
 
-    private async Task<List<string>> GetBinaries(dbo_Game game)
-    {
-        string gameFolder = await game.GetAbsoluteFolderLocation();
-
-        if (!Directory.Exists(gameFolder))
-            return new List<string>();
-
-        return Directory.GetFiles(gameFolder).Where(FilterFile).Select(x => Path.GetFileName(x)).ToList();
-
-        bool FilterFile(string dir)
-        {
-            return dir.EndsWith(".exe", StringComparison.CurrentCultureIgnoreCase) ||
-                dir.EndsWith(".lnk", StringComparison.CurrentCultureIgnoreCase);
-        }
-    }
 
     private void HandleLaunch()
     {
-        GameLauncher.LaunchGame(inspectingGameId);
+        inspectingGame.Launch();
     }
 
     private void btn_Overlay_Click()
@@ -115,20 +75,15 @@ public partial class Popup_GameView : UserControl
         //GameLauncher.RequestOverlay(inspectingGameId, null);
     }
 
-    private async void BrowseToGame() => await FileManager.BrowseToGame(LibraryHandler.GetGameFromId(inspectingGameId)!);
+    private void BrowseToGame() => inspectingGame?.BrowseToGame();
+    private async void HandleBinaryChange() => await inspectingGame?.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
 
-    private async void HandleBinaryChange()
-    {
-        await LibraryHandler.ChangeBinaryLocation(inspectingGameId, inp_binary.selectedValue?.ToString());
-        //await Draw(LibraryHandler.GetGameFromId(inspectingGameId)!);
-    }
-
-    private async void DeleteGame() => await FileManager.DeleteGame(LibraryHandler.GetGameFromId(inspectingGameId)!);
+    private async void DeleteGame() => await FileManager.StartDeletion(inspectingGame);
 
 
     private void UpdateRunningGameStatus(int gameId, bool to)
     {
-        if (gameId != inspectingGameId)
+        if (gameId != inspectingGame.getGameId)
             return;
 
         lbl_IsRunning.IsVisible = to;
@@ -178,7 +133,7 @@ public partial class Popup_GameView : UserControl
                 tabs[activeTab].Close();
 
             activeTab = to;
-            await tabs[activeTab].Open(master.inspectingGameId);
+            await tabs[activeTab].Open(master.inspectingGame);
         }
 
 
@@ -186,7 +141,7 @@ public partial class Popup_GameView : UserControl
 
         internal abstract class TabBase
         {
-            protected int? lastGameId;
+            protected GameDto? lastGame;
             protected TabGroup? groupMaster;
 
             private Grid? container;
@@ -204,10 +159,10 @@ public partial class Popup_GameView : UserControl
                 return this;
             }
 
-            public virtual Task Open(int gameId)
+            public virtual Task Open(GameDto? game)
             {
                 container!.IsVisible = true;
-                lastGameId = gameId;
+                lastGame = game;
 
                 btn!.Background = groupMaster!.activeTabColour;
 
@@ -226,18 +181,17 @@ public partial class Popup_GameView : UserControl
 
         internal class Tab_Tags : TabBase
         {
-            private HashSet<int>? gameTags;
             private Dictionary<int, Library_Tag> allTags = new Dictionary<int, Library_Tag>();
 
-            public override async Task Open(int gameId)
+            public override async Task Open(GameDto? game)
             {
-                if (lastGameId != gameId)
+                if (lastGame != game)
                 {
                     await CheckForNewTags();
-                    await RedrawSelectedTags();
+                    await RedrawSelectedTags(game);
                 }
 
-                await base.Open(gameId);
+                await base.Open(game);
             }
 
             public async Task CheckForNewTags()
@@ -270,31 +224,19 @@ public partial class Popup_GameView : UserControl
                 }
             }
 
-            private async Task RedrawSelectedTags()
+            private async void HandleTagToggle(int tagId)
             {
-                gameTags = (await LibraryHandler.GetGameTags(groupMaster!.master.inspectingGameId)).ToHashSet();
+                await groupMaster!.master.inspectingGame.ToggleTag(tagId);
+                await RedrawSelectedTags(groupMaster!.master.inspectingGame);
+            }
 
+            private async Task RedrawSelectedTags(GameDto game)
+            {
                 foreach (KeyValuePair<int, Library_Tag> tag in allTags)
                 {
                     tag.Value.Margin = new Thickness(0, 0, 0, 5);
-                    tag.Value.Toggle(gameTags.Contains(tag.Key));
+                    tag.Value.Toggle(game?.getTags.Contains(tag.Key) ?? false);
                 }
-            }
-
-            private async void HandleTagToggle(int tagId)
-            {
-                if (gameTags!.Contains(tagId))
-                {
-                    gameTags.Remove(tagId);
-                    LibraryHandler.RemoveTagFromGame(groupMaster!.master.inspectingGameId, tagId);
-                }
-                else
-                {
-                    gameTags.Add(tagId);
-                    LibraryHandler.AddTagToGame(groupMaster!.master.inspectingGameId, tagId);
-                }
-
-                await RedrawSelectedTags();
             }
         }
 
@@ -309,17 +251,16 @@ public partial class Popup_GameView : UserControl
                 return base.Setup(btn, container, groupMaster);
             }
 
-            public override async Task Open(int gameId)
+            public override async Task Open(GameDto? game)
             {
-                if (lastGameId != gameId)
+                if (lastGame != game)
                 {
                     possibleWineProfiles = await DatabaseHandler.GetItems<dbo_WineProfile>();
-                    dbo_Game game = LibraryHandler.GetGameFromId(gameId)!;
 
                     if (ConfigHandler.isOnLinux)
                     {
                         groupMaster!.master.inp_WineProfile.IsVisible = true;
-                        groupMaster!.master.inp_WineProfile.SetupAsync(possibleWineProfiles!.Select(x => x.profileName), possibleWineProfiles.Select(x => x.id).ToList().IndexOf(game.wineProfile ?? -1), HandleWineProfileChange);
+                        groupMaster!.master.inp_WineProfile.SetupAsync(possibleWineProfiles!.Select(x => x.profileName), possibleWineProfiles.Select(x => x.id).ToList().IndexOf(game.getWineProfile?.id ?? -1), HandleWineProfileChange);
                     }
                     else
                     {
@@ -328,11 +269,11 @@ public partial class Popup_GameView : UserControl
                 }
 
 
-                await base.Open(gameId);
+                await base.Open(game);
             }
 
-            private void HandleEmulateToggle(bool to) => LibraryHandler.UpdateGameEmulationStatus(lastGameId!.Value, to);
-            private async Task HandleWineProfileChange() => await LibraryHandler.ChangeWineProfile(lastGameId!.Value, possibleWineProfiles?.ElementAt(groupMaster!.master.inp_WineProfile.selectedIndex)?.id);
+            private async Task HandleEmulateToggle(bool to) => await lastGame!.UpdateGameEmulationStatus(to);
+            private async Task HandleWineProfileChange() => await lastGame!.ChangeWineProfile(possibleWineProfiles?.ElementAt(groupMaster!.master.inp_WineProfile.selectedIndex)?.id);
         }
 
         internal class Tab_Logs : TabBase
@@ -341,22 +282,22 @@ public partial class Popup_GameView : UserControl
             {
                 groupMaster.master.btn_RefreshLogs.RegisterClick(async () =>
                 {
-                    if (lastGameId.HasValue)
-                        await RefreshLogs(lastGameId.Value);
+                    if (lastGame != null)
+                        await RefreshLogs(lastGame);
                 });
 
                 return base.Setup(btn, container, groupMaster);
             }
 
-            public override async Task Open(int gameId)
+            public override async Task Open(GameDto? game)
             {
-                await base.Open(gameId);
-                await RefreshLogs(gameId);
+                await base.Open(game);
+                await RefreshLogs(game);
             }
 
-            private async Task RefreshLogs(int gameId)
+            private async Task RefreshLogs(GameDto? game)
             {
-                string txt = await GameLauncher.GetLatestLogs(gameId);
+                string txt = await GameLauncher.GetLatestLogs(game!.getGameId);
                 groupMaster!.master.lbl_Logs.Text = txt;
             }
         }

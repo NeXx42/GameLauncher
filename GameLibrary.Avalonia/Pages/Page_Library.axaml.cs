@@ -10,6 +10,7 @@ using GameLibrary.Avalonia.Pages.Library;
 using GameLibrary.DB;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Avalonia.Pages;
 
@@ -146,7 +147,7 @@ public partial class Page_Library : UserControl
 
     private async void ToggleGameView(int gameId)
     {
-        dbo_Game? game = LibraryHandler.GetGameFromId(gameId);
+        GameDto? game = LibraryHandler.GetGameFromId(gameId);
 
         if (game != null)
         {
@@ -266,7 +267,7 @@ public partial class Page_Library : UserControl
             if (resetPage)
                 gamesSlide = 0;
 
-            await LibraryHandler.RefilterGames(library.activeTags, library.currentSort, library.currentSortAscending);
+            LibraryHandler.RefilterGames(library.activeTags, library.currentSort, library.currentSortAscending);
             await DrawGames();
         }
 
@@ -274,7 +275,7 @@ public partial class Page_Library : UserControl
         {
             library.lbl_PageNum.Text = $"{(gamesSlide / getTotalContentPerPage) + 1}";
 
-            int[] games = await LibraryHandler.GetDrawList(gamesSlide, getTotalContentPerPage);
+            int[] games = LibraryHandler.GetDrawList(gamesSlide, getTotalContentPerPage);
             activeUI.Clear();
 
             for (int i = 0; i < cacheUI.Length; i++)

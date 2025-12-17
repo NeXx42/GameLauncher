@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -24,6 +25,11 @@ public partial class Common_Toggle : UserControl
         activeValue = to;
         inp.IsChecked = to;
         ignoreEvents = false;
+    }
+
+    public void RegisterOnChange(Func<bool, Task> onChange)
+    {
+        listeningEvent += async (x) => await onChange(x);
     }
 
     public void RegisterOnChange(Action<bool> onChange)

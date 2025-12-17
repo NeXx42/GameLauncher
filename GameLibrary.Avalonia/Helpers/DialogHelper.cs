@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
 using GameLibrary.Avalonia.Windows;
+using GameLibrary.DB;
 
 namespace GameLibrary.Avalonia.Helpers;
 
@@ -33,6 +34,12 @@ public static class DialogHelper
 
         return dialog.didSelectPositive ?? false;
     }
+
+    public static async Task OpenDatabaseExceptionDialog(Exception e, string sql)
+    {
+        await OpenDialog("Exception", $"{sql}\n\n{e.Message}", "Ok", null);
+    }
+
 
     public static async Task OpenExceptionDialog(Exception msg)
     {

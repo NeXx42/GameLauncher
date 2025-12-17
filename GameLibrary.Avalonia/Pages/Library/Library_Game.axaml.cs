@@ -6,6 +6,7 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Avalonia.Controls;
 
@@ -28,11 +29,11 @@ public partial class Library_Game : UserControl
         img.Background = null;
 
         this.gameId = gameId;
-        dbo_Game? game = LibraryHandler.GetGameFromId(gameId);
+        GameDto? game = LibraryHandler.GetGameFromId(gameId);
 
         if (game != null)
         {
-            title.Text = game.gameName;
+            title.Text = game.getGame.gameName;
             await ImageManager.GetGameImage<ImageBrush>(game, RedrawIcon);
         }
 

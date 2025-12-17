@@ -16,9 +16,12 @@ namespace GameLibrary.DB
 
         private static SQLiteConnection? connection;
 
-        private static Func<Exception, Task>? errorCallback;
 
-        public static async Task Setup(string dbPath, Func<Exception, Task>? errorCallback = null)
+        public delegate Task DatabaseExceptionCallback(Exception e, string sql);
+        private static DatabaseExceptionCallback? errorCallback;
+
+
+        public static async Task Setup(string dbPath, DatabaseExceptionCallback? errorCallback = null)
         {
             if (string.IsNullOrEmpty(dbPath))
                 throw new Exception("Invalid path");
@@ -138,7 +141,7 @@ namespace GameLibrary.DB
             }
             catch (Exception e)
             {
-                if (errorCallback != null) await errorCallback.Invoke(e);
+                if (errorCallback != null) await errorCallback.Invoke(e, sql);
             }
             finally
             {
@@ -149,12 +152,14 @@ namespace GameLibrary.DB
 
         public static async Task<bool> Exists<T>(QueryBuilder.InternalAccessor? queryBuilder = null) where T : Database_Table
         {
+            StringBuilder? sql = null;
+
             try
             {
                 bool exists = false;
                 connection!.Open();
 
-                StringBuilder sql = new StringBuilder($"SELECT 1 FROM {GetTableNameFromGeneric<T>()}");
+                sql = new StringBuilder($"SELECT 1 FROM {GetTableNameFromGeneric<T>()}");
 
                 if (queryBuilder != null)
                     sql.Append($" {queryBuilder?.BuildWhereClause()}");
@@ -173,7 +178,7 @@ namespace GameLibrary.DB
             }
             catch (Exception e)
             {
-                if (errorCallback != null) await errorCallback.Invoke(e);
+                if (errorCallback != null) await errorCallback.Invoke(e, sql?.ToString() ?? string.Empty);
                 return false;
             }
             finally
@@ -188,12 +193,14 @@ namespace GameLibrary.DB
 
         public static async Task<T[]> GetItems<T>(QueryBuilder.InternalAccessor? queryBuilder = null, int? limit = null) where T : Database_Table
         {
+            StringBuilder? sql = null;
+
             try
             {
                 List<T> val = new List<T>(limit ?? 10);
                 await connection!.OpenAsync();
 
-                StringBuilder sql = new StringBuilder($"SELECT * FROM {GetTableNameFromGeneric<T>()}");
+                sql = new StringBuilder($"SELECT * FROM {GetTableNameFromGeneric<T>()}");
 
                 if (queryBuilder != null)
                     sql.Append($" {queryBuilder?.BuildWhereClause()}");
@@ -221,7 +228,7 @@ namespace GameLibrary.DB
             catch (Exception e)
             {
                 await connection!.CloseAsync();
-                if (errorCallback != null) await errorCallback.Invoke(e);
+                if (errorCallback != null) await errorCallback.Invoke(e, sql?.ToString() ?? string.Empty);
                 return Array.Empty<T>();
             }
         }

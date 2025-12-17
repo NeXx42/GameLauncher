@@ -7,6 +7,7 @@ using System.Text;
 using System.Windows;
 using GameLibrary.DB;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Objects;
 using GameLibrary.Logic.Runners;
 
 namespace GameLibrary.Logic
@@ -39,12 +40,12 @@ namespace GameLibrary.Logic
         public static bool IsRunning(int id) => activeProcesses.ContainsKey(id);
 
 
-        public static async void LaunchGame(int gameId)
+        public static async void LaunchGame(GameDto game)
         {
-            if (IsRunning(gameId))
+            if (IsRunning(game.getGameId))
             {
                 // say game is already running?
-                OnGameRunStateChange?.Invoke(gameId, true); // make sure ui knows at least 
+                OnGameRunStateChange?.Invoke(game.getGameId, true); // make sure ui knows at least 
 
                 return;
             }
@@ -54,20 +55,12 @@ namespace GameLibrary.Logic
                 KillAllExistingProcesses();
             }
 
-            dbo_Game? game = LibraryHandler.GetGameFromId(gameId);
-
-            if (game == null)
-                return;
-
-
-            game.lastPlayed = DateTime.UtcNow;
-            await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), gameId));
-
+            await game.UpdateLastPlayed();
             string? logFile = null;
 
             if (true)
             {
-                logFile = Path.Combine(getLogFolder, $"{game.id}.log");
+                logFile = Path.Combine(getLogFolder, $"{game.getGameId}.log");
             }
 
             try
@@ -82,20 +75,20 @@ namespace GameLibrary.Logic
 
                 //MainWindow.window!.UpdateActiveBanner($"Playing - {game.gameName}");
 
-                OnGameRunStateChange?.Invoke(game.id, true);
+                OnGameRunStateChange?.Invoke(game.getGameId, true);
 
-                gameProcess.Exited += async (a, b) => await OnGameClose(game.id, a, b);
-                activeProcesses.TryAdd(gameId, await runner.LaunchGame(gameProcess, logFile));
+                gameProcess.Exited += async (a, b) => await OnGameClose(game.getGameId, a, b);
+                activeProcesses.TryAdd(game.getGameId, await runner.LaunchGame(gameProcess, logFile));
 
 
-                if (string.IsNullOrEmpty(game.iconPath))
+                if (string.IsNullOrEmpty(game.getGame.iconPath))
                 {
                     //RequestOverlay(runningGame.Value, activeGame);
                 }
             }
             catch (Exception e)
             {
-                await OnGameClose(game.id, null, null);
+                await OnGameClose(game.getGameId, null, null);
                 //MessageBox.Show(e.Message);
             }
         }

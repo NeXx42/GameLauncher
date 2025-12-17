@@ -1,11 +1,12 @@
 using System.Diagnostics;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic.Runners;
 
 public class Runner_Windows : IRunner
 {
-    public async Task<ProcessStartInfo> Run(dbo_Game game)
+    public async Task<ProcessStartInfo> Run(GameDto game)
     {
         ProcessStartInfo info = await GetFileToRun(game);
         await SandboxGame(info);
@@ -13,28 +14,26 @@ public class Runner_Windows : IRunner
         return info;
     }
 
-    private static async Task<ProcessStartInfo> GetFileToRun(dbo_Game game)
+    private static async Task<ProcessStartInfo> GetFileToRun(GameDto game)
     {
-        string realPath = await game.GetAbsoluteExecutableLocation();
-
-        if (!File.Exists(realPath))
+        if (!File.Exists(game.getAbsoluteBinaryLocation))
         {
-            throw new Exception("Path doesnt exist - " + realPath);
+            throw new Exception("Path doesnt exist - " + game.getAbsoluteBinaryLocation);
         }
 
-        if (game.useEmulator)
+        if (game.getGame.useEmulator)
         {
             string emulatorPath = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.EmulatorPath, string.Empty);
             return new ProcessStartInfo()
             {
                 FileName = emulatorPath,
-                Arguments = $"-run \"{realPath}\""
+                Arguments = $"-run \"{game.getAbsoluteBinaryLocation}\""
             };
         }
 
         return new ProcessStartInfo()
         {
-            FileName = realPath,
+            FileName = game.getAbsoluteBinaryLocation,
             Arguments = ""
         };
     }
