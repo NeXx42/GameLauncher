@@ -16,6 +16,7 @@ namespace GameLibrary.DB.Tables
         public required int libaryId { get; set; }
         public required string gameFolder { get; set; }
         public int? wineProfile { get; set; }
+        public bool? captureLogs { get; set; }
 
         //public async Task<string> GetLibraryLocation() => (await DatabaseHandler.GetItem<dbo_Libraries>(QueryBuilder.SQLEquals(nameof(dbo_Libraries.libaryId), libaryId)))?.rootPath ?? string.Empty;
         //public async Task<string> GetAbsoluteFolderLocation() => Path.Combine(await GetLibraryLocation(), gameFolder);
@@ -39,6 +40,8 @@ namespace GameLibrary.DB.Tables
             new Row() {  name = nameof(gameFolder), type = DataType.TEXT, isNullable = true },
 
             new Row() {  name = nameof(wineProfile), type = DataType.INTEGER, isNullable = true },
+
+            new Row() {  name = nameof(captureLogs), type = DataType.BIT, isNullable = true },
         };
     }
 }

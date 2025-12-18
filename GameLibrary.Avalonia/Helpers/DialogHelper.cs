@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
+using GameLibrary.Avalonia.Overlay;
 using GameLibrary.Avalonia.Windows;
 using GameLibrary.DB;
 
@@ -44,5 +45,11 @@ public static class DialogHelper
     public static async Task OpenExceptionDialog(Exception msg)
     {
         await OpenDialog("Exception", msg.Message, "Ok", null);
+    }
+
+    public static async Task OpenOverlay(int gameId)
+    {
+        OverlayUI overlay = new OverlayUI();
+        overlay.Show();
     }
 }

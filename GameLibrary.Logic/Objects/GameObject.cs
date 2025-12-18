@@ -94,14 +94,6 @@ public class GameDto
 
     public async Task UpdateGameIcon(string path)
     {
-        if (game != null)
-        {
-            game.iconPath = path;
-
-            ImageManager.ClearCache(game.id);
-            await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
-        }
-
         if (File.Exists(getAbsoluteIconPath))
         {
             try
@@ -110,6 +102,11 @@ public class GameDto
             }
             catch { }
         }
+
+        game!.iconPath = path;
+
+        await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
+        ImageManager.ClearCache(game.id);
     }
 
     public async Task UpdateGameEmulationStatus(bool to)

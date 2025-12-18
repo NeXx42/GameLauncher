@@ -67,7 +67,7 @@
             </Grid>
 
             <!-- Options -->
-            <Grid x:Name="tab_Settings" IsVisible="False">
+            <Grid x:Name="tab_Settings" IsVisible="True">
               <StackPanel Orientation="Vertical" Spacing="15">
 
                 <StackPanel Orientation="Vertical">

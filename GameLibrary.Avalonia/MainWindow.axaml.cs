@@ -83,6 +83,7 @@ public partial class MainWindow : Window
     {
         await ConfigHandler.Init();
 
+        OverlayManager.Init(DialogHelper.OpenOverlay);
         ImageManager.Init(new AvaloniaImageBrushFetcher());
         GameLauncher.Init();
 

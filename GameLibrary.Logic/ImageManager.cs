@@ -103,7 +103,7 @@ public static class ImageManager
     {
         if (cachedImages.TryRemove(gameId, out _))
         {
-            onGlobalImageChange?.Invoke(gameId, null);
+            fetcher?.InvokeOnUIThread(() => onGlobalImageChange?.Invoke(gameId, null));
         }
     }
 

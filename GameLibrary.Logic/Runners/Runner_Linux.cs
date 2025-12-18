@@ -97,9 +97,9 @@ public class Runner_Linux : IRunner
         options.didSandbox = true;
     }
 
-    public Task<Runner_Game> LaunchGame(Process process, string logPath)
+    public Task<Runner_Game> LaunchGame(GameDto game, Process process, string logPath)
     {
-        return Task.FromResult((Runner_Game)new Runner_LinuxGame(logPath, process));
+        return Task.FromResult((Runner_Game)new Runner_LinuxGame(game, logPath, process));
     }
 
     private class LaunchOptions
@@ -114,7 +114,7 @@ public class Runner_Linux : IRunner
 
     public class Runner_LinuxGame : Runner_Game
     {
-        public Runner_LinuxGame(string logPath, Process p) : base(logPath, p)
+        public Runner_LinuxGame(GameDto game, string logPath, Process p) : base(game, logPath, p)
         {
         }
 

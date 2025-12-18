@@ -19,5 +19,8 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\GameLibrary.Logic\GameLibrary.Logic.csproj" />
+    <None Include="..\GameLibrary_GTKOverlay\target\debug\GameLibrary_GTKOverlay">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 </Project>

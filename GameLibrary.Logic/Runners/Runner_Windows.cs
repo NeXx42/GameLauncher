@@ -50,16 +50,16 @@ public class Runner_Windows : IRunner
         info.FileName = sandboxieLoc;
     }
 
-    public Task<Runner_Game> LaunchGame(Process startInfo, string logPath)
+    public Task<Runner_Game> LaunchGame(GameDto game, Process startInfo, string logPath)
     {
-        return Task.FromResult((Runner_Game)new Runner_WindowsGame(logPath, startInfo));
+        return Task.FromResult((Runner_Game)new Runner_WindowsGame(game, logPath, startInfo));
     }
 
 
 
     public class Runner_WindowsGame : Runner_Game
     {
-        public Runner_WindowsGame(string logPath, Process p) : base(logPath, p)
+        public Runner_WindowsGame(GameDto game, string logPath, Process p) : base(game, logPath, p)
         {
         }
     }

@@ -98,7 +98,7 @@ namespace GameLibrary.Logic
                 try
                 {
                     await DatabaseHandler.InsertIntoTable(newGame);
-                    Directory.Move(folder.path, Path.Combine(chosenLibrary.rootPath, newGame.gameFolder));
+                    await FileManager.MoveGameToItsLibrary(newGame, folder.path, chosenLibrary.rootPath);
 
                     availableImports.Pop();
                 }
@@ -107,6 +107,8 @@ namespace GameLibrary.Logic
 
                 }
             }
+
+            await RedetectGames();
 
             string TryFindBestExecutable(string[] possible)
             {
@@ -184,23 +186,7 @@ namespace GameLibrary.Logic
             return tags!.FirstOrDefault(x => x.TagId == id);
         }
 
-        public static async Task<int[]> GetGameTags(int gameId)
-        {
-            return (await DatabaseHandler.GetItems<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), gameId))).Select(x => x.TagId).ToArray();
-        }
-
         public static void MarkTagsAsDirty() => m_AreTagsDirty = true;
-
-
-        public static async Task UpdateGameIcon(int gameId)
-        {
-            //if (FileManager.GetTempScreenshot(out string path))
-            //{
-            //    string screenshotName = await FileManager.PromoteTempFile(gameId, path);
-            //    await UpdateGameIcon(gameId, screenshotName);
-            //}
-        }
-
 
         public static async Task<Exception?> DeleteGame(GameDto game)
         {

@@ -8,7 +8,7 @@ namespace GameLibrary.Logic.Runners;
 public interface IRunner
 {
     public Task<ProcessStartInfo> Run(GameDto game);
-    public Task<Runner_Game> LaunchGame(Process startInfo, string logPath);
+    public Task<Runner_Game> LaunchGame(GameDto game, Process startInfo, string logPath);
 }
 
 
@@ -20,9 +20,11 @@ public abstract class Runner_Game
     private StreamWriter? logOutput;
     private Thread loggingThread;
 
-    public Runner_Game(string logPath, Process p)
+    public Runner_Game(GameDto game, string logPath, Process p)
     {
-        if (!string.IsNullOrEmpty(logPath))
+        logPath = Path.Combine(logPath, $"{game.getGameId}.log");
+
+        if ((game?.getGame?.captureLogs ?? false) && !string.IsNullOrEmpty(logPath))
         {
             p.StartInfo.RedirectStandardOutput = true;
             p.StartInfo.RedirectStandardError = true;

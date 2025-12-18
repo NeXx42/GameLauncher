@@ -30,7 +30,7 @@ public partial class Popup_GameView : UserControl
         tabGroup = new TabGroup(this);
 
         btn_Delete.RegisterClick(DeleteGame);
-        btn_Overlay.RegisterClick(btn_Overlay_Click);
+        btn_Overlay.RegisterClick(OpenOverlay);
 
         btn_Browse.RegisterClick(BrowseToGame);
         btn_Launch.RegisterClick(HandleLaunch);
@@ -70,14 +70,10 @@ public partial class Popup_GameView : UserControl
         inspectingGame.Launch();
     }
 
-    private void btn_Overlay_Click()
-    {
-        //GameLauncher.RequestOverlay(inspectingGameId, null);
-    }
-
     private void BrowseToGame() => inspectingGame?.BrowseToGame();
-    private async void HandleBinaryChange() => await inspectingGame?.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
+    private void OpenOverlay() => OverlayManager.LaunchOverlay(inspectingGame!.getGameId);
 
+    private async void HandleBinaryChange() => await inspectingGame?.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
     private async void DeleteGame() => await FileManager.StartDeletion(inspectingGame);
 
 

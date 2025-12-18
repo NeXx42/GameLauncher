@@ -161,7 +161,7 @@ public partial class Page_Library : UserControl
 
     public void ToggleMenu(bool to)
     {
-        //effect_blur.Radius = to ? 10 : 0;
+        eff_Blur.Effect = to ? new ImmutableBlurEffect(20) : null;//. .Radius = to ? 10 : 0;
         cont_MenuView.IsVisible = to;
 
         GameViewer.IsVisible = false;

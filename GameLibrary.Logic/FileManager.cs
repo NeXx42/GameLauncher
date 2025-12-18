@@ -22,6 +22,27 @@ namespace GameLibrary.Logic
 
         }
 
+        public static async Task UpdateGameIcon(int gameId, Uri newIconPath)
+        {
+            GameDto? game = LibraryHandler.GetGameFromId(gameId);
+
+            if (!File.Exists(newIconPath.LocalPath) || game == null)
+            {
+                return;
+            }
+
+            string localPath = $"{Guid.NewGuid()}.png";
+            File.Copy(newIconPath.LocalPath, Path.Combine(game.getAbsoluteFolderLocation, localPath));
+
+            await game.UpdateGameIcon(localPath);
+        }
+
+        public static Task MoveGameToItsLibrary(dbo_Game game, string existingFolderLocation, string libraryRootLocation)
+        {
+            Directory.Move(existingFolderLocation, Path.Combine(libraryRootLocation, game.gameFolder));
+            return Task.CompletedTask;
+        }
+
 
         public static async Task<List<GameFolder>> CrawlGames(string[] paths)
         {

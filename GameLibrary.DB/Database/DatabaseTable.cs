@@ -198,7 +198,7 @@ namespace GameLibrary.DB
 
         public record Row
         {
-            public string name;
+            public required string name;
             public DataType type = DataType.TEXT;
             public bool isNullable = true;
             public bool isPrimaryKey = false;

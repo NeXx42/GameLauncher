@@ -56,12 +56,6 @@ namespace GameLibrary.Logic
             }
 
             await game.UpdateLastPlayed();
-            string? logFile = null;
-
-            if (true)
-            {
-                logFile = Path.Combine(getLogFolder, $"{game.getGameId}.log");
-            }
 
             try
             {
@@ -78,12 +72,12 @@ namespace GameLibrary.Logic
                 OnGameRunStateChange?.Invoke(game.getGameId, true);
 
                 gameProcess.Exited += async (a, b) => await OnGameClose(game.getGameId, a, b);
-                activeProcesses.TryAdd(game.getGameId, await runner.LaunchGame(gameProcess, logFile));
+                activeProcesses.TryAdd(game.getGameId, await runner.LaunchGame(game, gameProcess, getLogFolder));
 
 
                 if (string.IsNullOrEmpty(game.getGame.iconPath))
                 {
-                    //RequestOverlay(runningGame.Value, activeGame);
+                    OverlayManager.LaunchOverlay(game.getGameId);
                 }
             }
             catch (Exception e)

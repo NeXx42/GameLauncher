@@ -1,0 +1,16 @@
+[package]
+name = "GameLibrary_GTKOverlay"
+version = "0.1.0"
+edition = "2024"
+
+
+[dependencies]
+gtk-layer-shell = "0.4.1"
+gtk = { version = "0.15.5", features = ["v3_22"] }
+gio = { version = "0.15.12", features = ["v2_60"] }
+glib = "0.15.12"
+futures = "0.3.21"
+zbus = "5.12.0"
+zvariant = "5.8.0"
+tokio = { version = "1", features = ["full"] }
+futures-util = "0.3.31"

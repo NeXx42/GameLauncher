@@ -85,7 +85,6 @@ public partial class Popup_AddGames : UserControl
         cont_FoundGames.Children.Clear();
         availableImports.Clear();
 
-        await LibraryHandler.RedetectGames();
         await onReimportGames!();
     }
 }
