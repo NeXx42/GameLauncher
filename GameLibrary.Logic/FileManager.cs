@@ -5,6 +5,8 @@ using System.IO;
 using System.Windows;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Objects;
+using SharpCompress.Archives;
+using SharpCompress.Common;
 
 namespace GameLibrary.Logic
 {
@@ -44,70 +46,146 @@ namespace GameLibrary.Logic
         }
 
 
-        public static async Task<List<GameFolder>> CrawlGames(string[] paths)
+        public static async Task<List<FolderEntry>> CrawlGames(string[] paths)
         {
-            List<GameFolder> foundGameFolders = new List<GameFolder>();
-            List<GameZip> foundZips = new List<GameZip>();
+            List<FolderEntry> foundEntries = new List<FolderEntry>();
+
+            List<string> topLevelFolders = new List<string>();
+            List<string> extracts = new List<string>();
 
             foreach (string path in paths)
-                Craw(path);
-
-            return foundGameFolders;
-
-            void Craw(string path)
             {
-                string[] allFiles = Directory.GetFiles(path);
-                string[] binaries = allFiles.Where(x => x.EndsWith(".exe", StringComparison.InvariantCultureIgnoreCase)).ToArray();
+                topLevelFolders.AddRange(Directory.GetDirectories(path));
+                extracts.AddRange(Directory.GetFiles(path).Where(IsZip));
+            }
 
-                if (binaries.Length > 0)
+            foreach (string extract in extracts)
+            {
+                string archiveDir = Path.Combine(Path.GetDirectoryName(extract)!, Path.GetFileNameWithoutExtension(extract));
+                int extractedFolder = topLevelFolders.IndexOf(archiveDir);
+                FolderEntry folder = new FolderEntry(extract, extractedFolder >= 0 ? topLevelFolders[extractedFolder] : null);
+
+                if (extractedFolder >= 0)
+                    topLevelFolders.RemoveAt(extractedFolder);
+
+                foundEntries.Add(folder);
+            }
+
+            foreach (string remainingFolder in topLevelFolders)
+            {
+                FolderEntry folder = new FolderEntry(null, remainingFolder);
+                foundEntries.Add(folder);
+            }
+
+            return foundEntries;
+        }
+
+        public static bool IsExecutable(string path)
+        {
+            return path.EndsWith(".exe");
+        }
+
+
+        public static bool IsZip(string path)
+        {
+            return path.EndsWith(".7z", StringComparison.InvariantCultureIgnoreCase) ||
+                path.EndsWith(".rar", StringComparison.InvariantCultureIgnoreCase) ||
+                path.EndsWith(".zip", StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        public static async Task<string?> ExtractFolder(string archiveFile)
+        {
+            if (!File.Exists(archiveFile))
+                return string.Empty;
+
+            bool requiresPassword = false;
+            bool didExtract = false;
+
+            using (IArchive? passwordCheckArchive = ArchiveFactory.Open(archiveFile))
+            {
+                requiresPassword = passwordCheckArchive.Entries.Any(x => x.IsEncrypted);
+            }
+
+            string extractPath = Path.Combine(Path.GetDirectoryName(archiveFile)!, Path.GetFileNameWithoutExtension(archiveFile));
+            Directory.CreateDirectory(extractPath);
+
+            ExtractionOptions extractionOptions = new ExtractionOptions()
+            {
+                ExtractFullPath = true,
+                Overwrite = true,
+            };
+
+            if (requiresPassword)
+            {
+                using (IArchive? archive = ArchiveFactory.Open(archiveFile, new SharpCompress.Readers.ReaderOptions() { Password = "test" }))
                 {
-                    foundGameFolders.Add(new GameFolder()
+                    await UIHandler.LoadTask(false, async () =>
                     {
-                        path = path,
-                        executables = binaries
+                        archive.WriteToDirectory(extractPath, extractionOptions);
                     });
-                    return;
+
+                    didExtract = true;
                 }
-
-                string[] zips = allFiles.Where(IsZip).ToArray();
-
-                if (zips.Length > 0)
+            }
+            else
+            {
+                using (IArchive? archive = ArchiveFactory.Open(archiveFile))
                 {
-                    foreach (string zip in zips)
-                    {
-                        foundZips.Add(new GameZip()
-                        {
-                            path = zip
-                        });
-                    }
-                }
-
-                string[] subDirs = Directory.GetDirectories(path);
-
-                foreach (string dir in subDirs)
-                {
-                    Craw(dir);
+                    await Extract(archive, extractPath, extractionOptions);
+                    didExtract = true;
                 }
             }
 
+            if (didExtract)
+            {
+                return extractPath;
+            }
+
+            return string.Empty;
+
+            async Task Extract(IArchive archive, string outputPath, ExtractionOptions options)
+            {
+                Func<Task>[] tasks = archive.Entries
+                    .Where(e => !e.IsDirectory)
+                    .Select(entry => (Func<Task>)(() => entry.WriteToDirectoryAsync(outputPath, options)))
+                    .ToArray();
+
+                await UIHandler.LoadTask(true, tasks);
+            }
         }
 
-        private static bool IsZip(string path)
+        public class FolderEntry
         {
-            return path.EndsWith(".7z", StringComparison.InvariantCultureIgnoreCase) ||
-                path.EndsWith(".rar", StringComparison.InvariantCultureIgnoreCase);
-        }
+            public string? archiveFile;
+            public string? extractedEntry;
 
+            public string? selectedBinary;
 
-        public struct GameFolder
-        {
-            public string path;
-            public string[] executables;
-        }
+            public FolderEntry(string? extract, string? extractedFolder)
+            {
+                this.archiveFile = extract;
+                this.extractedEntry = extractedFolder;
 
-        private struct GameZip
-        {
-            public string path;
+                if (!string.IsNullOrEmpty(extractedEntry))
+                    CrawlForExecutable(extractedEntry);
+            }
+
+            public void CrawlForExecutable(string root)
+            {
+                string[] files = Directory.GetFiles(root);
+                IEnumerable<string> binaries = files.Where(IsExecutable);
+
+                if (binaries?.Count() > 0)
+                {
+                    selectedBinary = binaries.FirstOrDefault();
+                    return;
+                }
+
+                string[] subDirs = Directory.GetDirectories(root);
+
+                foreach (string sub in subDirs)
+                    CrawlForExecutable(sub);
+            }
         }
     }
 }

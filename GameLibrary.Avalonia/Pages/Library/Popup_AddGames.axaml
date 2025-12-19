@@ -1,24 +1,20 @@
 <UserControl xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-             xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-             mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450"
-             x:Class="GameLibrary.Avalonia.Pages.Library.Popup_AddGames"
-             xmlns:Common="clr-namespace:GameLibrary.Avalonia.Controls">
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="1200" x:Class="GameLibrary.Avalonia.Pages.Library.Popup_AddGames"
+  xmlns:Comps="clr-namespace:GameLibrary.Avalonia.Pages.Indexer"
+  xmlns:Common="clr-namespace:GameLibrary.Avalonia.Controls">
   <Border Background="#1E1E1E" CornerRadius="10,10,0,0">
-    <Grid Margin="20">
-      <Label Content="Indexer" Foreground="White" VerticalAlignment="Top" HorizontalAlignment="Center" FontSize="30"/>
+    <Grid>
+      <Grid.RowDefinitions>
+        <RowDefinition Height="80"/>
+        <RowDefinition Height="*"/>
+      </Grid.RowDefinitions>
 
-      <StackPanel x:Name="cont_FoundGames" Margin="0,100,0,100">
+      <Label Grid.Row="0" Content="Indexer" Foreground="White" VerticalAlignment="Top" HorizontalAlignment="Center" FontSize="30" Margin="20"/>
 
-      </StackPanel>
-
-      <Border VerticalAlignment="Bottom" Height="60">
-        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-          <Common:Common_Button Margin="5" x:Name="btn_Search" Height="40" Width="200" Label="Search Folder" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-          <Common:Common_Button Margin="5" x:Name="btn_Import" Height="40" Width="200" Label="Import" HorizontalAlignment="Center" VerticalAlignment="Center"/>
-        </StackPanel>
-      </Border>
+      <Comps:Indexer_ImportView Grid.Row="1" x:Name="cont_ImportView" />
+      <Comps:Indexer_FolderView Grid.Row="1" x:Name="cont_FolderView" />
     </Grid>
   </Border>
 </UserControl>

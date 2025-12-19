@@ -1,0 +1,29 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.Avalonia.Pages.Indexer.Indexer_FolderView"
+  xmlns:Common="clr-namespace:GameLibrary.Avalonia.Controls">
+  <Grid>
+    <StackPanel x:Name="cont_FolderView" Spacing="20">
+      <StackPanel Orientation="Horizontal" Height="40" VerticalAlignment="Top" x:Name="cont_FolderView_URI">
+
+      </StackPanel>
+      <ScrollViewer>
+        <StackPanel x:Name="cont_FolderView_Entries" Spacing="5">
+        </StackPanel>
+      </ScrollViewer>
+    </StackPanel>
+
+
+    <Border Background="Black" VerticalAlignment="Bottom">
+      <Grid>
+        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" x:Name="cont_FolderView_BTNS">
+          <Common:Common_Button Margin="5" x:Name="btn_FolderView_Close" Height="40" Width="200" Label="Close" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          <Common:Common_Button Margin="5" x:Name="btn_Generic" Height="40" Width="200" Label="" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+          <Common:Common_Button Margin="5" x:Name="btn_Launch" Height="40" Width="200" Label="Launch" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Grid>
+
+    </Border>
+  </Grid>
+</UserControl>

@@ -9,7 +9,7 @@ namespace GameLibrary.Logic.Runners;
 
 public class Runner_Linux : IRunner
 {
-    public async Task<ProcessStartInfo> Run(GameDto game)
+    public async Task<ProcessStartInfo> Run(IGameDto game)
     {
         ProcessStartInfo info = new ProcessStartInfo();
         LaunchOptions wineOptions = await GetWineOptions(game);
@@ -21,9 +21,9 @@ public class Runner_Linux : IRunner
         return info;
     }
 
-    private Task EmulateRegion(ProcessStartInfo info, GameDto game)
+    private Task EmulateRegion(ProcessStartInfo info, IGameDto game)
     {
-        if (game.getGame.useEmulator)
+        if (game.useRegionEmulation)
         {
             info.EnvironmentVariables["LANG"] = "ja_JP.UTF-8";
             info.EnvironmentVariables["LC_ALL"] = "ja_JP.UTF-8";
@@ -33,7 +33,7 @@ public class Runner_Linux : IRunner
         return Task.CompletedTask;
     }
 
-    private async Task<LaunchOptions> GetWineOptions(GameDto game)
+    private async Task<LaunchOptions> GetWineOptions(IGameDto game)
     {
         LaunchOptions options = new LaunchOptions();
 
@@ -97,7 +97,7 @@ public class Runner_Linux : IRunner
         options.didSandbox = true;
     }
 
-    public Task<Runner_Game> LaunchGame(GameDto game, Process process, string logPath)
+    public Task<Runner_Game> LaunchGame(IGameDto game, Process process, string logPath)
     {
         return Task.FromResult((Runner_Game)new Runner_LinuxGame(game, logPath, process));
     }
@@ -114,7 +114,7 @@ public class Runner_Linux : IRunner
 
     public class Runner_LinuxGame : Runner_Game
     {
-        public Runner_LinuxGame(GameDto game, string logPath, Process p) : base(game, logPath, p)
+        public Runner_LinuxGame(IGameDto game, string logPath, Process p) : base(game, logPath, p)
         {
         }
 

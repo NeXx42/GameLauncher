@@ -5,7 +5,36 @@ using GameLibrary.DB.Tables;
 
 namespace GameLibrary.Logic.Objects;
 
-public class GameDto
+public interface IGameDto
+{
+    public int getGameId { get; }
+
+    public bool captureLogs { get; }
+    public bool useRegionEmulation { get; }
+
+    public string getAbsoluteFolderLocation { get; }
+    public string getAbsoluteBinaryLocation { get; }
+
+    public dbo_WineProfile? getWineProfile { get; }
+}
+
+public class GameForge : IGameDto
+{
+    public required string path;
+    public dbo_WineProfile? wineProfile;
+
+    public int getGameId => -1;
+    public bool captureLogs => false;
+
+    public bool useRegionEmulation => false;
+
+    public string getAbsoluteFolderLocation => Path.GetDirectoryName(path);
+    public string getAbsoluteBinaryLocation => path;
+
+    public dbo_WineProfile? getWineProfile => wineProfile;
+}
+
+public class GameDto : IGameDto
 {
     private int gameId;
 
@@ -78,6 +107,8 @@ public class GameDto
     // props
 
     public int getGameId => gameId;
+    public bool captureLogs => game?.captureLogs ?? false;
+    public bool useRegionEmulation => game?.useEmulator ?? false;
 
     public dbo_Game getGame => game!;
     public HashSet<int> getTags => tags!;

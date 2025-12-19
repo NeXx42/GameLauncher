@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using GameLibrary.DB;
+using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Objects;
 using GameLibrary.Logic.Runners;
@@ -84,6 +85,32 @@ namespace GameLibrary.Logic
             {
                 await OnGameClose(game.getGameId, null, null);
                 //MessageBox.Show(e.Message);
+            }
+        }
+
+        public static async Task LaunchGeneric(string dir)
+        {
+            try
+            {
+                GameForge forge = new GameForge()
+                {
+                    path = dir,
+                    wineProfile = await DatabaseHandler.GetItem<dbo_WineProfile>()
+                };
+
+                ProcessStartInfo info = await runner!.Run(forge);
+                info.UseShellExecute = false;
+
+                Process gameProcess = new Process();
+
+                gameProcess.StartInfo = info;
+                gameProcess.EnableRaisingEvents = true;
+
+                gameProcess.Start();
+            }
+            catch (Exception e)
+            {
+
             }
         }
 

@@ -71,7 +71,7 @@ namespace GameLibrary.Logic
 
 
 
-        public static async Task ImportGames(Stack<FileManager.GameFolder> availableImports)
+        public static async Task ImportGames(List<FileManager.FolderEntry> availableImports)
         {
             dbo_Libraries? chosenLibrary = await DatabaseHandler.GetItem<dbo_Libraries>();
 
@@ -84,23 +84,28 @@ namespace GameLibrary.Logic
 
             for (int i = availableImports.Count - 1; i >= 0; i--)
             {
-                FileManager.GameFolder folder = availableImports.Peek();
-                string gameFolderName = CorrectGameName(Path.GetFileName(folder.path));
+                FileManager.FolderEntry folder = availableImports[i];
+
+                if (string.IsNullOrEmpty(folder.selectedBinary))
+                    continue;
+
+                string absoluteFolderPath = Path.GetDirectoryName(folder.selectedBinary);
+                string gameFolderName = CorrectGameName(Path.GetFileName(absoluteFolderPath));
 
                 dbo_Game newGame = new dbo_Game
                 {
                     gameName = gameFolderName,
                     gameFolder = useGuidFolderNames ? Guid.NewGuid().ToString() : gameFolderName,
-                    executablePath = Path.GetFileName(TryFindBestExecutable(folder.executables)),
+                    executablePath = Path.GetFileName(folder.selectedBinary),
                     libaryId = chosenLibrary.libaryId
                 };
 
                 try
                 {
                     await DatabaseHandler.InsertIntoTable(newGame);
-                    await FileManager.MoveGameToItsLibrary(newGame, folder.path, chosenLibrary.rootPath);
+                    await FileManager.MoveGameToItsLibrary(newGame, absoluteFolderPath, chosenLibrary.rootPath);
 
-                    availableImports.Pop();
+                    availableImports.RemoveAt(i);
                 }
                 catch
                 {

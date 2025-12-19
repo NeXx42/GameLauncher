@@ -1,6 +1,8 @@
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Threading;
 using GameLibrary.Avalonia.Helpers;
 using GameLibrary.Avalonia.Pages;
 using GameLibrary.Avalonia.Utils;
@@ -12,7 +14,7 @@ namespace GameLibrary.Avalonia;
 
 public partial class MainWindow : Window
 {
-    public static Window? instance { private set; get; }
+    public static MainWindow? instance { private set; get; }
     private UserControl activePage;
 
     public MainWindow()
@@ -21,6 +23,8 @@ public partial class MainWindow : Window
 
         InitializeComponent();
         OnStart();
+
+        cont_Loading.IsVisible = true;
     }
 
     private async void OnStart()
@@ -40,8 +44,11 @@ public partial class MainWindow : Window
 
     private async void CompleteSetup(Page_Setup.SetupRequest req)
     {
-        await DatabaseManager.CreateDBPointerFile(req.dbFile);
-        await DatabaseManager.LoadDatabase(DialogHelper.OpenDatabaseExceptionDialog);
+        await LoadTasks(false,
+            () => DatabaseManager.CreateDBPointerFile(req.dbFile),
+            () => DatabaseManager.LoadDatabase(DialogHelper.OpenDatabaseExceptionDialog),
+            () => Task.Delay(10000)
+        );
 
         if (req.isExistingLoad)
         {
@@ -81,13 +88,11 @@ public partial class MainWindow : Window
 
     private async Task CompleteLoad()
     {
-        await ConfigHandler.Init();
+        await LoadTasks(false, LibraryHandler.Setup, ConfigHandler.Init);
 
         OverlayManager.Init(DialogHelper.OpenOverlay);
         ImageManager.Init(new AvaloniaImageBrushFetcher());
         GameLauncher.Init();
-
-        await LibraryHandler.Setup();
 
         EnterPage<Page_Library>();
     }
@@ -103,8 +108,56 @@ public partial class MainWindow : Window
         T page = Activator.CreateInstance<T>();
 
         activePage = page;
+        activePage.ZIndex = 1;
+
         cont_Pages.Children.Add(activePage);
 
         return page;
+    }
+
+    public static async Task LoadTasks(bool showLoading, params Func<Task>[] tasks)
+    {
+        instance!.cont_Loading.IsVisible = true;
+        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+
+        if (showLoading)
+        {
+            instance!.lbl_Loading.Content = "Loading...";
+
+            DateTime lastTime = DateTime.UtcNow;
+            double averageTaskLength = 0;
+            int tasksCompleted = 0;
+
+            foreach (Func<Task> entry in tasks)
+            {
+                try
+                {
+                    await entry();
+
+                    tasksCompleted++;
+
+                    averageTaskLength = averageTaskLength + ((DateTime.UtcNow - lastTime).TotalSeconds - averageTaskLength) / tasksCompleted;
+                    lastTime = DateTime.UtcNow;
+
+                    float remainingPercentage = (float)Math.Round((tasksCompleted / tasks.Length) * 100f);
+                    float remainingTime = (float)Math.Round(averageTaskLength * (tasks.Length - tasksCompleted));
+
+                    await Dispatcher.UIThread.InvokeAsync(() => instance!.lbl_Loading.Content = $"{remainingPercentage}% {remainingTime}");
+                }
+                catch (Exception e)
+                {
+                    await DialogHelper.OpenDatabaseExceptionDialog(e, "");
+                }
+
+            }
+        }
+        else
+        {
+            instance!.lbl_Loading.Content = "Loading";
+            await Task.WhenAll(tasks.Select(x => x()));
+        }
+
+
+        instance!.cont_Loading.IsVisible = false;
     }
 }

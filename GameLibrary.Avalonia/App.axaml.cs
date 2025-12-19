@@ -13,6 +13,10 @@ public partial class App : Application
     public override void Initialize()
     {
         AvaloniaXamlLoader.Load(this);
+        UIHandler.Register(new UIHandler.UIRequests()
+        {
+            loader = MainWindow.LoadTasks,
+        });
     }
 
     public override void OnFrameworkInitializationCompleted()
