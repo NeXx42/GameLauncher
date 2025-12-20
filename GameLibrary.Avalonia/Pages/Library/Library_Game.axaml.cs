@@ -13,7 +13,7 @@ namespace GameLibrary.Avalonia.Controls;
 public partial class Library_Game : UserControl
 {
     private Action? onClick;
-    private int gameId;
+    private int? gameId;
 
     public Library_Game()
     {
@@ -26,25 +26,30 @@ public partial class Library_Game : UserControl
         if (this.gameId == gameId)
             return;
 
-        img.Background = null;
-
         this.gameId = gameId;
-        GameDto? game = LibraryHandler.GetGameFromId(gameId);
-
-        if (game != null)
-        {
-            title.Text = game.getGame.gameName;
-            await ImageManager.GetGameImage<ImageBrush>(game, RedrawIcon);
-        }
+        await RedrawGameDetails(gameId);
 
         onClick = () => onLaunch?.Invoke(gameId);
     }
 
-    public void RedrawIcon(int gameId, ImageBrush? bitmapImg)
+    public async Task RedrawGameDetails(int gameId, bool refetchImage = true)
     {
-        if (this.gameId != gameId)
+        GameDto? game = LibraryHandler.GetGameFromId(gameId);
+
+        if (game == null)
             return;
 
+        if (refetchImage)
+        {
+            img.Background = null;
+            await ImageManager.GetGameImage<ImageBrush>(game, RedrawIcon);
+        }
+
+        title.Text = game.getGame.gameName;
+    }
+
+    public void RedrawIcon(int gameId, ImageBrush? bitmapImg)
+    {
         img.Background = bitmapImg;
     }
 }

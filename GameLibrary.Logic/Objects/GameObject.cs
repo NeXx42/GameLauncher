@@ -80,6 +80,12 @@ public class GameDto : IGameDto
         game = await DatabaseHandler.GetItem<dbo_Game>(QueryBuilder.SQLEquals(nameof(dbo_Game.id), gameId));
     }
 
+    public async Task UpdateGame()
+    {
+        await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
+        LibraryHandler.InvokeGlobalGameChange(gameId);
+    }
+
     public async Task LoadTags()
     {
         dbo_GameTag[] actualTags = await DatabaseHandler.GetItems<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), gameId));
@@ -143,7 +149,7 @@ public class GameDto : IGameDto
     public async Task UpdateGameEmulationStatus(bool to)
     {
         game!.useEmulator = to;
-        await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
+        await UpdateGame();
     }
 
     public async Task ChangeBinaryLocation(string? path)
@@ -156,13 +162,19 @@ public class GameDto : IGameDto
         }
 
         game!.executablePath = path;
-        await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
+        await UpdateGame();
     }
 
     public async Task ChangeWineProfile(int? wineProfile)
     {
         game!.wineProfile = wineProfile;
-        await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
+        await UpdateGame();
+    }
+
+    public async Task UpdateGameName(string newName)
+    {
+        game!.gameName = newName;
+        await UpdateGame();
     }
 
     public Exception? DeleteFiles()

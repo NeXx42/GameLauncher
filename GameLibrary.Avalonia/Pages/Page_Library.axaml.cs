@@ -67,6 +67,7 @@ public partial class Page_Library : UserControl
         btn_Indexer.RegisterClick(OpenIndexer);
         btn_Settings.RegisterClick(OpenSettings);
 
+        inp_Search.KeyUp += (_, __) => gameList.RefilterGames();
         btn_SortDir.RegisterClick(UpdateSortDirection);
         inp_SortType.Setup(Enum.GetValues(typeof(LibraryHandler.OrderType)), 0, UpdateSortType);
     }
@@ -260,6 +261,7 @@ public partial class Page_Library : UserControl
             }
 
             ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateImage);
+            LibraryHandler.RegisterOnGlobalGameChange(RedrawGame);
         }
 
         public async Task RefilterGames(bool resetPage = true)
@@ -267,7 +269,7 @@ public partial class Page_Library : UserControl
             if (resetPage)
                 gamesSlide = 0;
 
-            LibraryHandler.RefilterGames(library.activeTags, library.currentSort, library.currentSortAscending);
+            LibraryHandler.RefilterGames(library.activeTags, library.inp_Search.Text, library.currentSort, library.currentSortAscending);
             await DrawGames();
         }
 
@@ -293,7 +295,13 @@ public partial class Page_Library : UserControl
             }
         }
 
-        public async void UpdateImage(int gameId, ImageBrush? brush)
+        public async Task RedrawGame(int gameId)
+        {
+            if (activeUI.TryGetValue(gameId, out int uiPos))
+                await cacheUI[uiPos].RedrawGameDetails(gameId, false);
+        }
+
+        public void UpdateImage(int gameId, ImageBrush? brush)
         {
             if (activeUI.TryGetValue(gameId, out int uiPos))
                 cacheUI[uiPos].RedrawIcon(gameId, brush);

@@ -38,6 +38,8 @@ public partial class Popup_GameView : UserControl
         lbl_Title.PointerPressed += (_, __) => StartNameChange();
 
         ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateGameIcon);
+        LibraryHandler.RegisterOnGlobalGameChange(RefreshSelectedGame);
+
         GameLauncher.OnGameRunStateChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b)); // need to fix threading issue
     }
 
@@ -81,9 +83,18 @@ public partial class Popup_GameView : UserControl
     private async void StartNameChange()
     {
         string? res = await DependencyManager.uiLinker!.OpenStringInputModal("Game Name");
-        Console.WriteLine(res);
+
+        if (!string.IsNullOrEmpty(res))
+            await inspectingGame!.UpdateGameName(res);
     }
 
+    private async Task RefreshSelectedGame(int gameId)
+    {
+        if (gameId != inspectingGame?.getGameId)
+            return;
+
+        await Draw(inspectingGame!);
+    }
 
     private void UpdateRunningGameStatus(int gameId, bool to)
     {

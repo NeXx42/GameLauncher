@@ -98,16 +98,8 @@ namespace GameLibrary.Logic
             if (!File.Exists(archiveFile))
                 return string.Empty;
 
-            bool requiresPassword = false;
             bool didExtract = false;
-
-            using (IArchive? passwordCheckArchive = ArchiveFactory.Open(archiveFile))
-            {
-                requiresPassword = passwordCheckArchive.Entries.Any(x => x.IsEncrypted);
-            }
-
             string extractPath = Path.Combine(Path.GetDirectoryName(archiveFile)!, Path.GetFileNameWithoutExtension(archiveFile));
-            Directory.CreateDirectory(extractPath);
 
             ExtractionOptions extractionOptions = new ExtractionOptions()
             {
@@ -115,7 +107,17 @@ namespace GameLibrary.Logic
                 Overwrite = true,
             };
 
-            if (requiresPassword)
+            Directory.CreateDirectory(extractPath);
+
+            try
+            {
+                using (IArchive? archive = ArchiveFactory.Open(archiveFile))
+                {
+                    await DependencyManager.uiLinker!.OpenLoadingModal(false, async () => archive.WriteToDirectory(extractPath, extractionOptions));
+                    didExtract = true;
+                }
+            }
+            catch (CryptographicException)
             {
                 string? password = await DependencyManager.uiLinker!.OpenStringInputModal("Archive Password") ?? string.Empty;
 
@@ -125,13 +127,9 @@ namespace GameLibrary.Logic
                     didExtract = true;
                 }
             }
-            else
+            catch
             {
-                using (IArchive? archive = ArchiveFactory.Open(archiveFile))
-                {
-                    await Extract(archive, extractPath, extractionOptions);
-                    didExtract = true;
-                }
+
             }
 
             if (didExtract)

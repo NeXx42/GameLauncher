@@ -43,12 +43,17 @@
                     <!-- Sort -->
                     <Border VerticalAlignment="Top" Height="40" Background="#181818" BorderBrush="#FF333333" BorderThickness="0,0,0,1">
                         <Grid>
-                            <StackPanel Margin="15,5,5,5" Orientation="Horizontal">
+                            <StackPanel Margin="15,5,5,5" Orientation="Horizontal" HorizontalAlignment="Left">
                                 <Label Content="Sort By: " Foreground="#FFAFAFAF" VerticalAlignment="Center"/>
                                 <common:Common_Dropdown x:Name="inp_SortType" Width="100"/>
 
                                 <Label Content="Order: " Foreground="#FFAFAFAF" VerticalAlignment="Center" Margin="15,0,0,0"/>
                                 <common:Common_Button x:Name="btn_SortDir" Margin="0, 0, 0, 0" Label="Ascending" Width="100"/>
+                            </StackPanel>
+
+                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Margin="5">
+                                <Label Content="Search" VerticalAlignment="Center"/>
+                                <TextBox x:Name="inp_Search" Width="300"/>
                             </StackPanel>
                         </Grid>
                     </Border>
@@ -83,9 +88,6 @@
         </Border>
 
         <Grid x:Name="cont_MenuView" Background="#7F000000">
-            <!-- <components:Control_GameView x:Name="GameViewer" Width="1200" Visibility="Hidden" HorizontalAlignment="Center" Margin="0, 100, 0, 0"/>
-            <components:Control_Indexer x:Name="Indexer" Width="1200" Visibility="Hidden" HorizontalAlignment="Center" Margin="0, 100, 0, 0"/>
-            <components:Control_Settings x:Name="Settings" Width="1200" Visibility="Hidden" HorizontalAlignment="Center" Margin="0, 100, 0, 0"/> -->
             <components:Popup_GameView x:Name="GameViewer" Width="1200" IsVisible="False" HorizontalAlignment="Center" Margin="0, 100, 0, 0"/>
             <components:Popup_AddGames x:Name="Indexer" Width="1200" IsVisible="False" HorizontalAlignment="Center" Margin="0, 100, 0, 0"/>
             <components:Popup_Settings x:Name="Settings" Width="1200" IsVisible="False" HorizontalAlignment="Center" Margin="0, 100, 0, 0"/>

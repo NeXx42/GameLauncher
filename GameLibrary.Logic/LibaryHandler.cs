@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using GameLibrary.DB;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Helpers;
 using GameLibrary.Logic.Interfaces;
 using GameLibrary.Logic.Objects;
 
@@ -16,6 +17,8 @@ namespace GameLibrary.Logic
             Name,
             LastPlayed,
         }
+
+        private static Action<int> globalGameChangeCallback;
 
         private static GameDto[]? games;
         private static dbo_Tag[]? tags;
@@ -68,7 +71,10 @@ namespace GameLibrary.Logic
         }
 
 
+        public static void RegisterOnGlobalGameChange(Func<int, Task> callback) => globalGameChangeCallback += async (x) => await callback(x);
+        public static void RegisterOnGlobalGameChange(Action<int> callback) => globalGameChangeCallback += callback;
 
+        public static void InvokeGlobalGameChange(int gameId) => globalGameChangeCallback?.Invoke(gameId);
 
 
         public static async Task ImportGames(List<FileManager.FolderEntry> availableImports)
@@ -140,30 +146,15 @@ namespace GameLibrary.Logic
         public static GameDto? GetGameFromId(int id) => games!.FirstOrDefault(x => x.getGameId == id);
 
 
-        public static void RefilterGames(HashSet<int> tagFilter, OrderType orderType, bool isAsc)
+        public static void RefilterGames(HashSet<int> tagFilter, string? textFilter, OrderType orderType, bool isAsc)
         {
-            if ((tagFilter?.Count ?? 0) == 0)
-            {
-                gameFilterList = OrderList(FilterList(games!.Select(x => x.getGameId))).ToArray();
-                return;
-            }
-
-            gameFilterList = OrderList(FilterList(games!.Where(x => x.IsInFilter(ref tagFilter)).Select(x => x.getGameId))).ToArray();
-
-            IEnumerable<int> OrderList(IEnumerable<int> inp)
-                => isAsc ? inp : inp.Reverse();
-
-            IEnumerable<int> FilterList(IEnumerable<int> inp)
-            {
-                switch (orderType)
-                {
-                    case OrderType.Id: return inp.OrderBy(x => x);
-                    case OrderType.Name: return inp.OrderBy(x => GetGameFromId(x)!.getGame.gameName);
-                    case OrderType.LastPlayed: return inp.OrderBy(x => GetGameFromId(x)!.getGame.lastPlayed);
-                }
-
-                return inp;
-            }
+            gameFilterList = games!
+                .Filter_Tags(tagFilter)
+                .Filter_Text(textFilter)
+                .Filter_OrderType(orderType)
+                .Filter_Direction(isAsc)
+                .Select(x => x.getGameId)
+                .ToArray();
         }
 
         public static int GetFilteredGameCount() => gameFilterList?.Length ?? games!.Length;
