@@ -14,6 +14,7 @@ public partial class Modal_Input : UserControl
     {
         InitializeComponent();
         btn_Enter.RegisterClick(CompleteInput);
+        btn_Close.RegisterClick(() => stringRequest?.SetResult(null));
     }
 
     public Task<string?> RequestString(string windowName)

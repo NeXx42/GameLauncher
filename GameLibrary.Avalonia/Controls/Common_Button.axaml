@@ -4,6 +4,6 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" x:Class="GameLibrary.Avalonia.Controls.Common_Button"
     xmlns:local="clr-namespace:GameLibrary.Avalonia.Controls" x:DataType="local:Common_Button">
     <Border x:Name="ctrl" CornerRadius="2" Background="#2C2C2C" BorderBrush="#FF444444" BorderThickness="1">
-        <TextBlock Text="{Binding Label, Mode=OneWay}" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+        <TextBlock Margin="5,0" Text="{Binding Label, Mode=OneWay}" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
     </Border>
 </UserControl>

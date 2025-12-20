@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
     xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.Avalonia.Pages.Page_Library"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080" x:Class="GameLibrary.Avalonia.Pages.Page_Library"
     xmlns:common="clr-namespace:GameLibrary.Avalonia.Controls"
     xmlns:components="clr-namespace:GameLibrary.Avalonia.Pages.Library">
 
@@ -10,7 +10,7 @@
         <Border x:Name="eff_Blur">
             <Grid>
                 <StackPanel>
-                    <Border VerticalAlignment="Top" Height="60" Background="#1E1E1E">
+                    <Border VerticalAlignment="Top" Height="60" Background="{DynamicResource bg_HeaderBar}">
                         <Grid>
                             <Label Margin="20, 0, 0, 0" FontSize="30" Content="Games" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center"/>
                             <StackPanel Margin="15,15,15,15" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -21,7 +21,7 @@
                     </Border>
 
                     <!-- Tags -->
-                    <Border VerticalAlignment="Top" Height="50" Background="#181818" BorderBrush="#FF333333" BorderThickness="0,0,0,1">
+                    <Border VerticalAlignment="Top" Height="50" Background="{DynamicResource bg_BarLight}" BorderBrush="{DynamicResource bg_Border}" BorderThickness="0,0,0,1">
                         <Grid>
                             <StackPanel Orientation="Horizontal" Margin="10, 8, 0, 8">
                                 <common:Common_Button x:Name="btn_OpenTagCreator" Label="+ Add Tags" HorizontalAlignment="Left" Width="100" Margin="0, 0, 15, 0"/>
@@ -31,7 +31,7 @@
                             </StackPanel>
 
                             <!-- Tag creator -->
-                            <Border x:Name="cont_TagCreator" Background="#181818" BorderBrush="#FF333333" BorderThickness="0,0,1,0" HorizontalAlignment="Left" Margin="120,0,0,0" IsVisible="False">
+                            <Border x:Name="cont_TagCreator" Background="#181818" BorderBrush="{DynamicResource bg_Border}" BorderThickness="0,0,1,0" HorizontalAlignment="Left" Margin="120,0,0,0" IsVisible="False">
                                 <StackPanel Orientation="Horizontal" Margin="8">
                                     <TextBox x:Name="inp_TagName" Width="250" HorizontalAlignment="Left" Background="#FF2C2C2C" BorderBrush="#FF444444" Foreground="White" VerticalContentAlignment="Center" SelectionBrush="#FFFFC500"/>
                                     <common:Common_Button Label="+ Create Tag" x:Name="btn_CreateTag" HorizontalAlignment="Right" Width="100" Margin="7,0,0,0"/>
@@ -41,7 +41,7 @@
                     </Border>
 
                     <!-- Sort -->
-                    <Border VerticalAlignment="Top" Height="40" Background="#181818" BorderBrush="#FF333333" BorderThickness="0,0,0,1">
+                    <Border VerticalAlignment="Top" Height="40" Background="{DynamicResource bg_BarLight}" BorderBrush="{DynamicResource bg_Border}" BorderThickness="0,0,0,1">
                         <Grid>
                             <StackPanel Margin="15,5,5,5" Orientation="Horizontal" HorizontalAlignment="Left">
                                 <Label Content="Sort By: " Foreground="#FFAFAFAF" VerticalAlignment="Center"/>

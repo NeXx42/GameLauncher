@@ -4,13 +4,15 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080" x:Class="GameLibrary.Avalonia.Pages.Library.Popup_GameView"
   xmlns:common="clr-namespace:GameLibrary.Avalonia.Controls"
   xmlns:local="clr-namespace:GameLibrary.Avalonia.Pages.Library">
-  <Border Background="#1E1E1E" CornerRadius="10,10,0,0">
+  <Border Background="{DynamicResource bg_BarLight}" CornerRadius="10,10,0,0" BorderBrush="{DynamicResource bg_Border}" BorderThickness="1">
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="670"/>
         <RowDefinition Height="*"/>
         <RowDefinition Height="40"/>
       </Grid.RowDefinitions>
+
+      <!-- img -->
 
       <Grid VerticalAlignment="Top" ClipToBounds="True" Height="670" Grid.Row="0">
         <Border CornerRadius="10" Background="Black" />

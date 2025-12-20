@@ -1,10 +1,14 @@
 <Application xmlns="https://github.com/avaloniaui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             x:Class="GameLibrary.Avalonia.App"
-             RequestedThemeVariant="Default">
-             <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="GameLibrary.Avalonia.App" RequestedThemeVariant="Default">
+    <!-- "Default" ThemeVariant follows system theme variant. "Dark" or "Light" are other available options. -->
 
     <Application.Styles>
         <FluentTheme />
     </Application.Styles>
+    <Application.Resources>
+        <SolidColorBrush x:Key="bg_HeaderBar" Color="#1E1E1E"/>
+        <SolidColorBrush x:Key="bg_BarLight" Color="#181818"/>
+        <SolidColorBrush x:Key="bg_Background" Color="#1E1E1E"/>
+        <SolidColorBrush x:Key="bg_Border" Color="#FF333333"/>
+    </Application.Resources>
 </Application>

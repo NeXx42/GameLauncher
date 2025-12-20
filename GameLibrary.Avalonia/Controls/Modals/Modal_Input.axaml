@@ -3,9 +3,13 @@
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080" x:Class="GameLibrary.Avalonia.Controls.Modals.Modal_Input"
   xmlns:Common="clr-namespace:GameLibrary.Avalonia.Controls">
-  <Border Background="Red" VerticalAlignment="Center" HorizontalAlignment="Center" Width="300" CornerRadius="5">
-    <StackPanel Spacing="10" Margin="10">
-      <Label x:Name="lbl_Title" Content="Input" HorizontalAlignment="Center"/>
+  <Border Background="{DynamicResource bg_BarLight}" CornerRadius="5" BorderBrush="{DynamicResource bg_Border}" BorderThickness="1" Width="400" VerticalAlignment="Center">
+    <StackPanel Spacing="20" Margin="10">
+      <Grid>
+        <Label FontSize="24" x:Name="lbl_Title" Content="Input" HorizontalAlignment="Center"/>
+
+        <Common:Common_Button x:Name="btn_Close" Label="X" HorizontalAlignment="Left" Height="30" Width="30"/>
+      </Grid>
 
       <Grid>
         <Grid.ColumnDefinitions>
