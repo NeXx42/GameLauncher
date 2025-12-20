@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia;
@@ -44,23 +45,27 @@ public class LibraryPage_Grid : LibraryPageBase
 
     public override async Task DrawGames()
     {
-        //library.lbl_PageNum.Text = $"{(gamesSlide / getTotalContentPerPage) + 1}";
+        library.lbl_PageNum.Text = $"{page + 1}";
+        await DependencyManager.uiLinker!.OpenLoadingModal(false, Internal);
 
-        int[] games = await LibraryHandler.GetGameList(library.GetGameFilter(page, ContentPerPage.x * ContentPerPage.y));
-        activeUI.Clear();
-
-        for (int i = 0; i < cacheUI.Length; i++)
+        async Task Internal()
         {
-            if (i >= games.Length)
+            activeUI.Clear();
+            int[] games = await LibraryHandler.GetGameList(library.GetGameFilter(page, ContentPerPage.x * ContentPerPage.y));
+
+            for (int i = 0; i < cacheUI.Length; i++)
             {
-                cacheUI[i].IsVisible = false;
-                continue;
+                if (i >= games.Length)
+                {
+                    cacheUI[i].IsVisible = false;
+                    continue;
+                }
+
+                cacheUI[i].IsVisible = true;
+                await cacheUI[i].Draw(games[i], library.ToggleGameView);
+
+                activeUI.Add(games[i], i);
             }
-
-            cacheUI[i].IsVisible = true;
-            await cacheUI[i].Draw(games[i], library.ToggleGameView);
-
-            activeUI.Add(games[i], i);
         }
     }
 
@@ -76,27 +81,17 @@ public class LibraryPage_Grid : LibraryPageBase
             cacheUI[uiPos].RedrawIcon(gameId, brush);
     }
 
-    public override async Task PrevPage()
-    {
-        page--;
-        await DrawGames();
-    }
+    public override async Task PrevPage() => await UpdatePage(Math.Max(page - 1, 0));
+    public override async Task NextPage() => await UpdatePage(Math.Min(page + 1, LibraryHandler.GetMaxPages(ContentPerPage.x * ContentPerPage.y)));
+    public override async Task FirstPage() => await UpdatePage(0);
+    public override async Task LastPage() => await UpdatePage(LibraryHandler.GetMaxPages(ContentPerPage.x * ContentPerPage.y));
 
-    public override async Task NextPage()
+    private async Task UpdatePage(int to)
     {
-        page++;
-        await DrawGames();
-    }
+        if (page == to)
+            return;
 
-    public override async Task FirstPage()
-    {
-        page = 0;
-        await DrawGames();
-    }
-
-    public override async Task LastPage()
-    {
-        // ? need to get count on init
+        page = to;
         await DrawGames();
     }
 }

@@ -139,15 +139,15 @@ namespace GameLibrary.Logic
 
             return string.Empty;
 
-            async Task Extract(IArchive archive, string outputPath, ExtractionOptions options)
-            {
-                Func<Task>[] tasks = archive.Entries
-                    .Where(e => !e.IsDirectory)
-                    .Select(entry => (Func<Task>)(() => entry.WriteToDirectoryAsync(outputPath, options)))
-                    .ToArray();
-
-                await DependencyManager.uiLinker!.OpenLoadingModal(true, tasks);
-            }
+            //async Task Extract(IArchive archive, string outputPath, ExtractionOptions options)
+            //{
+            //    Func<Task>[] tasks = archive.Entries
+            //        .Where(e => !e.IsDirectory)
+            //        .Select(entry => (Func<Task>)(() => entry.WriteToDirectoryAsync(outputPath, options)))
+            //        .ToArray();
+            //
+            //    await DependencyManager.uiLinker!.OpenLoadingModal(true, tasks);
+            //}
         }
 
         public class FolderEntry
@@ -173,7 +173,7 @@ namespace GameLibrary.Logic
 
                 if (binaries?.Count() > 0)
                 {
-                    selectedBinary = binaries.FirstOrDefault();
+                    selectedBinary = TryFindBestExecutable(binaries);
                     return;
                 }
 
@@ -181,6 +181,18 @@ namespace GameLibrary.Logic
 
                 foreach (string sub in subDirs)
                     CrawlForExecutable(sub);
+
+                string TryFindBestExecutable(IEnumerable<string> possible)
+                {
+                    string? bestPossible = possible.FirstOrDefault(x =>
+                    {
+                        string name = Path.GetFileName(x).ToLower();
+                        return !name.Contains("crash", StringComparison.InvariantCulture)
+                                && !name.Contains("crash", StringComparison.InvariantCulture);
+                    });
+
+                    return bestPossible ?? possible.FirstOrDefault() ?? "";
+                }
             }
         }
     }

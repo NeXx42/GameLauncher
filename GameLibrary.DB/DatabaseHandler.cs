@@ -21,6 +21,10 @@ namespace GameLibrary.DB
         private static DatabaseExceptionCallback? errorCallback;
 
 
+        private static Dictionary<string, string> tableNameCache = new Dictionary<string, string>();
+
+
+
         public static async Task Setup(string dbPath, DatabaseExceptionCallback? errorCallback = null)
         {
             if (string.IsNullOrEmpty(dbPath))
@@ -108,6 +112,19 @@ namespace GameLibrary.DB
                 await DeleteFromTable<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), Database_MigrationBase.CONFIG_MIGRATIONID));
                 await InsertIntoTable(new dbo_Config() { key = Database_MigrationBase.CONFIG_MIGRATIONID, value = lastMigration.Value.ToString() });
             }
+        }
+
+        private static string GetTableNameFromGeneric<T>() where T : Database_Table
+        {
+            if (!tableNameCache.TryGetValue(typeof(T).FullName!, out string? tableName))
+            {
+                T table = (T)Activator.CreateInstance(typeof(T))!;
+                tableName = table.tableName;
+
+                tableNameCache.Add(typeof(T).FullName!, tableName);
+            }
+
+            return tableName;
         }
 
 
@@ -249,12 +266,6 @@ namespace GameLibrary.DB
             }
         }
 
-        private static string GetTableNameFromGeneric<T>() where T : Database_Table
-        {
-            T table = (T)Activator.CreateInstance(typeof(T))!;
-            return table.tableName;
-        }
-
 
         public static async Task AddOrUpdate<T>(T change, QueryBuilder.InternalAccessor query) where T : Database_Table
         {
@@ -275,6 +286,36 @@ namespace GameLibrary.DB
                 await AddOrUpdate(change, match(change));
             }
         }
+
+        public static async Task<int?> GetCount<T>(QueryBuilder.InternalAccessor? query = null) where T : Database_Table
+        {
+            string sql = $"SELECT COUNT(*) FROM {GetTableNameFromGeneric<T>()} ";
+
+            if (query != null)
+                sql += query.BuildWhereClause();
+
+            try
+            {
+                await connection!.OpenAsync();
+
+                using (SQLiteCommand cmd = new SQLiteCommand(sql, connection))
+                using (SQLiteDataReader reader = (SQLiteDataReader)await cmd.ExecuteReaderAsync())
+                {
+                    await reader.ReadAsync();
+                    int count = Convert.ToInt32(reader[0]);
+
+                    await connection.CloseAsync();
+                    return count;
+                }
+            }
+            catch (Exception e)
+            {
+                await connection!.CloseAsync();
+                if (errorCallback != null) await errorCallback.Invoke(e, sql?.ToString() ?? string.Empty);
+                return null;
+            }
+        }
+
     }
 
 

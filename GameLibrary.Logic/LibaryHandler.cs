@@ -20,11 +20,12 @@ namespace GameLibrary.Logic
             LastPlayed,
         }
 
-        private static Action<int> globalGameChangeCallback;
+        private static Action<int>? globalGameChangeCallback;
 
         //private static GameDto[]? games;
         private static dbo_Tag[]? tags;
 
+        private static int localGameCount;
         private static Dictionary<int, GameDto> activeGameList = new Dictionary<int, GameDto>();
 
         public static bool getAreTagsDirty
@@ -45,29 +46,9 @@ namespace GameLibrary.Logic
 
         public static async Task Setup()
         {
-            await RedetectGames();
             await FindTags();
+            localGameCount = await DatabaseHandler.GetCount<dbo_Game>() ?? 0;
         }
-
-
-        public static async Task RedetectGames()
-        {
-            //await RefilterGames(null, null, OrderType.Id, true);
-
-            //gameFilterList = null;
-            //await FindGames_Internal();
-        }
-
-        //private static async Task FindGames_Internal()
-        //{
-        //    dbo_Game[] latestGames = await DatabaseHandler.GetItems<dbo_Game>();
-        //    games = latestGames.Select(x => new GameDto(x)).ToArray();
-        //
-        //    foreach (GameDto game in games)
-        //    {
-        //        await game.LoadAll();
-        //    }
-        //}
 
         private static async Task FindTags()
         {
@@ -99,8 +80,8 @@ namespace GameLibrary.Logic
                 if (string.IsNullOrEmpty(folder.selectedBinary))
                     continue;
 
-                string absoluteFolderPath = Path.GetDirectoryName(folder.selectedBinary);
-                string gameFolderName = CorrectGameName(Path.GetFileName(absoluteFolderPath));
+                string absoluteFolderPath = Path.GetDirectoryName(folder.selectedBinary)!;
+                string gameFolderName = CorrectGameName(Path.GetFileName(absoluteFolderPath)!);
 
                 dbo_Game newGame = new dbo_Game
                 {
@@ -113,7 +94,7 @@ namespace GameLibrary.Logic
                 try
                 {
                     await DatabaseHandler.InsertIntoTable(newGame);
-                    await FileManager.MoveGameToItsLibrary(newGame, absoluteFolderPath, chosenLibrary.rootPath);
+                    await FileManager.MoveGameToItsLibrary(newGame, absoluteFolderPath!, chosenLibrary.rootPath);
 
                     availableImports.RemoveAt(i);
                 }
@@ -123,26 +104,13 @@ namespace GameLibrary.Logic
                 }
             }
 
-            await RedetectGames();
-
-            string TryFindBestExecutable(string[] possible)
-            {
-                string? bestPossible = possible.Where(x =>
-                {
-                    string name = Path.GetFileName(x).ToLower();
-                    return !name.Contains("crash", StringComparison.InvariantCulture)
-                            && !name.Contains("crash", StringComparison.InvariantCulture);
-                }).FirstOrDefault();
-
-                return bestPossible ?? possible.FirstOrDefault() ?? "";
-            }
-
             string CorrectGameName(string existing)
             {
                 return existing.Replace("'", "");
             }
         }
 
+        public static int GetMaxPages(int limit) => (int)Math.Ceiling(localGameCount / (float)limit) - 1;
         public static GameDto? TryGetCachedGame(int gameId) => activeGameList[gameId];
 
         public static async Task<int[]> GetGameList(GameFilterRequest filterRequest)
@@ -168,30 +136,6 @@ namespace GameLibrary.Logic
             return games.Select(x => x.id).ToArray();
         }
 
-
-        //public static GameDto? GetGameFromId(int id) => games!.FirstOrDefault(x => x.getGameId == id);
-        //
-        //
-        //public static void RefilterGames(HashSet<int> tagFilter, string? textFilter, OrderType orderType, bool isAsc)
-        //{
-        //    gameFilterList = games!
-        //        .Filter_Tags(tagFilter)
-        //        .Filter_Text(textFilter)
-        //        .Filter_OrderType(orderType)
-        //        .Filter_Direction(isAsc)
-        //        .Select(x => x.getGameId)
-        //        .ToArray();
-        //}
-        //
-        //public static int GetFilteredGameCount() => gameFilterList?.Length ?? games!.Length;
-        //
-        //public static int[] GetDrawList(int offset, int take)
-        //{
-        //    if (gameFilterList == null)
-        //        return games?.Skip(offset).Take(take).Select(x => x.getGameId).ToArray() ?? [];
-        //
-        //    return gameFilterList.Skip(offset).Take(take).Select(x => x).ToArray();
-        //}
 
         public static async Task<int[]> GetAllTags()
         {
@@ -227,7 +171,7 @@ namespace GameLibrary.Logic
                 await DatabaseHandler.DeleteFromTable<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), game.getGameId));
                 await DatabaseHandler.DeleteFromTable<dbo_Game>(QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.getGameId));
 
-                await RedetectGames();
+                //await RedetectGames();
 
                 return null;
             }
