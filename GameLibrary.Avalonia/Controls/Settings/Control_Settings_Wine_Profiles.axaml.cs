@@ -32,6 +32,7 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
             if (m_selectedProfile.HasValue)
             {
                 profileUIS![m_selectedProfile.Value].Background = unselectedBrush;
+                btn_Default.IsVisible = false;
             }
 
             m_selectedProfile = value;
@@ -40,6 +41,7 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
             if (m_selectedProfile.HasValue)
             {
                 profileUIS![m_selectedProfile.Value].Background = selectedBrush;
+                btn_Default.IsVisible = true;
             }
         }
         get => m_selectedProfile;
@@ -55,6 +57,9 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
 
         selectedProfile = null;
         btn_Add.RegisterClick(OpenEditMenu);
+        btn_Default.RegisterClick(MakeDefaultProfile);
+
+        btn_Default.IsVisible = false;
     }
 
     public ISettingControl Draw(SettingBase setting, SettingsUI_Wine_Profiles ui)
@@ -120,5 +125,14 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
             dialog.Setup(selectedProfile.HasValue ? existingProfiles![selectedProfile.Value] : null);
             return Task.CompletedTask;
         }
+    }
+
+    private async Task MakeDefaultProfile()
+    {
+        if (!selectedProfile.HasValue)
+            return;
+
+        dbo_WineProfile _temp = new dbo_WineProfile() { emulatorType = 0 };
+        await DatabaseHandler.TryExecute($"UPDATE {_temp.tableName} SET {nameof(_temp.isDefault)} = {nameof(_temp.id)} = {existingProfiles![selectedProfile.Value].id}");
     }
 }

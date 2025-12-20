@@ -25,7 +25,7 @@ public partial class Window_Settings_Wine_Profile : Window
 
     public void Setup(dbo_WineProfile? profile)
     {
-        inspectingProfile = profile ?? new dbo_WineProfile() { id = -1 };
+        inspectingProfile = profile ?? new dbo_WineProfile() { id = -1, emulatorType = 0 };
         Redraw();
     }
 

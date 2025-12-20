@@ -35,7 +35,7 @@ public partial class Popup_GameView : UserControl
         btn_Browse.RegisterClick(BrowseToGame);
         btn_Launch.RegisterClick(HandleLaunch);
 
-        lbl_Title.PointerPressed += (_, __) => StartNameChange();
+        lbl_Title.PointerPressed += async (_, __) => await StartNameChange();
 
         ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateGameIcon);
         LibraryHandler.RegisterOnGlobalGameChange(RefreshSelectedGame);
@@ -53,7 +53,6 @@ public partial class Popup_GameView : UserControl
         await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
         await tabGroup.OpenFresh();
 
-        inp_Emulate.SilentSetValue(game.getGame.useEmulator);
         lbl_Title.Content = game.getGame.gameName;
 
         (int? currentExecutable, string[] possibleBinaries) = game.GetPossibleBinaries();
@@ -75,12 +74,12 @@ public partial class Popup_GameView : UserControl
     }
 
     private void BrowseToGame() => inspectingGame?.BrowseToGame();
-    private void OpenOverlay() => OverlayManager.LaunchOverlay(inspectingGame!.getGameId);
+    private async Task OpenOverlay() => await OverlayManager.LaunchOverlay(inspectingGame!.getGameId);
 
-    private async void HandleBinaryChange() => await inspectingGame?.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
-    private async void DeleteGame() => await FileManager.StartDeletion(inspectingGame);
+    private async void HandleBinaryChange() => await inspectingGame!.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
+    private async Task DeleteGame() => await FileManager.StartDeletion(inspectingGame);
 
-    private async void StartNameChange()
+    private async Task StartNameChange()
     {
         string? res = await DependencyManager.uiLinker!.OpenStringInputModal("Game Name");
 
@@ -203,7 +202,7 @@ public partial class Popup_GameView : UserControl
                 if (lastGame != game)
                 {
                     await CheckForNewTags();
-                    await RedrawSelectedTags(game);
+                    await RedrawSelectedTags(game!);
                 }
 
                 await base.Open(game);
@@ -263,6 +262,8 @@ public partial class Popup_GameView : UserControl
             public override TabBase Setup(Border btn, Grid container, TabGroup groupMaster)
             {
                 groupMaster.master.inp_Emulate.RegisterOnChange(HandleEmulateToggle);
+                groupMaster.master.inp_CaptureLogs.RegisterOnChange(HandleCaptureLogs);
+
                 return base.Setup(btn, container, groupMaster);
             }
 
@@ -270,12 +271,17 @@ public partial class Popup_GameView : UserControl
             {
                 if (lastGame != game)
                 {
-                    possibleWineProfiles = await DatabaseHandler.GetItems<dbo_WineProfile>();
+                    possibleWineProfiles = await DatabaseHandler.GetItems<dbo_WineProfile>(QueryBuilder.OrderBy(nameof(dbo_WineProfile.isDefault), true));
 
                     if (ConfigHandler.isOnLinux)
                     {
+                        string defaultOption = possibleWineProfiles.FirstOrDefault(x => x.isDefault)?.profileName ?? "INVALID";
+                        int indexOfSelectedWineProfile = possibleWineProfiles.Select(x => x.id).ToList().IndexOf(game!.getWineProfile?.id ?? -1);
+
+                        string[] profileOptions = [$"Default ({defaultOption})", .. possibleWineProfiles!.Select(x => x.profileName)!];
+
                         groupMaster!.master.inp_WineProfile.IsVisible = true;
-                        groupMaster!.master.inp_WineProfile.SetupAsync(possibleWineProfiles!.Select(x => x.profileName), possibleWineProfiles.Select(x => x.id).ToList().IndexOf(game.getWineProfile?.id ?? -1), HandleWineProfileChange);
+                        groupMaster!.master.inp_WineProfile.SetupAsync(profileOptions, indexOfSelectedWineProfile < 0 ? 0 : indexOfSelectedWineProfile, HandleWineProfileChange);
                     }
                     else
                     {
@@ -283,12 +289,27 @@ public partial class Popup_GameView : UserControl
                     }
                 }
 
+                groupMaster!.master.inp_Emulate.SilentSetValue(game!.useRegionEmulation);
+                groupMaster!.master.inp_CaptureLogs.SilentSetValue(game!.captureLogs);
 
                 await base.Open(game);
             }
 
             private async Task HandleEmulateToggle(bool to) => await lastGame!.UpdateGameEmulationStatus(to);
-            private async Task HandleWineProfileChange() => await lastGame!.ChangeWineProfile(possibleWineProfiles?.ElementAt(groupMaster!.master.inp_WineProfile.selectedIndex)?.id);
+            private async Task HandleCaptureLogs(bool to) => await lastGame!.UpdateCaptureLogsStatus(to);
+
+            private async Task HandleWineProfileChange()
+            {
+                int? newProfileId = null;
+                int selectedIndex = groupMaster!.master.inp_WineProfile.selectedIndex;
+
+                if (selectedIndex != 0) // default profile
+                {
+                    newProfileId = possibleWineProfiles!.ElementAt(selectedIndex - 1)?.id;
+                }
+
+                await lastGame!.ChangeWineProfile(newProfileId);
+            }
         }
 
         internal class Tab_Logs : TabBase

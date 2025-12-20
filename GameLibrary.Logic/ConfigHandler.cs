@@ -37,7 +37,9 @@ namespace GameLibrary.Logic
             Sandbox_Linux_Firejail_FileSystemIsolation,
             Sandbox_Linux_Firejail_Networking,
 
-            Import_GUIDFolderNames
+            Import_GUIDFolderNames,
+
+            Proton_SteamFolder,
         }
 
         public static ReadOnlyDictionary<string, SettingBase[]>? groupedSettings { get; private set; }
@@ -64,6 +66,10 @@ namespace GameLibrary.Logic
 
             settings.Add("Wine", [
                 new Setting_Wine_Profiles(),
+            ]);
+
+            settings.Add("Proton", [
+                new Setting_Generic_Config("Proton Location", SettingOSCompatibility.Linux, ConfigValues.Proton_SteamFolder, new SettingsUI_DirectorySelector(){folder = true}, ConfigSerialization.FolderDirectory),
             ]);
 
             settings.Add("Sandboxing", [

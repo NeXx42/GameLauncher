@@ -70,19 +70,26 @@
 
             <!-- Options -->
             <Grid x:Name="tab_Settings" IsVisible="True">
-              <StackPanel Orientation="Vertical" Spacing="15">
+              <ScrollViewer>
+                <StackPanel Orientation="Vertical" Spacing="15">
 
-                <StackPanel Orientation="Vertical">
-                  <Label Content="Emulation" VerticalAlignment="Center"/>
-                  <common:Common_Toggle x:Name="inp_Emulate" />
+                  <StackPanel Orientation="Vertical">
+                    <Label Content="Capture Logs" VerticalAlignment="Center"/>
+                    <common:Common_Toggle x:Name="inp_CaptureLogs" />
+                  </StackPanel>
+
+                  <StackPanel Orientation="Vertical">
+                    <Label Content="Emulation" VerticalAlignment="Center"/>
+                    <common:Common_Toggle x:Name="inp_Emulate" />
+                  </StackPanel>
+
+                  <StackPanel Orientation="Vertical">
+                    <Label Content="Wine Profile" VerticalAlignment="Center"/>
+                    <common:Common_Dropdown x:Name="inp_WineProfile" Width="200" HorizontalAlignment="Left"/>
+                  </StackPanel>
+
                 </StackPanel>
-
-                <StackPanel Orientation="Vertical">
-                  <Label Content="Wine Profile" VerticalAlignment="Center"/>
-                  <common:Common_Dropdown x:Name="inp_WineProfile" Width="200" HorizontalAlignment="Left"/>
-                </StackPanel>
-
-              </StackPanel>
+              </ScrollViewer>
             </Grid>
 
             <!-- Logs -->

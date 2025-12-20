@@ -158,6 +158,12 @@ public class GameDto : IGameDto
         await UpdateGame();
     }
 
+    public async Task UpdateCaptureLogsStatus(bool to)
+    {
+        game!.captureLogs = to;
+        await UpdateGame();
+    }
+
     public async Task ChangeBinaryLocation(string? path)
     {
         string newAbsolutePath = Path.Combine(getAbsoluteFolderLocation, path!);
@@ -175,6 +181,7 @@ public class GameDto : IGameDto
     {
         game!.wineProfile = wineProfile;
         await UpdateGame();
+        await LoadWineProfile();
     }
 
     public async Task UpdateGameName(string newName)

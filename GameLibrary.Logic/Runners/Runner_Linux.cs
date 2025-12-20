@@ -9,6 +9,12 @@ namespace GameLibrary.Logic.Runners;
 
 public class Runner_Linux : IRunner
 {
+    public enum RunnerType
+    {
+        Wine = 0,
+        Proton = 1
+    }
+
     public async Task<ProcessStartInfo> Run(IGameDto game)
     {
         ProcessStartInfo info = new ProcessStartInfo();
@@ -16,7 +22,21 @@ public class Runner_Linux : IRunner
 
         await EmulateRegion(info, game);
         await Sandbox(info, wineOptions);
-        await EmbedWine(info, wineOptions);
+
+        switch (wineOptions.runnerType)
+        {
+            case RunnerType.Wine:
+                await EmbedWine(info, wineOptions);
+                break;
+
+            case RunnerType.Proton:
+                await EmbedProton(info, wineOptions);
+                break;
+
+            default:
+                throw new Exception("Invalid runner type");
+        }
+
 
         return info;
     }
@@ -36,17 +56,62 @@ public class Runner_Linux : IRunner
     private async Task<LaunchOptions> GetWineOptions(IGameDto game)
     {
         LaunchOptions options = new LaunchOptions();
+        dbo_WineProfile? wineProfile = game.getWineProfile ?? await DatabaseHandler.GetItem<dbo_WineProfile>(QueryBuilder.SQLEquals(nameof(dbo_WineProfile.isDefault), 1));
 
-        if (game.getWineProfile != null)
+        if (wineProfile != null)
         {
-            options.prefix = game.getWineProfile!.profileDirectory!;
+            options.prefix = wineProfile.profileDirectory!;
+            options.runnerType = (RunnerType)wineProfile.emulatorType;
+
+            options.whitelistDirectories.Add(wineProfile.profileDirectory!);
+
+            switch (options.runnerType)
+            {
+                case RunnerType.Proton:
+                    options.runnerExecutable = wineProfile.profileExecutable;
+                    options.steamLocation = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Proton_SteamFolder, string.Empty);
+
+                    options.whitelistDirectories.Add(options.runnerExecutable!);
+                    options.whitelistDirectories.Add(options.steamLocation);
+                    break;
+            }
         }
 
-        options.gameFolder = game.getAbsoluteFolderLocation;
         options.gameExecutable = game.getAbsoluteBinaryLocation;
+        options.whitelistDirectories.Add(game.getAbsoluteFolderLocation);
 
         return options;
     }
+
+    private async Task Sandbox(ProcessStartInfo info, LaunchOptions options)
+    {
+        if (!await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Enabled, false))
+        {
+            options.didSandbox = false;
+            return;
+        }
+
+        bool isolateFileSystem = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, false);
+
+        if (isolateFileSystem)
+        {
+            foreach (string str in options.whitelistDirectories)
+            {
+                info.ArgumentList.Add($"--whitelist={str}");
+            }
+
+            info.ArgumentList.Add("--private-dev");
+        }
+
+        if (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Networking, true))
+        {
+            info.ArgumentList.Add("--net=none");
+        }
+
+        info.FileName = "firejail";
+        options.didSandbox = true;
+    }
+
 
     private async Task EmbedWine(ProcessStartInfo info, LaunchOptions options)
     {
@@ -67,35 +132,27 @@ public class Runner_Linux : IRunner
         info.ArgumentList.Add(options.gameExecutable!);
     }
 
-    private async Task Sandbox(ProcessStartInfo info, LaunchOptions options)
+    private async Task EmbedProton(ProcessStartInfo info, LaunchOptions options)
     {
-        if (!await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Enabled, false))
+        info.EnvironmentVariables["STEAM_COMPAT_CLIENT_INSTALL_PATH"] = options.steamLocation;
+        info.EnvironmentVariables["STEAM_COMPAT_DATA_PATH"] = options.prefix;
+        //WINEDEBUG
+
+        if (options.didSandbox)
         {
-            options.didSandbox = false;
-            return;
+            info.ArgumentList.Add(options.runnerExecutable);
+            info.ArgumentList.Add("run");
+            info.ArgumentList.Add(options.gameExecutable);
         }
-
-        bool isolateFileSystem = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, false);
-
-        if (isolateFileSystem)
+        else
         {
-            if (!string.IsNullOrEmpty(options.prefix))
-            {
-                info.ArgumentList.Add($"--whitelist={options.prefix}");
-            }
-
-            info.ArgumentList.Add($"--whitelist={options.gameFolder}");
-            info.ArgumentList.Add("--private-dev");
+            info.FileName = options.runnerExecutable;
+            info.ArgumentList.Add("run");
+            info.ArgumentList.Add(options.gameExecutable);
         }
-
-        if (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Networking, true))
-        {
-            info.ArgumentList.Add("--net=none");
-        }
-
-        info.FileName = "firejail";
-        options.didSandbox = true;
     }
+
+
 
     public Task<Runner_Game> LaunchGame(IGameDto game, Process process, string logPath)
     {
@@ -105,10 +162,15 @@ public class Runner_Linux : IRunner
     private class LaunchOptions
     {
         public string? prefix;
-        public string? gameFolder;
         public string? gameExecutable;
+        public string? runnerExecutable;
+        public string? steamLocation;
 
         public bool didSandbox;
+
+        public RunnerType? runnerType;
+
+        public List<string> whitelistDirectories = new List<string>();
     }
 
 

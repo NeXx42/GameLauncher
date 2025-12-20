@@ -127,8 +127,7 @@ namespace GameLibrary.DB
             await TryExecute($"{updateSQL} {queryBuilder?.BuildWhereClause() ?? ""}");
         }
 
-
-        private static async Task TryExecute(string sql)
+        public static async Task TryExecute(string sql)
         {
             try
             {
@@ -291,52 +290,70 @@ namespace GameLibrary.DB
         public static InternalAccessor In(string column, params int[] values)
             => new InternalAccessor().In(column, values);
 
+        public static InternalAccessor OrderBy(string column, bool desc)
+            => new InternalAccessor().OrderBy(column, desc);
+
         public class InternalAccessor
         {
-            private string searchClause = "";
-
-            private void PrepSearch()
-            {
-                if (!string.IsNullOrEmpty(searchClause))
-                    searchClause += " AND";
-            }
+            private List<(string sql, SQLiteParameter parameter)> whereClauses = new List<(string sql, SQLiteParameter parameter)>();
+            private List<string> orderClauses = new List<string>();
 
             public InternalAccessor SQLEquals(string column, string value)
             {
-                PrepSearch();
+                string varName = $"{whereClauses.Count}";
 
-                searchClause += $" {column} = '{value}'";
+                string sql = $"{column} = '{value}'"; // replace with var when i get around to it
+                SQLiteParameter param = new SQLiteParameter(varName.ToString(), value);
+
+                whereClauses.Add((sql, param));
                 return this;
             }
 
             public InternalAccessor SQLEquals(string column, int value)
             {
-                PrepSearch();
+                string varName = $"{whereClauses.Count}";
 
-                searchClause += $" {column} = {value}";
+                string sql = $"{column} = {value}"; // replace with var when i get around to it
+                SQLiteParameter param = new SQLiteParameter(varName.ToString(), value);
+
+                whereClauses.Add((sql, param));
                 return this;
             }
 
             public InternalAccessor In(string column, params int[] values)
             {
-                PrepSearch();
+                string varName = $"{whereClauses.Count}";
 
-                searchClause += $" {column} in ( ";
+                string sql = $"{column} in ({string.Join(",", values)})"; // replace with var when i get around to it
+                SQLiteParameter param = new SQLiteParameter(varName.ToString(), values);
 
-                for (int i = 0; i < values.Length; i++)
-                {
-                    searchClause += $"{values[i]}";
+                whereClauses.Add((sql, param));
+                return this;
+            }
 
-                    if (i < values.Length - 1)
-                        searchClause += ",";
-                }
-                searchClause += ")";
+            public InternalAccessor OrderBy(string columnName, bool desc)
+            {
+                orderClauses.Add($"{columnName} {(desc ? "Desc" : "Asc")}");
                 return this;
             }
 
             public string BuildWhereClause()
             {
-                return string.IsNullOrEmpty(searchClause) ? "" : $"WHERE {searchClause}";
+                StringBuilder sql = new StringBuilder();
+
+                if (whereClauses?.Count > 0)
+                {
+                    sql.Append(" WHERE ");
+                    sql.Append(string.Join(" AND ", whereClauses.Select(x => x.sql)));
+                }
+
+                if (orderClauses?.Count > 0)
+                {
+                    sql.Append(" ORDER BY ");
+                    sql.Append(string.Join(" AND ", orderClauses));
+                }
+
+                return sql.ToString();
             }
         }
     }
