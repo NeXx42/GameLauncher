@@ -22,13 +22,13 @@ public partial class Page_Library : UserControl
     private bool currentSortAscending = true;
     private LibraryHandler.OrderType currentSort = LibraryHandler.OrderType.Id;
 
-    private GameList gameList;
+    private LibraryPageBase gameList;
 
 
     public Page_Library()
     {
         InitializeComponent();
-        gameList = new GameList(this);
+        gameList = new LibraryPage_Grid(this);
 
         BindButtons();
         ToggleMenu(false);
@@ -48,7 +48,7 @@ public partial class Page_Library : UserControl
 
     private void BindButtons()
     {
-        Indexer.Setup(() => gameList.RefilterGames());
+        Indexer.Setup(() => gameList.DrawGames());
 
         GameViewer.PointerPressed += (_, e) => e.Handled = true;
         Indexer.PointerPressed += (_, e) => e.Handled = true;
@@ -60,21 +60,16 @@ public partial class Page_Library : UserControl
         btn_CreateTag.RegisterClick(CreateTag);
 
         btn_FirstPage.RegisterClick(gameList.FirstPage);
-        btn_PrevPage.RegisterClick(gameList.PrePage);
+        btn_PrevPage.RegisterClick(gameList.PrevPage);
         btn_NextPage.RegisterClick(gameList.NextPage);
         btn_LastPage.RegisterClick(gameList.LastPage);
 
         btn_Indexer.RegisterClick(OpenIndexer);
         btn_Settings.RegisterClick(OpenSettings);
 
-        inp_Search.KeyUp += (_, __) => gameList.RefilterGames();
+        inp_Search.KeyUp += (_, __) => gameList.DrawGames();
         btn_SortDir.RegisterClick(UpdateSortDirection);
         inp_SortType.Setup(Enum.GetValues(typeof(LibraryHandler.OrderType)), 0, UpdateSortType);
-    }
-
-    private async Task RedrawGameImages()
-    {
-
     }
 
     public async Task DrawTags()
@@ -122,7 +117,7 @@ public partial class Page_Library : UserControl
             }
         }
 
-        await gameList.RefilterGames();
+        await gameList.DrawGames();
     }
 
     private async void CreateTag()
@@ -143,12 +138,9 @@ public partial class Page_Library : UserControl
         await DrawTags();
     }
 
-
-
-
-    private async void ToggleGameView(int gameId)
+    public async void ToggleGameView(int gameId)
     {
-        GameDto? game = LibraryHandler.GetGameFromId(gameId);
+        GameDto? game = LibraryHandler.TryGetCachedGame(gameId);
 
         if (game != null)
         {
@@ -159,7 +151,6 @@ public partial class Page_Library : UserControl
         GameViewer.IsVisible = true;
     }
 
-
     public void ToggleMenu(bool to)
     {
         eff_Blur.Effect = to ? new ImmutableBlurEffect(20) : null;//. .Radius = to ? 10 : 0;
@@ -169,10 +160,6 @@ public partial class Page_Library : UserControl
         Settings.IsVisible = false;
         Indexer.IsVisible = false;
     }
-
-
-
-
 
     private void OpenIndexer()
     {
@@ -198,20 +185,19 @@ public partial class Page_Library : UserControl
         btn_OpenTagCreator.Label = to.Value ? $"Close" : "+ Add Tag";
     }
 
-
     // sort
     private async void UpdateSortDirection()
     {
         currentSortAscending = !currentSortAscending;
         RedrawSortNames();
 
-        await gameList.RefilterGames();
+        await gameList.DrawGames();
     }
 
     private async void UpdateSortType()
     {
         currentSort = (LibraryHandler.OrderType)inp_SortType.selectedIndex;
-        await gameList.RefilterGames();
+        await gameList.DrawGames();
     }
 
     private void RedrawSortNames()
@@ -219,122 +205,16 @@ public partial class Page_Library : UserControl
         btn_SortDir.Label = currentSortAscending ? "Ascending" : "Descending";
     }
 
-
-    // page controls
-
-
-
-
-
-    private class GameList
+    public LibraryHandler.GameFilterRequest GetGameFilter(int page, int contentPerPage)
     {
-        public static (int x, int y) ContentPerPage = (5, 4);
-        public int getTotalContentPerPage => ContentPerPage.x * ContentPerPage.y;
-
-        private int gamesSlide;
-
-        private Library_Game[] cacheUI;
-        private Dictionary<int, int> activeUI;
-
-        private Page_Library library;
-
-
-        public GameList(Page_Library library)
+        return new LibraryHandler.GameFilterRequest()
         {
-            this.library = library;
-            const float ratio = 0.1927083333f;
-
-            cacheUI = new Library_Game[getTotalContentPerPage];
-            activeUI = new Dictionary<int, int>();
-
-            library.cont_Games.Children.Clear();
-
-            for (int i = 0; i < cacheUI.Length; i++)
-            {
-                Library_Game ui = new Library_Game();
-                ui.Width = 1920 * ratio;
-                ui.Height = 1080 * ratio; // + padding + title
-                ui.Margin = new Thickness(0, 0, 2, 0);
-
-                library.cont_Games.Children.Add(ui);
-                cacheUI[i] = ui;
-            }
-
-            ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateImage);
-            LibraryHandler.RegisterOnGlobalGameChange(RedrawGame);
-        }
-
-        public async Task RefilterGames(bool resetPage = true)
-        {
-            if (resetPage)
-                gamesSlide = 0;
-
-            LibraryHandler.RefilterGames(library.activeTags, library.inp_Search.Text, library.currentSort, library.currentSortAscending);
-            await DrawGames();
-        }
-
-        public async Task DrawGames()
-        {
-            library.lbl_PageNum.Text = $"{(gamesSlide / getTotalContentPerPage) + 1}";
-
-            int[] games = LibraryHandler.GetDrawList(gamesSlide, getTotalContentPerPage);
-            activeUI.Clear();
-
-            for (int i = 0; i < cacheUI.Length; i++)
-            {
-                if (i >= games.Length)
-                {
-                    cacheUI[i].IsVisible = false;
-                    continue;
-                }
-
-                cacheUI[i].IsVisible = true;
-                await cacheUI[i].Draw(games[i], library.ToggleGameView);
-
-                activeUI.Add(games[i], i);
-            }
-        }
-
-        public async Task RedrawGame(int gameId)
-        {
-            if (activeUI.TryGetValue(gameId, out int uiPos))
-                await cacheUI[uiPos].RedrawGameDetails(gameId, false);
-        }
-
-        public void UpdateImage(int gameId, ImageBrush? brush)
-        {
-            if (activeUI.TryGetValue(gameId, out int uiPos))
-                cacheUI[uiPos].RedrawIcon(gameId, brush);
-        }
-
-        public async Task PrePage()
-        {
-            gamesSlide -= getTotalContentPerPage;
-            gamesSlide = Math.Max(0, gamesSlide);
-
-            await DrawGames();
-        }
-
-        public async Task NextPage()
-        {
-            int maxSlide = ((int)Math.Floor(LibraryHandler.GetFilteredGameCount() / (float)getTotalContentPerPage)) * getTotalContentPerPage;
-
-            gamesSlide += (int)getTotalContentPerPage;
-            gamesSlide = Math.Min(gamesSlide, maxSlide);
-
-            await DrawGames();
-        }
-
-        public async Task FirstPage()
-        {
-            gamesSlide = 0;
-            await DrawGames();
-        }
-
-        public async Task LastPage()
-        {
-            gamesSlide = ((int)Math.Floor(LibraryHandler.GetFilteredGameCount() / (float)getTotalContentPerPage)) * getTotalContentPerPage;
-            await DrawGames();
-        }
+            nameFilter = inp_Search.Text,
+            tagList = activeTags,
+            orderDirection = currentSortAscending,
+            orderType = currentSort,
+            page = page,
+            contentPerPage = contentPerPage
+        };
     }
 }

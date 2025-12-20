@@ -75,8 +75,14 @@ public class GameDto : IGameDto
         await LoadWineProfile();
     }
 
-    public async Task LoadGame()
+    public async Task LoadGame(dbo_Game? dbGame = null)
     {
+        if (dbGame != null)
+        {
+            game = dbGame;
+            return;
+        }
+
         game = await DatabaseHandler.GetItem<dbo_Game>(QueryBuilder.SQLEquals(nameof(dbo_Game.id), gameId));
     }
 

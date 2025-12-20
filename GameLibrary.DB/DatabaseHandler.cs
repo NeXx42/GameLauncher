@@ -197,9 +197,6 @@ namespace GameLibrary.DB
 
             try
             {
-                List<T> val = new List<T>(limit ?? 10);
-                await connection!.OpenAsync();
-
                 sql = new StringBuilder($"SELECT * FROM {GetTableNameFromGeneric<T>()}");
 
                 if (queryBuilder != null)
@@ -210,7 +207,27 @@ namespace GameLibrary.DB
 
                 sql.Append(";");
 
-                using (SQLiteCommand cmd = new SQLiteCommand(sql.ToString(), connection))
+                return await GetItems<T>(sql.ToString(), limit);
+            }
+            catch (Exception e)
+            {
+                await connection!.CloseAsync();
+                if (errorCallback != null) await errorCallback.Invoke(e, sql?.ToString() ?? string.Empty);
+                return Array.Empty<T>();
+            }
+        }
+
+
+        public static async Task<T[]> GetItems<T>(string rawSql, int? limit = null) where T : Database_Table
+        {
+            StringBuilder? sql = null;
+
+            try
+            {
+                List<T> val = new List<T>(limit ?? 10);
+                await connection!.OpenAsync();
+
+                using (SQLiteCommand cmd = new SQLiteCommand(rawSql, connection))
                 using (SQLiteDataReader reader = (SQLiteDataReader)await cmd.ExecuteReaderAsync())
                 {
                     while (await reader.ReadAsync())

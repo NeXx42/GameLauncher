@@ -34,7 +34,7 @@ public partial class Library_Game : UserControl
 
     public async Task RedrawGameDetails(int gameId, bool refetchImage = true)
     {
-        GameDto? game = LibraryHandler.GetGameFromId(gameId);
+        GameDto? game = LibraryHandler.TryGetCachedGame(gameId);
 
         if (game == null)
             return;
