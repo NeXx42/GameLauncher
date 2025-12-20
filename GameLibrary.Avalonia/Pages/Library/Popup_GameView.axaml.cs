@@ -35,6 +35,8 @@ public partial class Popup_GameView : UserControl
         btn_Browse.RegisterClick(BrowseToGame);
         btn_Launch.RegisterClick(HandleLaunch);
 
+        lbl_Title.PointerPressed += (_, __) => StartNameChange();
+
         ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateGameIcon);
         GameLauncher.OnGameRunStateChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b)); // need to fix threading issue
     }
@@ -75,6 +77,12 @@ public partial class Popup_GameView : UserControl
 
     private async void HandleBinaryChange() => await inspectingGame?.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
     private async void DeleteGame() => await FileManager.StartDeletion(inspectingGame);
+
+    private async void StartNameChange()
+    {
+        string? res = await DependencyManager.uiLinker!.OpenStringInputModal("Game Name");
+        Console.WriteLine(res);
+    }
 
 
     private void UpdateRunningGameStatus(int gameId, bool to)

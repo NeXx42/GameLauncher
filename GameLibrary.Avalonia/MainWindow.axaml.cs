@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Media;
 using Avalonia.Threading;
 using GameLibrary.Avalonia.Helpers;
 using GameLibrary.Avalonia.Pages;
@@ -24,12 +25,12 @@ public partial class MainWindow : Window
         InitializeComponent();
         OnStart();
 
-        cont_Loading.IsVisible = true;
+        cont_Modals.IsVisible = false;
     }
 
     private async void OnStart()
     {
-        await DatabaseManager.Init();
+        await DependencyManager.PreSetup(new UILinker());
 
         if (DatabaseManager.cachedDBLocation == null)
         {
@@ -37,18 +38,14 @@ public partial class MainWindow : Window
         }
         else
         {
-            await DatabaseManager.LoadDatabase(DialogHelper.OpenDatabaseExceptionDialog);
+            await DependencyManager.LoadDatabase();
             await HandleAuthentication();
         }
     }
 
     private async void CompleteSetup(Page_Setup.SetupRequest req)
     {
-        await LoadTasks(false,
-            () => DatabaseManager.CreateDBPointerFile(req.dbFile),
-            () => DatabaseManager.LoadDatabase(DialogHelper.OpenDatabaseExceptionDialog),
-            () => Task.Delay(10000)
-        );
+        await DependencyManager.LoadDatabase(req.dbFile);
 
         if (req.isExistingLoad)
         {
@@ -57,6 +54,7 @@ public partial class MainWindow : Window
         }
         else
         {
+            // when i add support for multiple libraries this should be done in the setup page
             await DatabaseHandler.InsertIntoTable(new dbo_Libraries()
             {
                 libaryId = 0,
@@ -88,12 +86,7 @@ public partial class MainWindow : Window
 
     private async Task CompleteLoad()
     {
-        await LoadTasks(false, LibraryHandler.Setup, ConfigHandler.Init);
-
-        OverlayManager.Init(DialogHelper.OpenOverlay);
-        ImageManager.Init(new AvaloniaImageBrushFetcher());
-        GameLauncher.Init();
-
+        await DependencyManager.PostSetup(new AvaloniaImageBrushFetcher());
         EnterPage<Page_Library>();
     }
 
@@ -115,49 +108,18 @@ public partial class MainWindow : Window
         return page;
     }
 
-    public static async Task LoadTasks(bool showLoading, params Func<Task>[] tasks)
+    public async Task DisplayModal<T>(Func<T, Task> modalReq) where T : UserControl
     {
-        instance!.cont_Loading.IsVisible = true;
-        await Dispatcher.UIThread.InvokeAsync(() => { }, DispatcherPriority.Background);
+        cont_Modals.IsVisible = true;
+        cont_Pages.Effect = new ImmutableBlurEffect(5);
 
-        if (showLoading)
-        {
-            instance!.lbl_Loading.Content = "Loading...";
+        T modal = Activator.CreateInstance<T>();
+        cont_Modals.Child = modal;
 
-            DateTime lastTime = DateTime.UtcNow;
-            double averageTaskLength = 0;
-            int tasksCompleted = 0;
+        await modalReq(modal);
 
-            foreach (Func<Task> entry in tasks)
-            {
-                try
-                {
-                    await entry();
-
-                    tasksCompleted++;
-
-                    averageTaskLength = averageTaskLength + ((DateTime.UtcNow - lastTime).TotalSeconds - averageTaskLength) / tasksCompleted;
-                    lastTime = DateTime.UtcNow;
-
-                    float remainingPercentage = (float)Math.Round((tasksCompleted / tasks.Length) * 100f);
-                    float remainingTime = (float)Math.Round(averageTaskLength * (tasks.Length - tasksCompleted));
-
-                    await Dispatcher.UIThread.InvokeAsync(() => instance!.lbl_Loading.Content = $"{remainingPercentage}% {remainingTime}");
-                }
-                catch (Exception e)
-                {
-                    await DialogHelper.OpenDatabaseExceptionDialog(e, "");
-                }
-
-            }
-        }
-        else
-        {
-            instance!.lbl_Loading.Content = "Loading";
-            await Task.WhenAll(tasks.Select(x => x()));
-        }
-
-
-        instance!.cont_Loading.IsVisible = false;
+        cont_Modals.Child = null;
+        cont_Modals.IsVisible = false;
+        cont_Pages.Effect = null;
     }
 }

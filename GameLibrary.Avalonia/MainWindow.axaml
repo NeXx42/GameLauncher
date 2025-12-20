@@ -6,8 +6,8 @@
     <Grid>
         <Grid x:Name="cont_Pages">
         </Grid>
-        <Border x:Name="cont_Loading" Background="#a0000000" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" ZIndex="5000">
-            <Label x:Name="lbl_Loading" Content="Loading" FontSize="20" VerticalAlignment="Center" HorizontalAlignment="Center" Foreground="White"/>
+        <Border x:Name="cont_Modals" Background="#a0000000" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" ZIndex="5000">
+
         </Border>
     </Grid>
 </Window>

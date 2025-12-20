@@ -117,13 +117,11 @@ namespace GameLibrary.Logic
 
             if (requiresPassword)
             {
-                using (IArchive? archive = ArchiveFactory.Open(archiveFile, new SharpCompress.Readers.ReaderOptions() { Password = "test" }))
-                {
-                    await UIHandler.LoadTask(false, async () =>
-                    {
-                        archive.WriteToDirectory(extractPath, extractionOptions);
-                    });
+                string? password = await DependencyManager.uiLinker!.OpenStringInputModal("Archive Password") ?? string.Empty;
 
+                using (IArchive? archive = ArchiveFactory.Open(archiveFile, new SharpCompress.Readers.ReaderOptions() { Password = password }))
+                {
+                    await DependencyManager.uiLinker!.OpenLoadingModal(false, async () => archive.WriteToDirectory(extractPath, extractionOptions));
                     didExtract = true;
                 }
             }
@@ -150,7 +148,7 @@ namespace GameLibrary.Logic
                     .Select(entry => (Func<Task>)(() => entry.WriteToDirectoryAsync(outputPath, options)))
                     .ToArray();
 
-                await UIHandler.LoadTask(true, tasks);
+                await DependencyManager.uiLinker!.OpenLoadingModal(true, tasks);
             }
         }
 
