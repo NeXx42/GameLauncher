@@ -5,10 +5,12 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using CSharpSqliteORM;
 using GameLibrary.DB;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
+using Logic.db;
 
 namespace GameLibrary.Logic
 {
@@ -152,7 +154,7 @@ namespace GameLibrary.Logic
 
         public static async Task<T> GetConfigValue<T>(ConfigValues config, T defaultVal)
         {
-            dbo_Config? configValue = await DatabaseHandler.GetItem<dbo_Config>(QueryBuilder.SQLEquals(nameof(dbo_Config.key), config.ToString()));
+            dbo_Config? configValue = await Database_Manager.GetItem<dbo_Config>(SQLFilter.Equal(nameof(dbo_Config.key), config.ToString()));
 
             if (configValue == null)
                 return defaultVal;
@@ -188,22 +190,13 @@ namespace GameLibrary.Logic
 
         private static async Task SaveConfigValue_Internal(ConfigValues config, string serializedVal)
         {
-            QueryBuilder.InternalAccessor selector = QueryBuilder.SQLEquals(nameof(dbo_Config.key), config.ToString());
-
             dbo_Config val = new dbo_Config()
             {
                 key = config.ToString(),
                 value = serializedVal
             };
 
-            if (await DatabaseHandler.Exists<dbo_Config>(selector))
-            {
-                await DatabaseHandler.UpdateTableEntry(val, selector);
-            }
-            else
-            {
-                await DatabaseHandler.InsertIntoTable(val);
-            }
+            await Database_Manager.AddOrUpdate(val, SQLFilter.Equal(nameof(dbo_Config.key), val.key), nameof(dbo_Config.value));
         }
 
         public static bool IsSettingSupported(SettingOSCompatibility compatibility)

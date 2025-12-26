@@ -1,3 +1,4 @@
+using CSharpSqliteORM;
 using GameLibrary.DB;
 
 namespace GameLibrary.Logic;
@@ -28,14 +29,14 @@ public static class DatabaseManager
         }
     }
 
-    public static async Task LoadDatabase(DatabaseHandler.DatabaseExceptionCallback exceptionCallback)
+    public static async Task LoadDatabase()
     {
         if (string.IsNullOrEmpty(cachedDBLocation))
         {
             throw new Exception("Invalid pointer file");
         }
 
-        await GameLibrary.DB.DatabaseHandler.Setup(cachedDBLocation, exceptionCallback);
+        await Database_Manager.Init(cachedDBLocation);
     }
 
     public static async Task CreateDBPointerFile(string path)

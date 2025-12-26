@@ -2,6 +2,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
 using GameLibrary.Avalonia.Helpers;
@@ -26,6 +27,7 @@ public partial class MainWindow : Window
         OnStart();
 
         cont_Modals.IsVisible = false;
+        AddHandler(DragDrop.DropEvent, HandleFileDrop);
     }
 
     private async void OnStart()
@@ -55,11 +57,7 @@ public partial class MainWindow : Window
         else
         {
             // when i add support for multiple libraries this should be done in the setup page
-            await DatabaseHandler.InsertIntoTable(new dbo_Libraries()
-            {
-                libaryId = 0,
-                rootPath = req.libraryFolder
-            });
+            await LibraryHandler.GenerateLibrary(req.libraryFolder);
 
             if (!string.IsNullOrEmpty(req.pin))
             {
@@ -121,5 +119,10 @@ public partial class MainWindow : Window
         cont_Modals.Child = null;
         cont_Modals.IsVisible = false;
         cont_Pages.Effect = null;
+    }
+
+    private void HandleFileDrop()
+    {
+
     }
 }

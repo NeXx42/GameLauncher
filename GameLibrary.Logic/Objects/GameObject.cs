@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using CSharpSqliteORM;
 using GameLibrary.DB;
 using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
@@ -83,31 +84,31 @@ public class GameDto : IGameDto
             return;
         }
 
-        game = await DatabaseHandler.GetItem<dbo_Game>(QueryBuilder.SQLEquals(nameof(dbo_Game.id), gameId));
+        game = await Database_Manager.GetItem<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), gameId));
     }
 
     public async Task UpdateGame()
     {
-        await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
+        await Database_Manager.Update(game, SQLFilter.Equal(nameof(dbo_Game.id), game.id));
         LibraryHandler.InvokeGlobalGameChange(gameId);
     }
 
     public async Task LoadTags()
     {
-        dbo_GameTag[] actualTags = await DatabaseHandler.GetItems<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), gameId));
+        dbo_GameTag[] actualTags = await Database_Manager.GetItems<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), gameId));
         tags = actualTags.Select(x => x.TagId).ToHashSet();
     }
 
     public async Task LoadLibrary()
     {
-        library = await DatabaseHandler.GetItem<dbo_Libraries>(QueryBuilder.SQLEquals(nameof(dbo_Libraries.libaryId), game.libaryId));
+        library = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libaryId), game.libaryId));
     }
 
     public async Task LoadWineProfile()
     {
         if (game?.wineProfile.HasValue ?? false)
         {
-            wineProfile = await DatabaseHandler.GetItem<dbo_WineProfile>(QueryBuilder.SQLEquals(nameof(dbo_WineProfile.id), game!.wineProfile!.Value));
+            wineProfile = await Database_Manager.GetItem<dbo_WineProfile>(SQLFilter.Equal(nameof(dbo_WineProfile.id), game!.wineProfile!.Value));
             return;
         }
 
@@ -148,7 +149,7 @@ public class GameDto : IGameDto
 
         game!.iconPath = path;
 
-        await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.id));
+        await Database_Manager.Update(game, SQLFilter.Equal(nameof(dbo_Game.id), game.id), nameof(dbo_Game.iconPath));
         ImageManager.ClearCache(game.id);
     }
 
@@ -244,12 +245,12 @@ public class GameDto : IGameDto
         if (tags!.Contains(tagId))
         {
             tags.Remove(tagId);
-            await DatabaseHandler.DeleteFromTable<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), gameId).SQLEquals(nameof(dbo_GameTag.TagId), tagId));
+            await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), gameId).Equal(nameof(dbo_GameTag.TagId), tagId));
         }
         else
         {
             tags.Add(tagId);
-            await DatabaseHandler.InsertIntoTable(new dbo_GameTag() { GameId = gameId, TagId = tagId });
+            await Database_Manager.InsertItem(new dbo_GameTag() { GameId = gameId, TagId = tagId });
         }
     }
 
@@ -280,6 +281,6 @@ public class GameDto : IGameDto
     public async Task UpdateLastPlayed()
     {
         game!.lastPlayed = DateTime.UtcNow;
-        await DatabaseHandler.UpdateTableEntry(game, QueryBuilder.SQLEquals(nameof(dbo_Game.id), gameId));
+        await Database_Manager.AddOrUpdate(game, SQLFilter.Equal(nameof(dbo_Game.id), gameId), nameof(dbo_Game.lastPlayed));
     }
 }

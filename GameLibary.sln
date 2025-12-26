@@ -7,9 +7,11 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLibrary.WPF", "GameLibr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLibrary.Logic", "GameLibrary.Logic\GameLibrary.Logic.csproj", "{F2532506-FC40-479E-B9E9-84FE2AB6A3B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLibrary.DB", "GameLibrary.DB\GameLibrary.DB.csproj", "{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLibrary.Avalonia", "GameLibrary.Avalonia\GameLibrary.Avalonia.csproj", "{06830198-F5EA-46E1-A3A7-EE2CAAB84FEB}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GameLibrary.Database", "GameLibrary.Database", "{C0C021AD-C6B8-ABEB-332B-5FFBC71FEA07}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CSharpSqliteORM", "GameLibrary.Database\CSharpSqliteORM.csproj", "{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,18 +35,6 @@ Global
 		{F2532506-FC40-479E-B9E9-84FE2AB6A3B2}.Release|x64.Build.0 = Release|Any CPU
 		{F2532506-FC40-479E-B9E9-84FE2AB6A3B2}.Release|x86.ActiveCfg = Release|Any CPU
 		{F2532506-FC40-479E-B9E9-84FE2AB6A3B2}.Release|x86.Build.0 = Release|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Debug|x64.Build.0 = Debug|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Debug|x86.Build.0 = Debug|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Release|Any CPU.Build.0 = Release|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Release|x64.ActiveCfg = Release|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Release|x64.Build.0 = Release|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Release|x86.ActiveCfg = Release|Any CPU
-		{EBDDC9BF-A50A-4D7A-9583-D5E908F671A4}.Release|x86.Build.0 = Release|Any CPU
 		{06830198-F5EA-46E1-A3A7-EE2CAAB84FEB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{06830198-F5EA-46E1-A3A7-EE2CAAB84FEB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{06830198-F5EA-46E1-A3A7-EE2CAAB84FEB}.Debug|x64.ActiveCfg = Debug|Any CPU
@@ -57,9 +47,24 @@ Global
 		{06830198-F5EA-46E1-A3A7-EE2CAAB84FEB}.Release|x64.Build.0 = Release|Any CPU
 		{06830198-F5EA-46E1-A3A7-EE2CAAB84FEB}.Release|x86.ActiveCfg = Release|Any CPU
 		{06830198-F5EA-46E1-A3A7-EE2CAAB84FEB}.Release|x86.Build.0 = Release|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Debug|x64.Build.0 = Debug|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Debug|x86.Build.0 = Debug|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Release|x64.ActiveCfg = Release|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Release|x64.Build.0 = Release|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Release|x86.ActiveCfg = Release|Any CPU
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{AD9AB041-C5A6-4ABA-B9B8-4990F747AF77} = {C0C021AD-C6B8-ABEB-332B-5FFBC71FEA07}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {CA45C3AE-47EC-4C3C-9B5F-30984AD37C31}

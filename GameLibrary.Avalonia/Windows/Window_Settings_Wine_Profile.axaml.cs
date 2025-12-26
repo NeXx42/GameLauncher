@@ -6,6 +6,7 @@ using Avalonia.Platform.Storage;
 using GameLibrary.Avalonia.Helpers;
 using GameLibrary.DB;
 using GameLibrary.DB.Database.Tables;
+using GameLibrary.Logic;
 
 namespace GameLibrary.Avalonia.Windows;
 
@@ -39,7 +40,7 @@ public partial class Window_Settings_Wine_Profile : Window
         if (IsValidSave())
         {
             inspectingProfile!.profileName = inp_Name.Text;
-            await DatabaseHandler.AddOrUpdate(inspectingProfile!, QueryBuilder.SQLEquals(nameof(inspectingProfile.id), inspectingProfile!.id));
+            await LibraryHandler.UpdateWineProfile(inspectingProfile!);
 
             this.Close();
         }

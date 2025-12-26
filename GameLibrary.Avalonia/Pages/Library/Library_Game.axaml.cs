@@ -21,6 +21,15 @@ public partial class Library_Game : UserControl
         this.PointerPressed += (_, __) => onClick?.Invoke();
     }
 
+    public void DrawSkeleton()
+    {
+        onClick = null;
+        gameId = null;
+
+        img.Background = null;
+        title.Text = "";
+    }
+
     public async Task Draw(int gameId, Action<int> onLaunch)
     {
         if (this.gameId == gameId)

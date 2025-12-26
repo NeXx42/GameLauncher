@@ -1,9 +1,12 @@
 ﻿using System.Collections.Concurrent;
 using System.Data.SQLite;
+using System.Formats.Asn1;
 using System.IO;
 using System.Text;
 using System.Windows;
+using CSharpSqliteORM;
 using GameLibrary.DB;
+using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Helpers;
 using GameLibrary.Logic.Interfaces;
@@ -25,7 +28,7 @@ namespace GameLibrary.Logic
         //private static GameDto[]? games;
         private static dbo_Tag[]? tags;
 
-        private static int localGameCount;
+        private static int filteredGameCount;
         private static Dictionary<int, GameDto> activeGameList = new Dictionary<int, GameDto>();
 
         public static bool getAreTagsDirty
@@ -47,12 +50,11 @@ namespace GameLibrary.Logic
         public static async Task Setup()
         {
             await FindTags();
-            localGameCount = await DatabaseHandler.GetCount<dbo_Game>() ?? 0;
         }
 
         private static async Task FindTags()
         {
-            tags = await DatabaseHandler.GetItems<dbo_Tag>();
+            tags = await Database_Manager.GetItems<dbo_Tag>();
         }
 
 
@@ -64,7 +66,7 @@ namespace GameLibrary.Logic
 
         public static async Task ImportGames(List<FileManager.FolderEntry> availableImports)
         {
-            dbo_Libraries? chosenLibrary = await DatabaseHandler.GetItem<dbo_Libraries>();
+            dbo_Libraries? chosenLibrary = await Database_Manager.GetItem<dbo_Libraries>();
 
             if (chosenLibrary == null)
             {
@@ -93,7 +95,7 @@ namespace GameLibrary.Logic
 
                 try
                 {
-                    await DatabaseHandler.InsertIntoTable(newGame);
+                    await Database_Manager.InsertItem(newGame);
                     await FileManager.MoveGameToItsLibrary(newGame, absoluteFolderPath!, chosenLibrary.rootPath);
 
                     availableImports.RemoveAt(i);
@@ -110,12 +112,12 @@ namespace GameLibrary.Logic
             }
         }
 
-        public static int GetMaxPages(int limit) => (int)Math.Ceiling(localGameCount / (float)limit) - 1;
+        public static int GetMaxPages(int limit) => (int)Math.Ceiling(filteredGameCount / (float)limit) - 1;
         public static GameDto? TryGetCachedGame(int gameId) => activeGameList[gameId];
 
         public static async Task<int[]> GetGameList(GameFilterRequest filterRequest)
         {
-            dbo_Game[] games = await DatabaseHandler.GetItems<dbo_Game>(filterRequest.ConstructSQL(), 10);
+            (dbo_Game[] games, filteredGameCount) = await Database_Manager.GetItemsWithCount<dbo_Game>(filterRequest.ConstructSQL());
 
             foreach (dbo_Game game in games)
             {
@@ -168,8 +170,8 @@ namespace GameLibrary.Logic
                 //    MessageBox.Show($"The folder deletion failed, Do you want to still remove the record?\n\n{fileDeletionFail.Message}", "Folder Delete Failed", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
                 //    return null;
 
-                await DatabaseHandler.DeleteFromTable<dbo_GameTag>(QueryBuilder.SQLEquals(nameof(dbo_GameTag.GameId), game.getGameId));
-                await DatabaseHandler.DeleteFromTable<dbo_Game>(QueryBuilder.SQLEquals(nameof(dbo_Game.id), game.getGameId));
+                await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), game.getGameId));
+                await Database_Manager.Delete<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), game.getGameId));
 
                 //await RedetectGames();
 
@@ -180,6 +182,35 @@ namespace GameLibrary.Logic
                 return e;
             }
         }
+
+
+        public static async Task GenerateLibrary(string path)
+        {
+            await Database_Manager.InsertItem(new dbo_Libraries()
+            {
+                rootPath = path
+            });
+        }
+
+        public static async Task CreateTag(string tagName)
+        {
+            await Database_Manager.InsertItem(new dbo_Tag()
+            {
+                TagName = tagName,
+            });
+        }
+
+        public static async Task UpdateDefaultWineProfile(int to)
+            => await Database_Manager.ExecuteSQLNonQuery($"UPDATE {dbo_WineProfile.tableName} SET {nameof(dbo_WineProfile.isDefault)} = {nameof(dbo_WineProfile.id)} = {to}");
+
+        public static async Task UpdateWineProfile(dbo_WineProfile profile)
+            => await Database_Manager.Update(profile, SQLFilter.Equal(nameof(dbo_WineProfile.id), profile.id));
+
+        public static async Task<dbo_WineProfile?> GetWineProfile(int id)
+            => await Database_Manager.GetItem<dbo_WineProfile>(SQLFilter.Equal(nameof(dbo_WineProfile.id), id));
+
+        public static async Task<dbo_WineProfile[]> GetDefaultWineProfiles()
+            => await Database_Manager.GetItems<dbo_WineProfile>(SQLFilter.OrderDesc(nameof(dbo_WineProfile.isDefault)));
 
 
         public struct GameFilterRequest
@@ -195,10 +226,7 @@ namespace GameLibrary.Logic
 
             public string ConstructSQL()
             {
-                dbo_Game _temp = new dbo_Game() { gameFolder = "", gameName = "", libaryId = 0 };
-                dbo_GameTag _tempTag = new dbo_GameTag();
-
-                StringBuilder sql = new StringBuilder($"SELECT g.* FROM {_temp.tableName} g ");
+                StringBuilder sql = new StringBuilder($"SELECT g.*, count(*) as total_count FROM {dbo_Game.tableName} g ");
 
                 List<string> joinClause = new List<string>();
                 List<string> whereClause = new List<string>();
@@ -212,7 +240,7 @@ namespace GameLibrary.Logic
 
                 if (tagList?.Count > 0)
                 {
-                    joinClause.Add($"JOIN {_tempTag.tableName} gt ON gt.{nameof(dbo_GameTag.GameId)} = {nameof(dbo_Game.id)}");
+                    joinClause.Add($"JOIN {dbo_GameTag.tableName} gt ON gt.{nameof(dbo_GameTag.GameId)} = {nameof(dbo_Game.id)}");
                     whereClause.Add($"gt.{nameof(dbo_GameTag.TagId)} in ({string.Join(",", tagList)})");
 
                     groupClause.Add($"g.{nameof(dbo_Game.id)}");

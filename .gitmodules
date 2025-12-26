@@ -1,0 +1,3 @@
+[submodule "GameLibrary.Database"]
+	path = GameLibrary.Database
+	url = https://github.com/NeXx42/CSharpSqliteORM.git

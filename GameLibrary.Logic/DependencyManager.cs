@@ -22,7 +22,7 @@ public static class DependencyManager
             toRun.Add(() => DatabaseManager.CreateDBPointerFile(newPointerFile));
         }
 
-        toRun.Add(() => DatabaseManager.LoadDatabase(null));
+        toRun.Add(() => DatabaseManager.LoadDatabase());
 
         foreach (var task in toRun)
         {

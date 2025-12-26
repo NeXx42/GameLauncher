@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Runtime.InteropServices;
+using CSharpSqliteORM;
 using GameLibrary.DB;
 using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
@@ -56,7 +57,7 @@ public class Runner_Linux : IRunner
     private async Task<LaunchOptions> GetWineOptions(IGameDto game)
     {
         LaunchOptions options = new LaunchOptions();
-        dbo_WineProfile? wineProfile = game.getWineProfile ?? await DatabaseHandler.GetItem<dbo_WineProfile>(QueryBuilder.SQLEquals(nameof(dbo_WineProfile.isDefault), 1));
+        dbo_WineProfile? wineProfile = game.getWineProfile ?? await Database_Manager.GetItem<dbo_WineProfile>(SQLFilter.Equal(nameof(dbo_WineProfile.isDefault), 1));
 
         if (wineProfile != null)
         {

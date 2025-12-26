@@ -3,6 +3,8 @@ using System.Drawing;
 using System.Drawing.Imaging;
 using System.IO;
 using System.Windows;
+using CSharpSqliteORM;
+using GameLibrary.DB;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Objects;
 using SharpCompress.Archives;
@@ -21,7 +23,16 @@ namespace GameLibrary.Logic
 
         public static async Task StartDeletion(GameDto game)
         {
+            if (Directory.Exists(game.getAbsoluteBinaryLocation))
+            {
+                try
+                {
+                    Directory.Delete(game.getAbsoluteFolderLocation);
+                }
+                catch { }
+            }
 
+            await Database_Manager.Delete<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), game.getGameId));
         }
 
         public static async Task UpdateGameIcon(int gameId, Uri newIconPath)
@@ -41,7 +52,38 @@ namespace GameLibrary.Logic
 
         public static Task MoveGameToItsLibrary(dbo_Game game, string existingFolderLocation, string libraryRootLocation)
         {
+            string destination = Path.Combine(libraryRootLocation, game.gameFolder);
+
+            try
+            {
+                Directory.Move(existingFolderLocation, destination);
+            }
+            catch (IOException ex) when (ex.Message.Contains("Invalid cross-device link"))
+            {
+                CopyFiles(existingFolderLocation, destination);
+            }
+
             Directory.Move(existingFolderLocation, Path.Combine(libraryRootLocation, game.gameFolder));
+            return Task.CompletedTask;
+        }
+
+        private static Task CopyFiles(string existing, string destination)
+        {
+            Directory.CreateDirectory(destination);
+
+            foreach (var file in Directory.GetFiles(existing))
+            {
+                var destFile = Path.Combine(destination, Path.GetFileName(file));
+                File.Copy(file, destFile, overwrite: true);
+            }
+
+            foreach (var directory in Directory.GetDirectories(existing))
+            {
+                var destSubDir = Path.Combine(destination, Path.GetFileName(directory));
+                CopyFiles(directory, destSubDir);
+            }
+
+            Directory.Delete(existing, recursive: true);
             return Task.CompletedTask;
         }
 

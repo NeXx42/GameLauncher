@@ -45,27 +45,29 @@ public class LibraryPage_Grid : LibraryPageBase
 
     public override async Task DrawGames()
     {
+        activeUI.Clear();
         library.lbl_PageNum.Text = $"{page + 1}";
-        await DependencyManager.uiLinker!.OpenLoadingModal(false, Internal);
 
-        async Task Internal()
+        foreach (Library_Game ui in cacheUI)
         {
-            activeUI.Clear();
-            int[] games = await LibraryHandler.GetGameList(library.GetGameFilter(page, ContentPerPage.x * ContentPerPage.y));
+            ui.IsVisible = true;
+            ui.DrawSkeleton();
+        }
 
-            for (int i = 0; i < cacheUI.Length; i++)
+        int[] games = await LibraryHandler.GetGameList(library.GetGameFilter(page, ContentPerPage.x * ContentPerPage.y));
+
+        for (int i = 0; i < cacheUI.Length; i++)
+        {
+            if (i >= games.Length)
             {
-                if (i >= games.Length)
-                {
-                    cacheUI[i].IsVisible = false;
-                    continue;
-                }
-
-                cacheUI[i].IsVisible = true;
-                await cacheUI[i].Draw(games[i], library.ToggleGameView);
-
-                activeUI.Add(games[i], i);
+                cacheUI[i].IsVisible = false;
+                continue;
             }
+
+            cacheUI[i].IsVisible = true;
+            await cacheUI[i].Draw(games[i], library.ToggleGameView);
+
+            activeUI.Add(games[i], i);
         }
     }
 

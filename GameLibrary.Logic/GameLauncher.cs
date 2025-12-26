@@ -5,6 +5,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
+using CSharpSqliteORM;
 using GameLibrary.DB;
 using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
@@ -95,7 +96,7 @@ namespace GameLibrary.Logic
                 GameForge forge = new GameForge()
                 {
                     path = dir,
-                    wineProfile = await DatabaseHandler.GetItem<dbo_WineProfile>()
+                    wineProfile = await Database_Manager.GetItem<dbo_WineProfile>()
                 };
 
                 ProcessStartInfo info = await runner!.Run(forge);
@@ -153,27 +154,5 @@ namespace GameLibrary.Logic
                 return await reader.ReadToEndAsync();
             }
         }
-
-        //public static void RequestOverlay(int gameId, Process? process)
-        //{
-        //    if (overlay != null)
-        //    {
-        //        overlay.Close();
-        //        overlay = null;
-        //    }
-        //
-        //    overlay = new GameOverlay();
-        //    //overlay.Owner = MainWindow.window;
-        //
-        //    overlay.Left = 0;
-        //    overlay.Top = 0;
-        //    overlay.Width = SystemParameters.PrimaryScreenWidth;
-        //    overlay.Height = SystemParameters.PrimaryScreenHeight;
-        //    overlay.Topmost = true;
-        //    overlay.ShowActivated = false;
-        //
-        //    overlay.Prep(gameId);
-        //    overlay.Show();
-        //}
     }
 }

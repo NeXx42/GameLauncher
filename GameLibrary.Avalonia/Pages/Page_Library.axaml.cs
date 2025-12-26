@@ -129,10 +129,7 @@ public partial class Page_Library : UserControl
 
         inp_TagName.Text = "";
 
-        await DatabaseHandler.InsertIntoTable(new dbo_Tag()
-        {
-            TagName = newTagName,
-        });
+        await LibraryHandler.CreateTag(newTagName);
 
         LibraryHandler.MarkTagsAsDirty();
         await DrawTags();

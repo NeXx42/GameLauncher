@@ -271,7 +271,7 @@ public partial class Popup_GameView : UserControl
             {
                 if (lastGame != game)
                 {
-                    possibleWineProfiles = await DatabaseHandler.GetItems<dbo_WineProfile>(QueryBuilder.OrderBy(nameof(dbo_WineProfile.isDefault), true));
+                    possibleWineProfiles = await LibraryHandler.GetDefaultWineProfiles();// await DatabaseHandler.GetItems<dbo_WineProfile>(QueryBuilder.OrderBy(nameof(dbo_WineProfile.isDefault), true));
 
                     if (ConfigHandler.isOnLinux)
                     {

@@ -10,6 +10,7 @@ using GameLibrary.Avalonia.Settings;
 using GameLibrary.Avalonia.Windows;
 using GameLibrary.DB;
 using GameLibrary.DB.Database.Tables;
+using GameLibrary.Logic;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
 
@@ -132,7 +133,6 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
         if (!selectedProfile.HasValue)
             return;
 
-        dbo_WineProfile _temp = new dbo_WineProfile() { emulatorType = 0 };
-        await DatabaseHandler.TryExecute($"UPDATE {_temp.tableName} SET {nameof(_temp.isDefault)} = {nameof(_temp.id)} = {existingProfiles![selectedProfile.Value].id}");
+        await LibraryHandler.UpdateDefaultWineProfile(existingProfiles![selectedProfile.Value].id);
     }
 }
