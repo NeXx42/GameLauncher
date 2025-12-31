@@ -1,8 +1,8 @@
-﻿using GameLibary.Components;
+﻿using System.Windows;
+using System.Windows.Controls;
+using GameLibary.Components;
 using GameLibary.Source;
 using GameLibary.Source.Database.Tables;
-using System.Windows;
-using System.Windows.Controls;
 
 namespace GameLibary.Pages
 {

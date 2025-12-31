@@ -36,7 +36,7 @@ public partial class App : Application
 
     private async void CatchException(object sender, UnhandledExceptionEventArgs arg)
     {
-        // dont want this to loop endlessly loop for some reason
+        // don't want this to loop endlessly loop for some reason
         try
         {
             if (arg.ExceptionObject is Exception e)

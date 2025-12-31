@@ -8,12 +8,14 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Styling;
+using Avalonia.Threading;
 
 namespace GameLibrary.Avalonia.Controls
 {
     public partial class Common_Button : UserControl
     {
         private Action callback;
+        private string defaultMessage;
 
         private ImmutableSolidColorBrush? originalBrush;
         private ImmutableSolidColorBrush? selectedBrush;
@@ -49,12 +51,27 @@ namespace GameLibrary.Avalonia.Controls
         public string Label
         {
             get => GetValue(LabelProperty);
-            set => SetValue(LabelProperty, value);
+            set
+            {
+                defaultMessage = value;
+                SetValue(LabelProperty, value);
+            }
         }
 
-        public void RegisterClick(Func<Task> callback)
+        public void RegisterClick(Func<Task> callback, string? asyncMessage = "")
         {
-            this.callback += async () => await callback();
+            this.callback += async () => await HandleUpdate();
+
+            async Task HandleUpdate()
+            {
+                if (!string.IsNullOrEmpty(asyncMessage))
+                    Dispatcher.UIThread.Post(() => SetValue(LabelProperty, asyncMessage));
+
+                await callback();
+
+                if (!string.IsNullOrEmpty(asyncMessage))
+                    Dispatcher.UIThread.Post(() => SetValue(LabelProperty, defaultMessage));
+            }
         }
 
         public void RegisterClick(Action callback)

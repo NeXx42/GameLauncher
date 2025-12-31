@@ -1,7 +1,5 @@
 using System.Diagnostics;
 using CSharpSqliteORM;
-using GameLibrary.DB;
-using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
 
 namespace GameLibrary.Logic.Objects;
@@ -15,14 +13,11 @@ public interface IGameDto
 
     public string getAbsoluteFolderLocation { get; }
     public string getAbsoluteBinaryLocation { get; }
-
-    public dbo_WineProfile? getWineProfile { get; }
 }
 
 public class GameForge : IGameDto
 {
     public required string path;
-    public dbo_WineProfile? wineProfile;
 
     public int getGameId => -1;
     public bool captureLogs => false;
@@ -31,8 +26,6 @@ public class GameForge : IGameDto
 
     public string getAbsoluteFolderLocation => Path.GetDirectoryName(path);
     public string getAbsoluteBinaryLocation => path;
-
-    public dbo_WineProfile? getWineProfile => wineProfile;
 }
 
 public class GameDto : IGameDto
@@ -43,8 +36,6 @@ public class GameDto : IGameDto
 
     private HashSet<int>? tags;
     private dbo_Libraries? library;
-
-    private dbo_WineProfile? wineProfile;
 
     // loading
 
@@ -73,7 +64,6 @@ public class GameDto : IGameDto
 
         await LoadTags();
         await LoadLibrary();
-        await LoadWineProfile();
     }
 
     public async Task LoadGame(dbo_Game? dbGame = null)
@@ -104,17 +94,6 @@ public class GameDto : IGameDto
         library = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libaryId), game.libaryId));
     }
 
-    public async Task LoadWineProfile()
-    {
-        if (game?.wineProfile.HasValue ?? false)
-        {
-            wineProfile = await Database_Manager.GetItem<dbo_WineProfile>(SQLFilter.Equal(nameof(dbo_WineProfile.id), game!.wineProfile!.Value));
-            return;
-        }
-
-        wineProfile = null;
-    }
-
 
 
     // props
@@ -125,8 +104,6 @@ public class GameDto : IGameDto
 
     public dbo_Game getGame => game!;
     public HashSet<int> getTags => tags!;
-
-    public dbo_WineProfile? getWineProfile => wineProfile;
 
     public string getAbsoluteFolderLocation => Path.Combine(library!.rootPath, game!.gameFolder!);
 
@@ -180,9 +157,9 @@ public class GameDto : IGameDto
 
     public async Task ChangeWineProfile(int? wineProfile)
     {
-        game!.wineProfile = wineProfile;
+        game!.runnerId = wineProfile;
         await UpdateGame();
-        await LoadWineProfile();
+        //await LoadWineProfile();
     }
 
     public async Task UpdateGameName(string newName)
@@ -263,19 +240,18 @@ public class GameDto : IGameDto
         if (!Directory.Exists(getAbsoluteFolderLocation))
             return (null, []);
 
-        List<string> binaries = Directory.GetFiles(getAbsoluteFolderLocation).Where(FilterFile).Select(x => Path.GetFileName(x)).ToList();
+        List<string> binaries = Directory.GetFiles(getAbsoluteFolderLocation).Where(RunnerManager.IsUniversallyAcceptedExecutableFormat).Select(x => Path.GetFileName(x)).ToList();
         return (binaries.IndexOf(game!.executablePath!), binaries.ToArray());
-
-        bool FilterFile(string dir)
-        {
-            return dir.EndsWith(".exe", StringComparison.CurrentCultureIgnoreCase) ||
-                dir.EndsWith(".lnk", StringComparison.CurrentCultureIgnoreCase);
-        }
     }
 
-    public void Launch()
+    public async Task Launch()
     {
-        GameLauncher.LaunchGame(this);
+        await RunnerManager.RunGame(new RunnerManager.GameLaunchRequest()
+        {
+            gameId = getGameId,
+            path = getAbsoluteBinaryLocation,
+            runnerId = game?.runnerId ?? -1
+        });
     }
 
     public async Task UpdateLastPlayed()

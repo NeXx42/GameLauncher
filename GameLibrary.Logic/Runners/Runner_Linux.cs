@@ -1,9 +1,5 @@
 using System.Diagnostics;
-using System.Runtime.InteropServices;
 using CSharpSqliteORM;
-using GameLibrary.DB;
-using GameLibrary.DB.Database.Tables;
-using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic.Runners;
@@ -18,70 +14,38 @@ public class Runner_Linux : IRunner
 
     public async Task<ProcessStartInfo> Run(IGameDto game)
     {
-        ProcessStartInfo info = new ProcessStartInfo();
-        LaunchOptions wineOptions = await GetWineOptions(game);
-
-        await EmulateRegion(info, game);
-        await Sandbox(info, wineOptions);
-
-        switch (wineOptions.runnerType)
-        {
-            case RunnerType.Wine:
-                await EmbedWine(info, wineOptions);
-                break;
-
-            case RunnerType.Proton:
-                await EmbedProton(info, wineOptions);
-                break;
-
-            default:
-                throw new Exception("Invalid runner type");
-        }
-
-
-        return info;
+        return null;
+        //ProcessStartInfo info = new ProcessStartInfo();
+        //
+        //await EmulateRegion(info, game);
+        //await Sandbox(info, wineOptions);
+        //
+        //switch (wineOptions.runnerType)
+        //{
+        //    case RunnerType.Wine:
+        //        await EmbedWine(info, wineOptions);
+        //        break;
+        //
+        //    case RunnerType.Proton:
+        //        await EmbedProton(info, wineOptions);
+        //        break;
+        //
+        //    default:
+        //        throw new Exception("Invalid runner type");
+        //}
+        //
+        //
+        //return info;
     }
 
     private Task EmulateRegion(ProcessStartInfo info, IGameDto game)
     {
         if (game.useRegionEmulation)
         {
-            info.EnvironmentVariables["LANG"] = "ja_JP.UTF-8";
-            info.EnvironmentVariables["LC_ALL"] = "ja_JP.UTF-8";
-            info.EnvironmentVariables["LC_CTYPE"] = "ja_JP.UTF-8";
+
         }
 
         return Task.CompletedTask;
-    }
-
-    private async Task<LaunchOptions> GetWineOptions(IGameDto game)
-    {
-        LaunchOptions options = new LaunchOptions();
-        dbo_WineProfile? wineProfile = game.getWineProfile ?? await Database_Manager.GetItem<dbo_WineProfile>(SQLFilter.Equal(nameof(dbo_WineProfile.isDefault), 1));
-
-        if (wineProfile != null)
-        {
-            options.prefix = wineProfile.profileDirectory!;
-            options.runnerType = (RunnerType)wineProfile.emulatorType;
-
-            options.whitelistDirectories.Add(wineProfile.profileDirectory!);
-
-            switch (options.runnerType)
-            {
-                case RunnerType.Proton:
-                    options.runnerExecutable = wineProfile.profileExecutable;
-                    options.steamLocation = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Proton_SteamFolder, string.Empty);
-
-                    options.whitelistDirectories.Add(options.runnerExecutable!);
-                    options.whitelistDirectories.Add(options.steamLocation);
-                    break;
-            }
-        }
-
-        options.gameExecutable = game.getAbsoluteBinaryLocation;
-        options.whitelistDirectories.Add(game.getAbsoluteFolderLocation);
-
-        return options;
     }
 
     private async Task Sandbox(ProcessStartInfo info, LaunchOptions options)

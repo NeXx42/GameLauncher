@@ -137,7 +137,7 @@ public partial class Indexer_FolderView : UserControl
         btn_Generic.IsVisible = false;
         btn_Launch.IsVisible = false;
 
-        if (FileManager.IsExecutable(dir))
+        if (RunnerManager.IsUniversallyAcceptedExecutableFormat(dir))
         {
             btn_Launch.IsVisible = true;
             btn_Launch_Callback = async () => await LaunchSelectedBinary(dir);

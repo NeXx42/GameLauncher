@@ -1,15 +1,6 @@
-﻿using System.Collections.Concurrent;
-using System.Data.SQLite;
-using System.Formats.Asn1;
-using System.IO;
-using System.Text;
-using System.Windows;
+﻿using System.Text;
 using CSharpSqliteORM;
-using GameLibrary.DB;
-using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
-using GameLibrary.Logic.Helpers;
-using GameLibrary.Logic.Interfaces;
 using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic
@@ -200,19 +191,6 @@ namespace GameLibrary.Logic
             });
         }
 
-        public static async Task UpdateDefaultWineProfile(int to)
-            => await Database_Manager.ExecuteSQLNonQuery($"UPDATE {dbo_WineProfile.tableName} SET {nameof(dbo_WineProfile.isDefault)} = {nameof(dbo_WineProfile.id)} = {to}");
-
-        public static async Task UpdateWineProfile(dbo_WineProfile profile)
-            => await Database_Manager.Update(profile, SQLFilter.Equal(nameof(dbo_WineProfile.id), profile.id));
-
-        public static async Task<dbo_WineProfile?> GetWineProfile(int id)
-            => await Database_Manager.GetItem<dbo_WineProfile>(SQLFilter.Equal(nameof(dbo_WineProfile.id), id));
-
-        public static async Task<dbo_WineProfile[]> GetDefaultWineProfiles()
-            => await Database_Manager.GetItems<dbo_WineProfile>(SQLFilter.OrderDesc(nameof(dbo_WineProfile.isDefault)));
-
-
         public struct GameFilterRequest
         {
             public string? nameFilter;
@@ -226,7 +204,7 @@ namespace GameLibrary.Logic
 
             public string ConstructSQL()
             {
-                StringBuilder sql = new StringBuilder($"SELECT g.*, count(*) as total_count FROM {dbo_Game.tableName} g ");
+                StringBuilder sql = new StringBuilder($"SELECT g.*, count(*) OVER() as total_count FROM {dbo_Game.tableName} g ");
 
                 List<string> joinClause = new List<string>();
                 List<string> whereClause = new List<string>();

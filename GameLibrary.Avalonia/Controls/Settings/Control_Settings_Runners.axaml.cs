@@ -5,23 +5,20 @@ using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
-using GameLibrary.Avalonia.Helpers;
+using GameLibrary.Avalonia.Controls.Modals;
 using GameLibrary.Avalonia.Settings;
-using GameLibrary.Avalonia.Windows;
-using GameLibrary.DB;
-using GameLibrary.DB.Database.Tables;
-using GameLibrary.Logic;
+using GameLibrary.Logic.Database.Tables;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
 
 namespace GameLibrary.Avalonia.Controls.Settings;
 
-public partial class Control_Settings_Wine_Profiles : UserControl, ISettingControl
+public partial class Control_Settings_Runners : UserControl, ISettingControl
 {
     private SettingBase? setting;
 
     private Border[]? profileUIS;
-    private dbo_WineProfile[]? existingProfiles;
+    private dbo_Runner[]? existingProfiles;
 
     private ImmutableSolidColorBrush selectedBrush;
     private ImmutableSolidColorBrush unselectedBrush;
@@ -49,7 +46,7 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
     }
     private int? m_selectedProfile;
 
-    public Control_Settings_Wine_Profiles()
+    public Control_Settings_Runners()
     {
         InitializeComponent();
 
@@ -63,7 +60,7 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
         btn_Default.IsVisible = false;
     }
 
-    public ISettingControl Draw(SettingBase setting, SettingsUI_Wine_Profiles ui)
+    public ISettingControl Draw(SettingBase setting, SettingsUI_Runners ui)
     {
         this.setting = setting;
         return this;
@@ -71,7 +68,7 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
 
     public async Task LoadValue()
     {
-        existingProfiles = await setting!.LoadSetting<dbo_WineProfile[]>();
+        existingProfiles = await setting!.LoadSetting<dbo_Runner[]>();
         profileUIS = new Border[existingProfiles?.Length ?? 0];
 
         container.Children.Clear();
@@ -85,7 +82,7 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
         }
     }
 
-    private void DrawProfile(int profileIndex)
+    private void DrawProfile(int uiIndex)
     {
         Border grid = new Border();
 
@@ -95,15 +92,15 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
         grid.Background = unselectedBrush;
 
         Label l = new Label();
-        l.Content = existingProfiles![profileIndex].profileName;
+        l.Content = existingProfiles![uiIndex].runnerName;
         l.VerticalAlignment = VerticalAlignment.Center;
         l.Margin = new Thickness(5);
 
         grid.Child = l;
-        grid.PointerPressed += (_, __) => SelectProfile(profileIndex);
+        grid.PointerPressed += (_, __) => SelectProfile(uiIndex);
 
         container.Children.Add(grid);
-        profileUIS![profileIndex] = grid;
+        profileUIS![uiIndex] = grid;
     }
 
     private void SelectProfile(int profileId)
@@ -119,12 +116,11 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
 
     private async Task OpenEditMenu()
     {
-        await DialogHelper.OpenDialog<Window_Settings_Wine_Profile>(SetupCall);
+        await MainWindow.instance!.DisplayModal<Modal_Settings_Runner>(HandleModal);
 
-        Task SetupCall(Window_Settings_Wine_Profile dialog)
+        async Task HandleModal(Modal_Settings_Runner modal)
         {
-            dialog.Setup(selectedProfile.HasValue ? existingProfiles![selectedProfile.Value] : null);
-            return Task.CompletedTask;
+            await modal.HandleOpen(selectedProfile.HasValue ? existingProfiles![selectedProfile.Value].runnerId : null);
         }
     }
 
@@ -133,6 +129,6 @@ public partial class Control_Settings_Wine_Profiles : UserControl, ISettingContr
         if (!selectedProfile.HasValue)
             return;
 
-        await LibraryHandler.UpdateDefaultWineProfile(existingProfiles![selectedProfile.Value].id);
+        //await LibraryHandler.UpdateDefaultWineProfile(existingProfiles![selectedProfile.Value].id);
     }
 }

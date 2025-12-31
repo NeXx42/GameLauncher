@@ -78,21 +78,23 @@ public static class ImageManager
             if (queuedImageFetch.Count == 0)
                 continue;
 
-            List<int> toClear = new List<int>();
+            IEnumerable<int> toClear = queuedImageFetch.Keys;
 
-            foreach (KeyValuePair<int, ImageFetchRequest> queued in queuedImageFetch)
+            await Parallel.ForEachAsync(toClear, async (int id, CancellationToken token) =>
             {
-                object? response = await fetcher!.GetIcon(queued.Value.absoluteImagePath);
+                if (!queuedImageFetch.TryGetValue(id, out ImageFetchRequest req))
+                    return;
+
+                object? response = await fetcher!.GetIcon(req.absoluteImagePath);
 
                 fetcher.InvokeOnUIThread(() =>
                 {
-                    queued.Value.callback?.Invoke(queued.Value.gameId, response);
-                    onGlobalImageChange?.Invoke(queued.Value.gameId, response);
+                    req.callback?.Invoke(id, response);
+                    onGlobalImageChange?.Invoke(id, response);
                 });
 
-                cachedImages.TryAdd(queued.Key, response);
-                toClear.Add(queued.Key);
-            }
+                cachedImages.TryAdd(id, response);
+            });
 
             foreach (int i in toClear)
                 queuedImageFetch.TryRemove(i, out _);

@@ -28,11 +28,13 @@ public partial class Common_Dropdown : UserControl
     public void SetupAsync(IEnumerable collection, int? defaultOption, Func<Task> onChange)
         => Setup(collection, defaultOption, async () => await onChange());
 
-    public void Setup(IEnumerable collection, int? defaultOption, Action onChange)
+    public void Setup(IEnumerable collection, int? defaultOption, Action? onChange)
     {
         ignoreEvents = true;
         inp.ItemsSource = collection;
-        selectionChangeCallback = onChange;
+
+        if (onChange != null)
+            selectionChangeCallback = onChange;
 
         if (defaultOption.HasValue)
             SilentlyChangeValue(defaultOption.Value);
@@ -54,6 +56,8 @@ public partial class Common_Dropdown : UserControl
         inp.SelectedIndex = index;
         ignoreEvents = false;
     }
+
+    public void ChangeValue(int to) => inp.SelectedIndex = to;
 
     private void ToggleDropdown(object sender, RoutedEventArgs e)
     {

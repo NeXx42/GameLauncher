@@ -122,12 +122,6 @@ namespace GameLibrary.Logic
             return foundEntries;
         }
 
-        public static bool IsExecutable(string path)
-        {
-            return path.EndsWith(".exe");
-        }
-
-
         public static bool IsZip(string path)
         {
             return path.EndsWith(".7z", StringComparison.InvariantCultureIgnoreCase) ||
@@ -211,7 +205,7 @@ namespace GameLibrary.Logic
             public void CrawlForExecutable(string root)
             {
                 string[] files = Directory.GetFiles(root);
-                IEnumerable<string> binaries = files.Where(IsExecutable);
+                IEnumerable<string> binaries = files.Where(RunnerManager.IsUniversallyAcceptedExecutableFormat);
 
                 if (binaries?.Count() > 0)
                 {

@@ -16,8 +16,8 @@ namespace GameLibrary.DB.Tables
         public DateTime? lastPlayed { get; set; }
         public required int libaryId { get; set; }
         public required string gameFolder { get; set; }
-        public int? wineProfile { get; set; }
         public bool? captureLogs { get; set; }
+        public int? runnerId { get; set; }
 
         //public async Task<string> GetLibraryLocation() => (await DatabaseHandler.GetItem<dbo_Libraries>(QueryBuilder.SQLEquals(nameof(dbo_Libraries.libaryId), libaryId)))?.rootPath ?? string.Empty;
         //public async Task<string> GetAbsoluteFolderLocation() => Path.Combine(await GetLibraryLocation(), gameFolder);
@@ -40,9 +40,9 @@ namespace GameLibrary.DB.Tables
 
             new Database_Column() {  columnName = nameof(gameFolder), columnType = Database_ColumnType.TEXT, allowNull = true },
 
-            new Database_Column() {  columnName = nameof(wineProfile), columnType = Database_ColumnType.INTEGER, allowNull = true },
-
             new Database_Column() {  columnName = nameof(captureLogs), columnType = Database_ColumnType.BIT, allowNull = true },
+
+            new Database_Column() {  columnName = nameof(runnerId), columnType = Database_ColumnType.INTEGER, allowNull = true },
         };
     }
 }

@@ -27,7 +27,7 @@ public partial class MainWindow : Window
         OnStart();
 
         cont_Modals.IsVisible = false;
-        AddHandler(DragDrop.DropEvent, HandleFileDrop);
+        DragDrop.SetAllowDrop(this, true);
     }
 
     private async void OnStart()

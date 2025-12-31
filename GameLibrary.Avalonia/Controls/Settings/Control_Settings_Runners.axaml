@@ -1,7 +1,7 @@
 <UserControl xmlns="https://github.com/avaloniaui"
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.Avalonia.Controls.Settings.Control_Settings_Wine_Profiles"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.Avalonia.Controls.Settings.Control_Settings_Runners"
   xmlns:Controls="clr-namespace:GameLibrary.Avalonia.Controls">
   <Border CornerRadius="5" Background="#ff3b3b3b">
     <Grid Margin="5">

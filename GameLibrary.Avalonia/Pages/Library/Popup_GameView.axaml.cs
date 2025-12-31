@@ -5,13 +5,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
-using Avalonia.Markup.Xaml;
+using Avalonia.Input;
+using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
-using GameLibrary.Avalonia.Controls;
 using GameLibrary.Avalonia.Utils;
-using GameLibrary.DB;
-using GameLibrary.DB.Database.Tables;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Objects;
@@ -29,11 +27,14 @@ public partial class Popup_GameView : UserControl
 
         tabGroup = new TabGroup(this);
 
+        DragDrop.SetAllowDrop(img_DropPoint, true);
+        img_DropPoint.AddHandler(DragDrop.DragEnterEvent, TrySetPicture, RoutingStrategies.Tunnel);
+
         btn_Delete.RegisterClick(DeleteGame);
         btn_Overlay.RegisterClick(OpenOverlay);
 
         btn_Browse.RegisterClick(BrowseToGame);
-        btn_Launch.RegisterClick(HandleLaunch);
+        btn_Launch.RegisterClick(LaunchGame, "Launching");
 
         lbl_Title.PointerPressed += async (_, __) => await StartNameChange();
 
@@ -67,10 +68,9 @@ public partial class Popup_GameView : UserControl
         img_bg.Background = img;
     }
 
-
-    private void HandleLaunch()
+    private async Task LaunchGame()
     {
-        inspectingGame.Launch();
+        await inspectingGame!.Launch();
     }
 
     private void BrowseToGame() => inspectingGame?.BrowseToGame();
@@ -102,6 +102,16 @@ public partial class Popup_GameView : UserControl
 
         lbl_IsRunning.IsVisible = to;
     }
+
+    private void TrySetPicture(object? sender, DragEventArgs e)
+    {
+        if (e.Data.Contains(DataFormats.Text))
+        {
+            var text = e.Data.GetText();
+
+        }
+    }
+
 
     private class TabGroup
     {
@@ -257,7 +267,7 @@ public partial class Popup_GameView : UserControl
 
         internal class Tab_LaunchSettings : TabBase
         {
-            private dbo_WineProfile[]? possibleWineProfiles;
+            private List<(int id, string name)>? possibleRunners;
 
             public override TabBase Setup(Border btn, Grid container, TabGroup groupMaster)
             {
@@ -271,17 +281,15 @@ public partial class Popup_GameView : UserControl
             {
                 if (lastGame != game)
                 {
-                    possibleWineProfiles = await LibraryHandler.GetDefaultWineProfiles();// await DatabaseHandler.GetItems<dbo_WineProfile>(QueryBuilder.OrderBy(nameof(dbo_WineProfile.isDefault), true));
+                    possibleRunners = await RunnerManager.GetRunnerProfiles();// await DatabaseHandler.GetItems<dbo_WineProfile>(QueryBuilder.OrderBy(nameof(dbo_WineProfile.isDefault), true));
 
                     if (ConfigHandler.isOnLinux)
                     {
-                        string defaultOption = possibleWineProfiles.FirstOrDefault(x => x.isDefault)?.profileName ?? "INVALID";
-                        int indexOfSelectedWineProfile = possibleWineProfiles.Select(x => x.id).ToList().IndexOf(game!.getWineProfile?.id ?? -1);
-
-                        string[] profileOptions = [$"Default ({defaultOption})", .. possibleWineProfiles!.Select(x => x.profileName)!];
+                        string[] profileOptions = possibleRunners!.Select(x => x.name)!.ToArray();
+                        int selectedProfile = possibleRunners.Select(x => x.id).ToList().IndexOf(game.getGame.runnerId ?? -1);
 
                         groupMaster!.master.inp_WineProfile.IsVisible = true;
-                        groupMaster!.master.inp_WineProfile.SetupAsync(profileOptions, indexOfSelectedWineProfile < 0 ? 0 : indexOfSelectedWineProfile, HandleWineProfileChange);
+                        groupMaster!.master.inp_WineProfile.SetupAsync(profileOptions, selectedProfile >= 0 ? selectedProfile : 0, HandleWineProfileChange);
                     }
                     else
                     {
@@ -303,12 +311,12 @@ public partial class Popup_GameView : UserControl
                 int? newProfileId = null;
                 int selectedIndex = groupMaster!.master.inp_WineProfile.selectedIndex;
 
-                if (selectedIndex != 0) // default profile
-                {
-                    newProfileId = possibleWineProfiles!.ElementAt(selectedIndex - 1)?.id;
-                }
+                //if (selectedIndex != 0) // default profile
+                //{
+                //    newProfileId = possibleWineProfiles!.ElementAt(selectedIndex - 1)?.id;
+                //}
 
-                await lastGame!.ChangeWineProfile(newProfileId);
+                await lastGame!.ChangeWineProfile(possibleRunners![selectedIndex].id);
             }
         }
 

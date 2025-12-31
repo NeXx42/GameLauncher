@@ -1,14 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Diagnostics;
-using System.IO;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using System.Text;
-using System.Windows;
 using CSharpSqliteORM;
-using GameLibrary.DB;
-using GameLibrary.DB.Database.Tables;
-using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Objects;
 using GameLibrary.Logic.Runners;
 
@@ -42,8 +35,21 @@ namespace GameLibrary.Logic
         public static bool IsRunning(int id) => activeProcesses.ContainsKey(id);
 
 
-        public static async void LaunchGame(GameDto game)
+        public static async Task LaunchGame(GameDto game)
         {
+            if (game.getGame.runnerId.HasValue)
+            {
+                // stop gap for the time being
+                await RunnerManager.RunGame(new RunnerManager.GameLaunchRequest()
+                {
+                    gameId = game.getGameId,
+                    path = game.getAbsoluteBinaryLocation,
+                    runnerId = game.getGame.runnerId.Value
+                });
+
+                return;
+            }
+
             if (IsRunning(game.getGameId))
             {
                 // say game is already running?
@@ -96,7 +102,7 @@ namespace GameLibrary.Logic
                 GameForge forge = new GameForge()
                 {
                     path = dir,
-                    wineProfile = await Database_Manager.GetItem<dbo_WineProfile>()
+
                 };
 
                 ProcessStartInfo info = await runner!.Run(forge);

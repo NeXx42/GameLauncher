@@ -62,16 +62,8 @@ namespace GameLibrary.Logic
             ]);
 
             settings.Add("Runner", [
+                new Setting_Runners(),
                 new Setting_Generic_Config("Concurrency", SettingOSCompatibility.Universal, ConfigValues.Launcher_Concurrency, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
-            ]);
-
-
-            settings.Add("Wine", [
-                new Setting_Wine_Profiles(),
-            ]);
-
-            settings.Add("Proton", [
-                new Setting_Generic_Config("Proton Location", SettingOSCompatibility.Linux, ConfigValues.Proton_SteamFolder, new SettingsUI_DirectorySelector(){folder = true}, ConfigSerialization.FolderDirectory),
             ]);
 
             settings.Add("Sandboxing", [

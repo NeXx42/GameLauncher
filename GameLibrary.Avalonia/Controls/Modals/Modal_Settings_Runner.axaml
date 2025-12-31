@@ -1,0 +1,41 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080" x:Class="GameLibrary.Avalonia.Controls.Modals.Modal_Settings_Runner"
+  xmlns:Controls="clr-namespace:GameLibrary.Avalonia.Controls">
+  <Border VerticalAlignment="Center" HorizontalAlignment="Center" Width="500" Height="400" Background="red" CornerRadius="5">
+    <Grid Margin="15" RowDefinitions="*, 15, 30">
+      <StackPanel Spacing="5">
+        <Grid ColumnDefinitions="100, *" Height="30">
+          <Label Content="Name" />
+          <TextBox Grid.Column="1" x:Name="inp_Name"/>
+        </Grid>
+
+        <Grid ColumnDefinitions="100, *" Height="30">
+          <Label Content="Type" />
+          <Controls:Common_Dropdown Grid.Column="1" x:Name="inp_Type" HorizontalAlignment="Stretch" />
+        </Grid>
+
+        <Grid ColumnDefinitions="100, *" Height="30">
+          <Label Content="Root" />
+          <Controls:Common_Button Grid.Column="1" x:Name="btn_Dir" HorizontalAlignment="Stretch" Label="Set Directory"/>
+        </Grid>
+
+        <Grid ColumnDefinitions="100, *" Height="30" x:Name="group_Version">
+          <Label Content="Version" />
+          <Controls:Common_Dropdown Grid.Column="1" x:Name="inp_Version" HorizontalAlignment="Stretch" />
+        </Grid>
+
+        <Grid ColumnDefinitions="100, *" Height="30" x:Name="group_WineTricks">
+          <Label Content="Wine Tricks" />
+          <Controls:Common_Button Grid.Column="1" x:Name="btn_WineTricks" HorizontalAlignment="Stretch" Label="Wine Tricks"/>
+        </Grid>
+      </StackPanel>
+
+      <StackPanel Orientation="Horizontal" Grid.Row="2" Spacing="5" HorizontalAlignment="Right">
+        <Controls:Common_Button Width="100" Label="Close" x:Name="btn_Close"/>
+        <Controls:Common_Button Width="100" Label="Save" x:Name="btn_Save" />
+      </StackPanel>
+    </Grid>
+  </Border>
+</UserControl>

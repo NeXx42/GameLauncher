@@ -66,7 +66,7 @@ public partial class Popup_Settings : UserControl
                 case SettingsUI_DirectorySelector settingsUI_DirectorySelector: return new Control_Settings_DirectorySelector().Draw(setting, settingsUI_DirectorySelector);
                 case SettingsUI_Toggle settingsUI_Toggle: return new Control_Settings_Toggle().Draw(setting, settingsUI_Toggle);
 
-                case SettingsUI_Wine_Profiles settingsUI_Wine_Profiles: return new Control_Settings_Wine_Profiles().Draw(setting, settingsUI_Wine_Profiles);
+                case SettingsUI_Runners settingsUI_Runners: return new Control_Settings_Runners().Draw(setting, settingsUI_Runners);
             }
 
             return null;
