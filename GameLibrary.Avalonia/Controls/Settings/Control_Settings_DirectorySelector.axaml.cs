@@ -8,7 +8,7 @@ using GameLibrary.Logic;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
 
-namespace GameLibrary.Avalonia.Settings;
+namespace GameLibrary.Avalonia.Controls.Settings;
 
 public partial class Control_Settings_DirectorySelector : UserControl, ISettingControl
 {

@@ -17,11 +17,16 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        AppDomain.CurrentDomain.UnhandledException += CatchException;
+        TaskScheduler.UnobservedTaskException += async (s, e) =>
+        {
+            e.SetObserved();
+            await CatchException(e.Exception);
+        };
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow();
+
 
             desktop.Exit += OnExit;
         }
@@ -34,15 +39,12 @@ public partial class App : Application
         GameLauncher.KillAllExistingProcesses();
     }
 
-    private async void CatchException(object sender, UnhandledExceptionEventArgs arg)
+    private async Task CatchException(Exception exception)
     {
         // don't want this to loop endlessly loop for some reason
         try
         {
-            if (arg.ExceptionObject is Exception e)
-            {
-                await DialogHelper.OpenExceptionDialog(e);
-            }
+            await DialogHelper.OpenExceptionDialog(exception);
         }
         catch { }
     }

@@ -83,10 +83,6 @@ namespace GameLibrary.Logic
                 activeProcesses.TryAdd(game.getGameId, await runner.LaunchGame(game, gameProcess, getLogFolder));
 
 
-                if (string.IsNullOrEmpty(game.getGame.iconPath))
-                {
-                    OverlayManager.LaunchOverlay(game.getGameId);
-                }
             }
             catch (Exception e)
             {

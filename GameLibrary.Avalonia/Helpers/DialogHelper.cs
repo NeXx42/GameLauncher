@@ -3,9 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Platform.Storage;
-using GameLibrary.Avalonia.Overlay;
-using GameLibrary.Avalonia.Windows;
-using GameLibrary.DB;
+using GameLibrary.Avalonia.Controls.Windows;
 
 namespace GameLibrary.Avalonia.Helpers;
 
@@ -49,7 +47,7 @@ public static class DialogHelper
 
     public static async Task OpenOverlay(int gameId)
     {
-        OverlayUI overlay = new OverlayUI();
-        overlay.Show();
+        //OverlayUI overlay = new OverlayUI();
+        //overlay.Show();
     }
 }

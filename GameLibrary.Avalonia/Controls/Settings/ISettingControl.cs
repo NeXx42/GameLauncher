@@ -1,6 +1,6 @@
 using System.Threading.Tasks;
 
-namespace GameLibrary.Avalonia.Settings;
+namespace GameLibrary.Avalonia.Controls.Settings;
 
 public interface ISettingControl
 {

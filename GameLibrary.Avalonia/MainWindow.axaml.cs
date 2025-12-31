@@ -1,15 +1,11 @@
 using System;
-using System.Linq;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
-using Avalonia.Threading;
+using GameLibrary.Avalonia.Controls.Pages;
 using GameLibrary.Avalonia.Helpers;
-using GameLibrary.Avalonia.Pages;
 using GameLibrary.Avalonia.Utils;
-using GameLibrary.DB;
-using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
 
 namespace GameLibrary.Avalonia;

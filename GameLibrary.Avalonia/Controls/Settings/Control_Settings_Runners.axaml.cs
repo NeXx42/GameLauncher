@@ -6,7 +6,6 @@ using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using GameLibrary.Avalonia.Controls.Modals;
-using GameLibrary.Avalonia.Settings;
 using GameLibrary.Logic.Database.Tables;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;

@@ -28,6 +28,8 @@ public static class RunnerManager
     private static SemaphoreSlim _mutex = new SemaphoreSlim(1, 1);
     private static Dictionary<string, ActiveProcess> activeGames = new Dictionary<string, ActiveProcess>();
 
+    public static Action<int, bool>? onGameStatusChange;
+
 
     public static bool IsUniversallyAcceptedExecutableFormat(string path)
     {
@@ -77,6 +79,16 @@ public static class RunnerManager
 
             await HandleEmbeds(game, req, args);
             ExecuteRunRequest(req, game.path);
+
+            if (game.gameId.HasValue)
+            {
+                GameDto? gameDto = LibraryHandler.TryGetCachedGame(game.gameId.Value);
+
+                if (string.IsNullOrEmpty(gameDto!.getGame.iconPath))
+                {
+                    await OverlayManager.LaunchOverlay(gameDto!.getGameId);
+                }
+            }
         }
         catch
         {
