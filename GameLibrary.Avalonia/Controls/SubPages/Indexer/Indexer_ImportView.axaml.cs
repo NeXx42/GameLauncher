@@ -15,8 +15,8 @@ namespace GameLibrary.Avalonia.Controls.SubPage.Indexer;
 
 public partial class Indexer_ImportView : UserControl
 {
-    private Popup_AddGames master;
-    private List<FileManager.FolderEntry> availableImports = new List<FileManager.FolderEntry>();
+    private Popup_AddGames? master;
+    private List<FileManager.IImportEntry> availableImports = new List<FileManager.IImportEntry>();
 
     public Indexer_ImportView()
     {
@@ -30,29 +30,57 @@ public partial class Indexer_ImportView : UserControl
 
         btn_Search.RegisterClick(ScanDirectory);
         btn_Import.RegisterClick(AttemptImport);
+
+        btn_SelectFile.RegisterClick(AddFile);
+        btn_SelectFolder.RegisterClick(AddFolder);
     }
 
     private async Task ScanDirectory()
     {
-        IReadOnlyList<IStorageFolder> selectedFolders = await DialogHelper.OpenFolderAsync(new FolderPickerOpenOptions()
-        {
-            Title = "Select Directories",
-            AllowMultiple = true,
-        });
+        IReadOnlyList<IStorageFolder> selectedFolders = await DialogHelper.OpenFolderAsync("Select Directories", true);
 
         if (selectedFolders.Count > 0)
         {
-            List<FileManager.FolderEntry> foundGames = await FileManager.CrawlGames(selectedFolders.Select(x => x.Path.AbsolutePath).ToArray());
+            availableImports.AddRange(await FileManager.CrawlGames(selectedFolders.Select(x => x.Path.AbsolutePath).ToArray()));
+            UpdateAvailableGamesUI();
+        }
+    }
 
-            cont_FoundGames.Children.Clear();
+    private async Task AddFile()
+    {
+        IReadOnlyList<IStorageFile> selectedFiles = await DialogHelper.OpenFileAsync("Select Games", true);
+        availableImports.AddRange(selectedFiles.Select(x => new FileManager.ImportEntry_Binary(x.Path.AbsolutePath)));
 
-            foreach (FileManager.FolderEntry gameFolder in foundGames)
+        UpdateAvailableGamesUI();
+    }
+
+    private async Task AddFolder()
+    {
+        IReadOnlyList<IStorageFolder> selectedFiles = await DialogHelper.OpenFolderAsync("Select Games", true);
+        availableImports.AddRange(selectedFiles.Select(x => new FileManager.ImportEntry_Folder(null, x.Path.AbsolutePath)));
+
+        UpdateAvailableGamesUI();
+    }
+
+    private void UpdateAvailableGamesUI()
+    {
+        cont_FoundGames.Children.Clear();
+
+        foreach (FileManager.IImportEntry entry in availableImports)
+        {
+            if (entry is FileManager.ImportEntry_Folder gameFolder)
             {
                 Indexer_Folder ui = new Indexer_Folder();
-                ui.Draw(gameFolder, master.RequestFolderView);
+                ui.Draw(gameFolder, master!.RequestFolderView);
 
                 cont_FoundGames.Children.Add(ui);
-                availableImports.Add(gameFolder);
+            }
+            else if (entry is FileManager.ImportEntry_Binary gameBinary)
+            {
+                Indexer_File ui = new Indexer_File();
+                ui.Draw(gameBinary);
+
+                cont_FoundGames.Children.Add(ui);
             }
         }
     }
@@ -64,6 +92,6 @@ public partial class Indexer_ImportView : UserControl
         cont_FoundGames.Children.Clear();
         availableImports.Clear();
 
-        await master.onReimportGames!();
+        await master!.onReimportGames!();
     }
 }

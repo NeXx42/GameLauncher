@@ -9,10 +9,30 @@ namespace GameLibrary.Avalonia.Helpers;
 
 public static class DialogHelper
 {
+    public static async Task<IReadOnlyList<IStorageFolder>> OpenFolderAsync(string title, bool multipleAllowed)
+    {
+        return await MainWindow.instance!.StorageProvider.OpenFolderPickerAsync(new FolderPickerOpenOptions()
+        {
+            Title = title,
+            AllowMultiple = multipleAllowed
+        });
+    }
+
+    // replace me
     public static async Task<IReadOnlyList<IStorageFolder>> OpenFolderAsync(FolderPickerOpenOptions options)
     {
         return await MainWindow.instance!.StorageProvider.OpenFolderPickerAsync(options);
     }
+
+    public static async Task<IReadOnlyList<IStorageFile>> OpenFileAsync(string title, bool multipleAllowed)
+    {
+        return await MainWindow.instance!.StorageProvider.OpenFilePickerAsync(new FilePickerOpenOptions()
+        {
+            Title = title,
+            AllowMultiple = multipleAllowed
+        });
+    }
+
 
     public static async Task<T> OpenDialog<T>(Func<T, Task> setup) where T : Window
     {

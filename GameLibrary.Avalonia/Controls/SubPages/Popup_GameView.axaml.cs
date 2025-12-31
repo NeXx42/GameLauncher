@@ -19,8 +19,8 @@ namespace GameLibrary.Avalonia.Controls.SubPage;
 
 public partial class Popup_GameView : UserControl
 {
-    private GameDto inspectingGame;
-    private TabGroup tabGroup;
+    private GameDto? inspectingGame;
+    private TabGroup tabGroup; // change this to be based on the generic one i made
 
     public Popup_GameView()
     {
@@ -78,7 +78,7 @@ public partial class Popup_GameView : UserControl
     private async Task OpenOverlay() => await OverlayManager.LaunchOverlay(inspectingGame!.getGameId);
 
     private async void HandleBinaryChange() => await inspectingGame!.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
-    private async Task DeleteGame() => await FileManager.StartDeletion(inspectingGame);
+    private async Task DeleteGame() => await FileManager.StartDeletion(inspectingGame!);
 
     private async Task StartNameChange()
     {
@@ -98,7 +98,7 @@ public partial class Popup_GameView : UserControl
 
     private void UpdateRunningGameStatus(int gameId, bool to)
     {
-        if (gameId != inspectingGame.getGameId)
+        if (gameId != inspectingGame!.getGameId)
             return;
 
         lbl_IsRunning.IsVisible = to;
@@ -251,7 +251,7 @@ public partial class Popup_GameView : UserControl
 
             private async void HandleTagToggle(int tagId)
             {
-                await groupMaster!.master.inspectingGame.ToggleTag(tagId);
+                await groupMaster!.master.inspectingGame!.ToggleTag(tagId);
                 await RedrawSelectedTags(groupMaster!.master.inspectingGame);
             }
 

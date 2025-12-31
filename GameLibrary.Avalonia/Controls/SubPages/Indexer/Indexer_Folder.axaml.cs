@@ -9,8 +9,8 @@ namespace GameLibrary.Avalonia.Controls.SubPage.Indexer;
 
 public partial class Indexer_Folder : UserControl
 {
-    private FileManager.FolderEntry? folder;
-    private Action<FileManager.FolderEntry, Indexer_Folder>? requestFolderView;
+    private FileManager.ImportEntry_Folder? folder;
+    private Action<FileManager.ImportEntry_Folder, Indexer_Folder>? requestFolderView;
 
     public Indexer_Folder()
     {
@@ -20,7 +20,7 @@ public partial class Indexer_Folder : UserControl
         btn_Explore.RegisterClick(ExploreExtracted);
     }
 
-    public void Draw(FileManager.FolderEntry folder, Action<FileManager.FolderEntry, Indexer_Folder> requestFolderView)
+    public void Draw(FileManager.ImportEntry_Folder folder, Action<FileManager.ImportEntry_Folder, Indexer_Folder> requestFolderView)
     {
         this.requestFolderView = requestFolderView;
         this.folder = folder;

@@ -17,7 +17,7 @@ public partial class Indexer_FolderView : UserControl
 {
     private Popup_AddGames master;
 
-    private FileManager.FolderEntry inspectingFolder;
+    private FileManager.ImportEntry_Folder inspectingFolder;
     private Indexer_Folder inspectingFolderUI;
 
     private List<Label>? drawnFiles = new List<Label>();
@@ -38,7 +38,7 @@ public partial class Indexer_FolderView : UserControl
         btn_Launch.RegisterClick(() => btn_Launch_Callback?.Invoke());
     }
 
-    public void RequestFolderView(FileManager.FolderEntry folder, Indexer_Folder ui)
+    public void RequestFolderView(FileManager.ImportEntry_Folder folder, Indexer_Folder ui)
     {
         if (string.IsNullOrEmpty(folder.extractedEntry) || !Directory.Exists(folder.extractedEntry))
             return;

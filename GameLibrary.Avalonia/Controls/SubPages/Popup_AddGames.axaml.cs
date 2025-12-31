@@ -32,7 +32,7 @@ public partial class Popup_AddGames : UserControl
         CloseFolderView();
     }
 
-    public void RequestFolderView(FileManager.FolderEntry folder, Indexer_Folder ui)
+    public void RequestFolderView(FileManager.ImportEntry_Folder folder, Indexer_Folder ui)
     {
         cont_ImportView.IsVisible = false;
         cont_FolderView.IsVisible = true;

@@ -50,20 +50,28 @@ namespace GameLibrary.Logic
             await game.UpdateGameIcon(localPath);
         }
 
-        public static Task MoveGameToItsLibrary(dbo_Game game, string existingFolderLocation, string libraryRootLocation)
+        public static Task MoveGameToItsLibrary(dbo_Game game, string binaryAbsolutePath, string libraryRootLocation, bool hasNoFolder)
         {
             string destination = Path.Combine(libraryRootLocation, game.gameFolder);
+            string existingFolderPath = Path.GetDirectoryName(binaryAbsolutePath)!;
+
+            if (hasNoFolder)
+            {
+                existingFolderPath = Path.Combine(existingFolderPath, game.gameFolder);
+
+                Directory.CreateDirectory(existingFolderPath);
+                File.Move(binaryAbsolutePath, Path.Combine(existingFolderPath, Path.GetFileName(binaryAbsolutePath)));
+            }
 
             try
             {
-                Directory.Move(existingFolderLocation, destination);
+                Directory.Move(existingFolderPath, destination);
             }
             catch (IOException ex) when (ex.Message.Contains("Invalid cross-device link"))
             {
-                CopyFiles(existingFolderLocation, destination);
+                CopyFiles(existingFolderPath, destination);
             }
 
-            Directory.Move(existingFolderLocation, Path.Combine(libraryRootLocation, game.gameFolder));
             return Task.CompletedTask;
         }
 
@@ -88,9 +96,9 @@ namespace GameLibrary.Logic
         }
 
 
-        public static async Task<List<FolderEntry>> CrawlGames(string[] paths)
+        public static async Task<List<IImportEntry>> CrawlGames(string[] paths)
         {
-            List<FolderEntry> foundEntries = new List<FolderEntry>();
+            List<IImportEntry> foundEntries = new List<IImportEntry>();
 
             List<string> topLevelFolders = new List<string>();
             List<string> extracts = new List<string>();
@@ -105,7 +113,7 @@ namespace GameLibrary.Logic
             {
                 string archiveDir = Path.Combine(Path.GetDirectoryName(extract)!, Path.GetFileNameWithoutExtension(extract));
                 int extractedFolder = topLevelFolders.IndexOf(archiveDir);
-                FolderEntry folder = new FolderEntry(extract, extractedFolder >= 0 ? topLevelFolders[extractedFolder] : null);
+                ImportEntry_Folder folder = new ImportEntry_Folder(extract, extractedFolder >= 0 ? topLevelFolders[extractedFolder] : null);
 
                 if (extractedFolder >= 0)
                     topLevelFolders.RemoveAt(extractedFolder);
@@ -115,7 +123,7 @@ namespace GameLibrary.Logic
 
             foreach (string remainingFolder in topLevelFolders)
             {
-                FolderEntry folder = new FolderEntry(null, remainingFolder);
+                ImportEntry_Folder folder = new ImportEntry_Folder(null, remainingFolder);
                 foundEntries.Add(folder);
             }
 
@@ -186,14 +194,29 @@ namespace GameLibrary.Logic
             //}
         }
 
-        public class FolderEntry
+
+        public interface IImportEntry
+        {
+            public string getPotentialName { get; }
+            public string getBinaryPath { get; }
+
+            public string? getBinaryFolder { get; }
+        }
+
+        public class ImportEntry_Folder : IImportEntry
         {
             public string? archiveFile;
             public string? extractedEntry;
 
             public string? selectedBinary;
 
-            public FolderEntry(string? extract, string? extractedFolder)
+
+            public string getPotentialName => Path.GetFileNameWithoutExtension(selectedBinary!).Replace(" ", string.Empty);
+            public string getBinaryPath => selectedBinary!;
+            public string? getBinaryFolder => extractedEntry;
+
+
+            public ImportEntry_Folder(string? extract, string? extractedFolder)
             {
                 this.archiveFile = extract;
                 this.extractedEntry = extractedFolder;
@@ -230,6 +253,18 @@ namespace GameLibrary.Logic
                     return bestPossible ?? possible.FirstOrDefault() ?? "";
                 }
             }
+        }
+
+        public class ImportEntry_Binary : IImportEntry
+        {
+            public string binaryLocation;
+
+            public string getPotentialName => Path.GetFileNameWithoutExtension(binaryLocation).Replace(" ", string.Empty);
+            public string getBinaryPath => binaryLocation;
+            public string? getBinaryFolder => null;
+
+            public ImportEntry_Binary(string loc) => binaryLocation = loc;
+
         }
     }
 }

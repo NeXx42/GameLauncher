@@ -9,7 +9,7 @@
 
       </StackPanel>
       <ScrollViewer>
-        <StackPanel x:Name="cont_FolderView_Entries" Spacing="5">
+        <StackPanel Background="Red" x:Name="cont_FolderView_Entries" Spacing="5">
         </StackPanel>
       </ScrollViewer>
     </StackPanel>

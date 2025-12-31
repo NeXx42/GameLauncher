@@ -71,22 +71,22 @@
             <!-- Options -->
             <Grid x:Name="tab_Settings" IsVisible="True">
               <ScrollViewer>
-                <StackPanel Orientation="Vertical" Spacing="15">
+                <StackPanel Orientation="Vertical">
 
-                  <StackPanel Orientation="Vertical">
+                  <Grid ColumnDefinitions="150, *">
                     <Label Content="Capture Logs" VerticalAlignment="Center"/>
-                    <common:Common_Toggle x:Name="inp_CaptureLogs" />
-                  </StackPanel>
+                    <common:Common_Toggle x:Name="inp_CaptureLogs" Grid.Column="1"/>
+                  </Grid>
 
-                  <StackPanel Orientation="Vertical">
-                    <Label Content="Emulation" VerticalAlignment="Center"/>
-                    <common:Common_Toggle x:Name="inp_Emulate" />
-                  </StackPanel>
+                  <Grid ColumnDefinitions="150, *">
+                    <Label Content="Locale Emulation" VerticalAlignment="Center"/>
+                    <common:Common_Toggle x:Name="inp_Emulate" Grid.Column="1"/>
+                  </Grid>
 
-                  <StackPanel Orientation="Vertical">
-                    <Label Content="Wine Profile" VerticalAlignment="Center"/>
-                    <common:Common_Dropdown x:Name="inp_WineProfile" Width="200" HorizontalAlignment="Left"/>
-                  </StackPanel>
+                  <Grid ColumnDefinitions="150, *">
+                    <Label Content="Runner" VerticalAlignment="Center"/>
+                    <common:Common_Dropdown x:Name="inp_WineProfile" Width="200" HorizontalAlignment="Left" Grid.Column="1"/>
+                  </Grid>
 
                 </StackPanel>
               </ScrollViewer>
@@ -111,9 +111,9 @@
         <Grid>
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
             <common:Common_Button Margin="0,0,5,0" x:Name="btn_Delete" Width="90" Label="🗑 Delete"/>
-            <common:Common_Button Margin="0,0,5,0" x:Name="btn_Overlay" Width="120" Label="🧩 Open Overlay"/>
+            <common:Common_Button Margin="0,0,5,0" x:Name="btn_Overlay" Width="150" Label="🧩 Open Overlay"/>
             <common:Common_Dropdown Margin="0,0,5,0" x:Name="inp_binary" Width="355"/>
-            <common:Common_Button Margin="0,0,5,0" x:Name="btn_Browse" Width="120" Label="📁 Browse"/>
+            <common:Common_Button Margin="0,0,5,0" x:Name="btn_Browse" Width="150" Label="📁 Browse"/>
           </StackPanel>
 
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Right">

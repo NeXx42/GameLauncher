@@ -15,7 +15,7 @@ public class GameRunner_AppImage : IGameRunner
         return Task.FromResult(new RunnerManager.GameLaunchData()
         {
             command = game.path,
-            whiteListedDirs = [Path.GetFileName(game.path)]
+            whiteListedDirs = [Path.GetDirectoryName(game.path)!]
         });
     }
 }

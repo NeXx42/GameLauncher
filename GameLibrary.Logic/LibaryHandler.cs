@@ -55,7 +55,7 @@ namespace GameLibrary.Logic
         public static void InvokeGlobalGameChange(int gameId) => globalGameChangeCallback?.Invoke(gameId);
 
 
-        public static async Task ImportGames(List<FileManager.FolderEntry> availableImports)
+        public static async Task ImportGames(List<FileManager.IImportEntry> availableImports)
         {
             dbo_Libraries? chosenLibrary = await Database_Manager.GetItem<dbo_Libraries>();
 
@@ -68,26 +68,25 @@ namespace GameLibrary.Logic
 
             for (int i = availableImports.Count - 1; i >= 0; i--)
             {
-                FileManager.FolderEntry folder = availableImports[i];
+                FileManager.IImportEntry folder = availableImports[i];
 
-                if (string.IsNullOrEmpty(folder.selectedBinary))
+                if (string.IsNullOrEmpty(folder.getBinaryPath))
                     continue;
 
-                string absoluteFolderPath = Path.GetDirectoryName(folder.selectedBinary)!;
-                string gameFolderName = CorrectGameName(Path.GetFileName(absoluteFolderPath)!);
+                string gameName = folder.getPotentialName;
 
                 dbo_Game newGame = new dbo_Game
                 {
-                    gameName = gameFolderName,
-                    gameFolder = useGuidFolderNames ? Guid.NewGuid().ToString() : gameFolderName,
-                    executablePath = Path.GetFileName(folder.selectedBinary),
+                    gameName = gameName,
+                    gameFolder = useGuidFolderNames ? Guid.NewGuid().ToString() : gameName,
+                    executablePath = Path.GetFileName(folder.getBinaryPath),
                     libaryId = chosenLibrary.libaryId
                 };
 
                 try
                 {
                     await Database_Manager.InsertItem(newGame);
-                    await FileManager.MoveGameToItsLibrary(newGame, absoluteFolderPath!, chosenLibrary.rootPath);
+                    await FileManager.MoveGameToItsLibrary(newGame, folder.getBinaryPath, chosenLibrary.rootPath, string.IsNullOrEmpty(folder.getBinaryFolder));
 
                     availableImports.RemoveAt(i);
                 }
@@ -95,11 +94,6 @@ namespace GameLibrary.Logic
                 {
 
                 }
-            }
-
-            string CorrectGameName(string existing)
-            {
-                return existing.Replace("'", "");
             }
         }
 

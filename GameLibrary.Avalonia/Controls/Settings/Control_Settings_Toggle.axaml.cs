@@ -12,12 +12,12 @@ namespace GameLibrary.Avalonia.Controls.Settings;
 public partial class Control_Settings_Toggle : UserControl, ISettingControl
 {
     private bool selectedOption = false;
-    private SettingBase setting;
+    private SettingBase? setting;
 
     public Control_Settings_Toggle()
     {
         InitializeComponent();
-        btn.RegisterClick(Toggle);
+        btn.RegisterClick(Toggle, "Updating");
     }
 
     public ISettingControl Draw(SettingBase setting, SettingsUI_Toggle info)
@@ -30,13 +30,13 @@ public partial class Control_Settings_Toggle : UserControl, ISettingControl
 
     public async Task LoadValue()
     {
-        selectedOption = await setting.LoadSetting<bool>();
+        selectedOption = await setting!.LoadSetting<bool>();
         RedrawButton();
     }
 
     private async Task Toggle()
     {
-        if (await setting.SaveSetting(!selectedOption))
+        if (await setting!.SaveSetting(!selectedOption))
         {
             selectedOption = !selectedOption;
             RedrawButton();
