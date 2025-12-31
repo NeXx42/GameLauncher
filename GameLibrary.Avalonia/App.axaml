@@ -9,6 +9,7 @@
         <SolidColorBrush x:Key="bg_HeaderBar" Color="#1E1E1E"/>
         <SolidColorBrush x:Key="bg_BarLight" Color="#181818"/>
         <SolidColorBrush x:Key="bg_Background" Color="#1E1E1E"/>
+        <SolidColorBrush x:Key="bg_BackgroundDarker" Color="#111111"/>
         <SolidColorBrush x:Key="bg_Border" Color="#FF333333"/>
     </Application.Resources>
 </Application>

@@ -19,6 +19,8 @@ public partial class Modal_Settings_Runner : UserControl
 
     private string[]? versionOptions;
 
+    private UITabGroup tabGroup;
+
     public Modal_Settings_Runner()
     {
         InitializeComponent();
@@ -30,6 +32,8 @@ public partial class Modal_Settings_Runner : UserControl
 
         btn_Dir.RegisterClick(SelectDirectory);
         btn_WineTricks.RegisterClick(OpenWineTricks, "Loading");
+
+        tabGroup = new UITabGroup(TabGroup_Buttons, TabGroup_Content);
     }
 
     public Task HandleOpen(int? runnerId)
@@ -44,12 +48,13 @@ public partial class Modal_Settings_Runner : UserControl
 
     private async void Draw(int? runnerId)
     {
+        tabGroup.ChangeSelection(0);
+
         if (!runnerId.HasValue)
         {
             await UpdateVersionInput();
             return;
         }
-
 
         dbo_Runner? existing = await RunnerManager.GetRunnerProfile(runnerId.Value);
         dbo_RunnerConfig[] configValues = await RunnerManager.GetRunnerConfigValues(runnerId.Value);
