@@ -6,15 +6,8 @@ public static class OverlayManager
 {
     public const string GTK_OVERLAY_RETURN_IDENTIFIER = "GTKOVERLAY_RETURNPATH:";
 
-    public delegate Task OpenOverlayRequest(int gameId);
-
-    private static OpenOverlayRequest? openRequest;
     private static (Thread thread, Process process)? activeGTKOverlay;
 
-    public static void Init(OpenOverlayRequest openRequest)
-    {
-        OverlayManager.openRequest = openRequest;
-    }
 
     public static async Task LaunchOverlay(int gameId)
     {
@@ -46,7 +39,7 @@ public static class OverlayManager
         }
         else
         {
-            openRequest?.Invoke(gameId);
+            //
         }
     }
 

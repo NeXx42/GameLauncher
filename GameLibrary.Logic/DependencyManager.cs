@@ -36,7 +36,6 @@ public static class DependencyManager
         await LibraryHandler.Setup();
         await ConfigHandler.Init();
 
-        OverlayManager.Init(null);
         ImageManager.Init(imageFetcher);
     }
 }

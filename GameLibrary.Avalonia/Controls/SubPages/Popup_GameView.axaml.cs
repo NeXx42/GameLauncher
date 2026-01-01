@@ -42,7 +42,7 @@ public partial class Popup_GameView : UserControl
         ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateGameIcon);
         LibraryHandler.RegisterOnGlobalGameChange(RefreshSelectedGame);
 
-        //GameLauncher.OnGameRunStateChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b)); // need to fix threading issue
+        RunnerManager.onGameStatusChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b));
     }
 
     public async Task Draw(GameDto game)
@@ -50,7 +50,7 @@ public partial class Popup_GameView : UserControl
         inspectingGame = game;
         img_bg.Background = null;
 
-        UpdateRunningGameStatus(game.getGameId, RunnerManager.IsBinaryRunning(game.getAbsoluteBinaryLocation));
+        UpdateRunningGameStatus(game.getAbsoluteBinaryLocation, RunnerManager.IsBinaryRunning(game.getAbsoluteBinaryLocation));
 
         await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
         await tabGroup.OpenFresh();
@@ -71,7 +71,14 @@ public partial class Popup_GameView : UserControl
 
     private async Task LaunchGame()
     {
-        await inspectingGame!.Launch();
+        if (RunnerManager.IsBinaryRunning(inspectingGame!.getAbsoluteBinaryLocation))
+        {
+            RunnerManager.KillProcess(inspectingGame!.getAbsoluteBinaryLocation);
+        }
+        else
+        {
+            await inspectingGame!.Launch();
+        }
     }
 
     private void BrowseToGame() => inspectingGame?.BrowseToGame();
@@ -96,12 +103,12 @@ public partial class Popup_GameView : UserControl
         await Draw(inspectingGame!);
     }
 
-    private void UpdateRunningGameStatus(int gameId, bool to)
+    private void UpdateRunningGameStatus(string binary, bool to)
     {
-        if (gameId != inspectingGame!.getGameId)
+        if (inspectingGame!.getAbsoluteBinaryLocation != binary)
             return;
 
-        lbl_IsRunning.IsVisible = to;
+        btn_Launch.Label = to ? "Stop" : "Play";
     }
 
     private void TrySetPicture(object? sender, DragEventArgs e)

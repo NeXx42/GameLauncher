@@ -19,11 +19,6 @@
         <Border x:Name="img_bg" CornerRadius="10" IsHitTestVisible="False">
 
           <Grid>
-            <Border x:Name="lbl_IsRunning" Background="Red" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="30" CornerRadius="20">
-              <Label Content="Running" Margin="40, 10"/>
-            </Border>
-
-
             <Border VerticalAlignment="Bottom" Height="80">
               <Border.Background>
                 <LinearGradientBrush EndPoint="0%,0%" StartPoint="0%,100%">
@@ -34,8 +29,6 @@
               <Label x:Name="lbl_Title" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="#FFFFCC00" FontSize="32" Margin="15" FontWeight="Bold">Game Name</Label>
             </Border>
           </Grid>
-
-
         </Border>
       </Grid>
 

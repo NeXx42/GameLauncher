@@ -28,7 +28,7 @@ public static class RunnerManager
     private static SemaphoreSlim _mutex = new SemaphoreSlim(1, 1);
     private static Dictionary<string, ActiveProcess> activeGames = new Dictionary<string, ActiveProcess>();
 
-    public static Action<int, bool>? onGameStatusChange;
+    public static Action<string, bool>? onGameStatusChange;
 
     public static bool IsBinaryRunning(string dir) => activeGames.ContainsKey(dir);
 
@@ -221,6 +221,7 @@ public static class RunnerManager
 
         // ActiveProcess - starts the process
         activeGames.Add(identifier, new ActiveProcess(identifier, process));
+        onGameStatusChange?.Invoke(identifier, true);
     }
 
 
@@ -242,9 +243,16 @@ public static class RunnerManager
         return null;
     }
 
+    public static void KillProcess(string identifier)
+    {
+        if (activeGames.ContainsKey(identifier))
+            activeGames[identifier].Kill();
+    }
+
     public static void OnExitProcess(string identifier)
     {
         activeGames.Remove(identifier);
+        onGameStatusChange?.Invoke(identifier, false);
     }
 
 
