@@ -42,7 +42,7 @@ public partial class Popup_GameView : UserControl
         ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateGameIcon);
         LibraryHandler.RegisterOnGlobalGameChange(RefreshSelectedGame);
 
-        GameLauncher.OnGameRunStateChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b)); // need to fix threading issue
+        //GameLauncher.OnGameRunStateChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b)); // need to fix threading issue
     }
 
     public async Task Draw(GameDto game)
@@ -50,7 +50,7 @@ public partial class Popup_GameView : UserControl
         inspectingGame = game;
         img_bg.Background = null;
 
-        UpdateRunningGameStatus(game.getGameId, GameLauncher.IsRunning(game.getGameId));
+        UpdateRunningGameStatus(game.getGameId, RunnerManager.IsBinaryRunning(game.getAbsoluteBinaryLocation));
 
         await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
         await tabGroup.OpenFresh();
@@ -342,8 +342,8 @@ public partial class Popup_GameView : UserControl
 
             private async Task RefreshLogs(GameDto? game)
             {
-                string txt = await GameLauncher.GetLatestLogs(game!.getGameId);
-                groupMaster!.master.lbl_Logs.Text = txt;
+                //string txt = await GameLauncher.GetLatestLogs(game!.getGameId);
+                //groupMaster!.master.lbl_Logs.Text = txt;
             }
         }
     }

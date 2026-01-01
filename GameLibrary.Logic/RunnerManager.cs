@@ -30,6 +30,7 @@ public static class RunnerManager
 
     public static Action<int, bool>? onGameStatusChange;
 
+    public static bool IsBinaryRunning(string dir) => activeGames.ContainsKey(dir);
 
     public static bool IsUniversallyAcceptedExecutableFormat(string path)
     {

@@ -26,8 +26,6 @@ public partial class App : Application
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
         {
             desktop.MainWindow = new MainWindow();
-
-
             desktop.Exit += OnExit;
         }
 
@@ -36,7 +34,7 @@ public partial class App : Application
 
     private void OnExit(object? sender, ControlledApplicationLifetimeExitEventArgs e)
     {
-        GameLauncher.KillAllExistingProcesses();
+        //GameLauncher.KillAllExistingProcesses();
     }
 
     private async Task CatchException(Exception exception)

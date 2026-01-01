@@ -38,6 +38,5 @@ public static class DependencyManager
 
         OverlayManager.Init(null);
         ImageManager.Init(imageFetcher);
-        GameLauncher.Init();
     }
 }
