@@ -40,11 +40,12 @@ public class LibraryPage_Grid : LibraryPageBase
         }
 
         ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateImage);
-        LibraryHandler.RegisterOnGlobalGameChange(RedrawGame);
     }
 
     public override async Task DrawGames()
     {
+        library.ToggleGameView(null);
+
         activeUI.Clear();
         library.lbl_PageNum.Text = $"{page + 1}";
 

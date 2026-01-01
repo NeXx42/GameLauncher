@@ -30,6 +30,8 @@ public partial class Page_Library : UserControl
         ToggleMenu(false);
 
         DrawEverything();
+
+        LibraryHandler.onGameDeletion += async () => await gameList.DrawGames();
     }
 
     private async void DrawEverything()
@@ -131,17 +133,26 @@ public partial class Page_Library : UserControl
         await DrawTags();
     }
 
-    public async void ToggleGameView(int gameId)
+    public async void ToggleGameView(int? gameId)
     {
-        GameDto? game = LibraryHandler.TryGetCachedGame(gameId);
-
-        if (game != null)
+        if (gameId == null)
         {
-            await GameViewer.Draw(game);
+            ToggleMenu(false);
+            return;
+        }
+
+        GameDto? game = LibraryHandler.TryGetCachedGame(gameId.Value);
+
+        if (game == null)
+        {
+            ToggleMenu(false);
+            return;
         }
 
         ToggleMenu(true);
         GameViewer.IsVisible = true;
+
+        await GameViewer.Draw(game);
     }
 
     public void ToggleMenu(bool to)

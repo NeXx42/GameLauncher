@@ -14,7 +14,8 @@ namespace GameLibrary.Logic
             LastPlayed,
         }
 
-        private static Action<int>? globalGameChangeCallback;
+        public static Action? onGameDeletion;
+        public static Action<int>? onGameDetailsUpdate;
 
         //private static GameDto[]? games;
         private static dbo_Tag[]? tags;
@@ -47,13 +48,6 @@ namespace GameLibrary.Logic
         {
             tags = await Database_Manager.GetItems<dbo_Tag>();
         }
-
-
-        public static void RegisterOnGlobalGameChange(Func<int, Task> callback) => globalGameChangeCallback += async (x) => await callback(x);
-        public static void RegisterOnGlobalGameChange(Action<int> callback) => globalGameChangeCallback += callback;
-
-        public static void InvokeGlobalGameChange(int gameId) => globalGameChangeCallback?.Invoke(gameId);
-
 
         public static async Task ImportGames(List<FileManager.IImportEntry> availableImports)
         {
@@ -141,31 +135,25 @@ namespace GameLibrary.Logic
 
         public static void MarkTagsAsDirty() => m_AreTagsDirty = true;
 
-        public static async Task<Exception?> DeleteGame(GameDto game)
+        public static async Task DeleteGame(GameDto game)
         {
             try
             {
-                Exception? fileDeletionFail = game.DeleteFiles();
-
-                if (fileDeletionFail != null)
-                {
-                    return null;
-                }
-                //if (fileDeletionFail != null &&
-                //    MessageBox.Show($"The folder deletion failed, Do you want to still remove the record?\n\n{fileDeletionFail.Message}", "Folder Delete Failed", MessageBoxButton.YesNo, MessageBoxImage.Error) == MessageBoxResult.No)
-                //    return null;
-
-                await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), game.getGameId));
-                await Database_Manager.Delete<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), game.getGameId));
-
-                //await RedetectGames();
-
-                return null;
+                await FileManager.DeleteGameFiles(game);
             }
             catch (Exception e)
             {
-                return e;
+                string paragraph = $"Failed to delete games files!\n\n{e.Message}\n\nDo you want to delete the record anyway?";
+
+                if (!await DependencyManager.uiLinker!.OpenYesNoModal("Delete record?", paragraph))
+                    return;
             }
+
+            await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), game.getGameId));
+            await Database_Manager.Delete<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), game.getGameId));
+
+            activeGameList.Remove(game.getGameId);
+            onGameDeletion?.Invoke();
         }
 
 

@@ -21,18 +21,10 @@ namespace GameLibrary.Logic
         //    bmp.Save(Path.Combine(GetTempLocation(), "temp.jpg"), ImageFormat.Jpeg);
         //}
 
-        public static async Task StartDeletion(GameDto game)
+        public static async Task DeleteGameFiles(GameDto game)
         {
-            if (Directory.Exists(game.getAbsoluteBinaryLocation))
-            {
-                try
-                {
-                    Directory.Delete(game.getAbsoluteFolderLocation);
-                }
-                catch { }
-            }
-
-            await Database_Manager.Delete<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), game.getGameId));
+            if (Directory.Exists(game.getAbsoluteFolderLocation))
+                Directory.Delete(game.getAbsoluteFolderLocation, true);
         }
 
         public static async Task UpdateGameIcon(int gameId, Uri newIconPath)

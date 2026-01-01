@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Platform;
 using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
@@ -28,9 +29,6 @@ public partial class Popup_GameView : UserControl
 
         tabGroup = new TabGroup(this);
 
-        DragDrop.SetAllowDrop(img_DropPoint, true);
-        img_DropPoint.AddHandler(DragDrop.DragEnterEvent, TrySetPicture, RoutingStrategies.Tunnel);
-
         btn_Delete.RegisterClick(DeleteGame);
         btn_Overlay.RegisterClick(OpenOverlay);
 
@@ -40,7 +38,7 @@ public partial class Popup_GameView : UserControl
         lbl_Title.PointerPressed += async (_, __) => await StartNameChange();
 
         ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateGameIcon);
-        LibraryHandler.RegisterOnGlobalGameChange(RefreshSelectedGame);
+        LibraryHandler.onGameDetailsUpdate += async (int id) => await RefreshSelectedGame(id);
 
         RunnerManager.onGameStatusChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b));
     }
@@ -58,7 +56,7 @@ public partial class Popup_GameView : UserControl
         lbl_Title.Content = game.getGame.gameName;
 
         (int? currentExecutable, string[] possibleBinaries) = game.GetPossibleBinaries();
-        inp_binary.Setup(possibleBinaries.Select(x => Path.GetFileName(x)), currentExecutable, HandleBinaryChange);
+        inp_binary.SetupAsync(possibleBinaries.Select(x => Path.GetFileName(x)), currentExecutable, HandleBinaryChange);
     }
 
     private void UpdateGameIcon(int gameId, ImageBrush? img)
@@ -82,14 +80,22 @@ public partial class Popup_GameView : UserControl
     }
 
     private void BrowseToGame() => inspectingGame?.BrowseToGame();
-    private async Task OpenOverlay() => await OverlayManager.LaunchOverlay(inspectingGame!.getGameId);
 
-    private async void HandleBinaryChange() => await inspectingGame!.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
-    private async Task DeleteGame() => await FileManager.StartDeletion(inspectingGame!);
+    private async Task DeleteGame()
+    {
+        if (inspectingGame == null)
+            return;
+
+        string paragraph = $"Are you sure you want to delete \"{inspectingGame!.getGame.gameName}\"\n\nAnd its folder\n\"{inspectingGame!.getAbsoluteFolderLocation}\"";
+        await DependencyManager.uiLinker!.OpenYesNoModalAsync("Delete Game?", paragraph, async () => await LibraryHandler.DeleteGame(inspectingGame), "Deleting");
+    }
+
+    private async Task OpenOverlay() => await OverlayManager.LaunchOverlay(inspectingGame!.getGameId);
+    private async Task HandleBinaryChange() => await inspectingGame!.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
 
     private async Task StartNameChange()
     {
-        string? res = await DependencyManager.uiLinker!.OpenStringInputModal("Game Name");
+        string? res = await DependencyManager.uiLinker!.OpenStringInputModal("Game Name", inspectingGame!.getGame.gameName);
 
         if (!string.IsNullOrEmpty(res))
             await inspectingGame!.UpdateGameName(res);
@@ -110,16 +116,6 @@ public partial class Popup_GameView : UserControl
 
         btn_Launch.Label = to ? "Stop" : "Play";
     }
-
-    private void TrySetPicture(object? sender, DragEventArgs e)
-    {
-        if (e.Data.Contains(DataFormats.Text))
-        {
-            var text = e.Data.GetText();
-
-        }
-    }
-
 
     private class TabGroup
     {

@@ -15,8 +15,7 @@
       <!-- img -->
 
       <Grid VerticalAlignment="Top" ClipToBounds="True" Height="670" Grid.Row="0">
-        <Border x:Name="img_DropPoint" CornerRadius="10" Background="Black" Focusable="True"/>
-        <Border x:Name="img_bg" CornerRadius="10" IsHitTestVisible="False">
+        <Border x:Name="img_bg" CornerRadius="10" IsHitTestVisible="True">
 
           <Grid>
             <Border VerticalAlignment="Bottom" Height="80">
@@ -26,7 +25,8 @@
                   <GradientStop Color="#00000000" Offset="1.0"/>
                 </LinearGradientBrush>
               </Border.Background>
-              <Label x:Name="lbl_Title" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="#FFFFCC00" FontSize="32" Margin="15" FontWeight="Bold">Game Name</Label>
+
+              <Label x:Name="lbl_Title" VerticalAlignment="Top" HorizontalAlignment="Left" Foreground="#FFFFCC00" FontSize="32" Margin="15" FontWeight="Bold" IsHitTestVisible="True">Game Name</Label>
             </Border>
           </Grid>
         </Border>

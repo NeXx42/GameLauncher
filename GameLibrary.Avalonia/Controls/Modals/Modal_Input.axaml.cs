@@ -17,9 +17,10 @@ public partial class Modal_Input : UserControl
         btn_Close.RegisterClick(() => stringRequest?.SetResult(null));
     }
 
-    public Task<string?> RequestString(string windowName)
+    public Task<string?> RequestString(string windowName, string? existingText)
     {
         lbl_Title.Content = windowName;
+        txt_Input.Text = existingText;
 
         stringRequest = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
         return stringRequest.Task;

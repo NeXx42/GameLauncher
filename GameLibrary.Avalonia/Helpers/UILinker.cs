@@ -17,7 +17,7 @@ public class UILinker : IUILinker
         }
     }
 
-    public async Task<string?> OpenStringInputModal(string windowName)
+    public async Task<string?> OpenStringInputModal(string windowName, string? existingText = "")
     {
         string? res = null;
         await MainWindow.instance!.DisplayModal<Modal_Input>(ModalRequest);
@@ -26,7 +26,30 @@ public class UILinker : IUILinker
 
         async Task ModalRequest(Modal_Input modal)
         {
-            res = await modal.RequestString(windowName);
+            res = await modal.RequestString(windowName, existingText);
+        }
+    }
+
+    public async Task<bool> OpenYesNoModal(string title, string paragraph)
+    {
+        bool res = false;
+        await MainWindow.instance!.DisplayModal<Modal_YesNo>(ModalRequest);
+
+        return res;
+
+        async Task ModalRequest(Modal_YesNo modal)
+        {
+            res = await modal.RequestModal(title, paragraph);
+        }
+    }
+
+    public async Task OpenYesNoModalAsync(string title, string paragraph, Func<Task> positiveCallback, string? loadingMessage)
+    {
+        await MainWindow.instance!.DisplayModal<Modal_YesNo>(ModalRequest);
+
+        async Task ModalRequest(Modal_YesNo modal)
+        {
+            await modal.RequestModal(title, paragraph, positiveCallback, loadingMessage);
         }
     }
 }

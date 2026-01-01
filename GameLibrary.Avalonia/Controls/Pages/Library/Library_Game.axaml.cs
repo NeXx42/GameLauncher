@@ -30,7 +30,7 @@ public partial class Library_Game : UserControl
         title.Text = "";
     }
 
-    public async Task Draw(int gameId, Action<int> onLaunch)
+    public async Task Draw(int gameId, Action<int?> onLaunch)
     {
         if (this.gameId == gameId)
             return;

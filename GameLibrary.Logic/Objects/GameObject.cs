@@ -24,7 +24,7 @@ public class GameForge : IGameDto
 
     public bool useRegionEmulation => false;
 
-    public string getAbsoluteFolderLocation => Path.GetDirectoryName(path);
+    public string getAbsoluteFolderLocation => Path.GetDirectoryName(path)!;
     public string getAbsoluteBinaryLocation => path;
 }
 
@@ -79,8 +79,8 @@ public class GameDto : IGameDto
 
     public async Task UpdateGame()
     {
-        await Database_Manager.Update(game, SQLFilter.Equal(nameof(dbo_Game.id), game.id));
-        LibraryHandler.InvokeGlobalGameChange(gameId);
+        await Database_Manager.Update(game!, SQLFilter.Equal(nameof(dbo_Game.id), getGameId));
+        LibraryHandler.onGameDetailsUpdate?.Invoke(gameId);
     }
 
     public async Task LoadTags()
@@ -91,7 +91,7 @@ public class GameDto : IGameDto
 
     public async Task LoadLibrary()
     {
-        library = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libaryId), game.libaryId));
+        library = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libaryId), game!.libaryId));
     }
 
 
@@ -168,24 +168,6 @@ public class GameDto : IGameDto
         await UpdateGame();
     }
 
-    public Exception? DeleteFiles()
-    {
-        // do retry and stuff here, need a global way of showing dialogs and the like
-
-        return null;
-
-        try
-        {
-            if (Directory.Exists(getAbsoluteFolderLocation))
-                Directory.Delete(getAbsoluteFolderLocation, true);
-
-            return null;
-        }
-        catch (Exception e)
-        {
-            return e;
-        }
-    }
 
     public void BrowseToGame()
     {
