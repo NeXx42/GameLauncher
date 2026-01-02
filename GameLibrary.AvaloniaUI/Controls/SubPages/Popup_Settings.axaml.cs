@@ -30,20 +30,25 @@ public partial class Popup_Settings : UserControl
     {
         List<UITabGroup_Group> groups = new List<UITabGroup_Group>();
 
-        Application.Current!.TryGetResource("btn_Background", out object? obj);
-        SolidColorBrush btnColour = (obj as SolidColorBrush)!;
+        Application.Current!.TryGetResource("btn_Background", out object? bg);
+        Application.Current!.TryGetResource("btn_Border", out object? border);
+        SolidColorBrush btnColour = (bg as SolidColorBrush)!;
+        SolidColorBrush btnBorderColour = (border as SolidColorBrush)!;
 
-        foreach (KeyValuePair<string, SettingBase[]> settings in ConfigHandler.groupedSettings)
+        foreach (KeyValuePair<string, SettingBase[]> settings in ConfigHandler.groupedSettings!)
         {
             Border btn = new Border();
             btn.CornerRadius = new CornerRadius(2);
             btn.Background = btnColour;
-            btn.Height = 40;
+            btn.BorderBrush = btnBorderColour;
+            btn.BorderThickness = new Thickness(1);
+            btn.Height = 30;
 
             Label l = new Label();
             l.Content = settings.Key;
             l.Padding = new Thickness(5);
             l.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
+            l.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
             btn.Child = l;
 
             StackPanel grid = CreateGroup(settings.Value);
@@ -89,6 +94,8 @@ public partial class Popup_Settings : UserControl
                 case SettingsUI_Toggle settingsUI_Toggle: return new Control_Settings_Toggle().Draw(setting, settingsUI_Toggle);
 
                 case SettingsUI_Runners settingsUI_Runners: return new Control_Settings_Runners().Draw(setting, settingsUI_Runners);
+
+                case SettingsUI_Title settingsUI_Title: return new Control_Settings_Title().Draw(settingsUI_Title);
             }
 
             return null;

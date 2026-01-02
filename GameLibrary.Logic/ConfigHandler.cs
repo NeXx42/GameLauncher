@@ -55,25 +55,45 @@ namespace GameLibrary.Logic
 
         private static void RegisterSettings()
         {
-            Dictionary<string, SettingBase[]> settings = new Dictionary<string, SettingBase[]>();
+            Dictionary<string, SettingBase[]> settings = new Dictionary<string, SettingBase[]>
+            {
+                {
+                    "Importing",
+                    [
+                        new Setting_Title("Importing", 0, SettingOSCompatibility.Universal),
+                        new Setting_Generic_Config("Unique folder import", SettingOSCompatibility.Universal, ConfigValues.Import_GUIDFolderNames, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
+                    ]
+                },
+                {
+                    "Libraries",
+                    [
+                        new Setting_Title("Libraries", 0, SettingOSCompatibility.Universal),
+                    ]
+                },
+                {
+                    "Runner",
+                    [
+                        new Setting_Title("Runners", 0, SettingOSCompatibility.Linux),
+                        new Setting_Runners(),
 
-            settings.Add("Importing", [
-                new Setting_Generic_Config("Unique folder import", SettingOSCompatibility.Universal, ConfigValues.Import_GUIDFolderNames, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
-            ]);
+                        new Setting_Title("Misc", 10, SettingOSCompatibility.Universal),
+                        new Setting_Generic_Config("Concurrency", SettingOSCompatibility.Universal, ConfigValues.Launcher_Concurrency, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
+                    ]
+                },
+                {
+                    "Sandboxing",
+                    [
+                        new Setting_Title("Firejail", 0, SettingOSCompatibility.Linux),
+                        new Setting_Generic_Config("Use firejail", SettingOSCompatibility.Linux, ConfigValues.Sandbox_Linux_Firejail_Enabled, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
+                        new Setting_Generic_Config("Block networktivity", SettingOSCompatibility.Linux, ConfigValues.Sandbox_Linux_Firejail_Networking, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
+                        new Setting_Generic_Config("Isolate filesystem", SettingOSCompatibility.Linux, ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
 
-            settings.Add("Runner", [
-                new Setting_Runners(),
-                new Setting_Generic_Config("Concurrency", SettingOSCompatibility.Universal, ConfigValues.Launcher_Concurrency, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
-            ]);
-
-            settings.Add("Sandboxing", [
-                new Setting_Generic_Config("Use firejail", SettingOSCompatibility.Linux, ConfigValues.Sandbox_Linux_Firejail_Enabled, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
-                new Setting_Generic_Config("Block networktivity", SettingOSCompatibility.Linux, ConfigValues.Sandbox_Linux_Firejail_Networking, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
-                new Setting_Generic_Config("Isolate filesystem", SettingOSCompatibility.Linux, ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
-
-                new Setting_Generic_Config("Sandboxie box name", SettingOSCompatibility.Windows, ConfigValues.Sandbox_Windows_SandieboxBox, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
-                new Setting_Generic_Config("Sandboxie location", SettingOSCompatibility.Windows, ConfigValues.Sandbox_Windows_SandieboxLocation, new SettingsUI_DirectorySelector(){ folder = true}, ConfigSerialization.FolderDirectory),
-            ]);
+                        new Setting_Title("Sandboxie", 10, SettingOSCompatibility.Windows),
+                        new Setting_Generic_Config("Sandboxie box name", SettingOSCompatibility.Windows, ConfigValues.Sandbox_Windows_SandieboxBox, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
+                        new Setting_Generic_Config("Sandboxie location", SettingOSCompatibility.Windows, ConfigValues.Sandbox_Windows_SandieboxLocation, new SettingsUI_DirectorySelector(){ folder = true}, ConfigSerialization.FolderDirectory),
+                    ]
+                }
+            };
 
 
             groupedSettings = new ReadOnlyDictionary<string, SettingBase[]>(settings);
