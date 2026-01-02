@@ -151,7 +151,7 @@ namespace GameLibrary.Logic
             if (configValue == null)
                 return defaultVal;
 
-            return DeserializeConfigValue<T>(configValue.value);
+            return DeserializeConfigValue<T>(configValue.value!);
         }
 
 

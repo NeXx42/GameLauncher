@@ -30,6 +30,9 @@ public struct GameFilterRequest
         List<string> groupClause = new List<string>();
         List<string> havingClause = new List<string>();
 
+        // active filter, may allow you to filter uninstalled steam games?
+        whereClause.Add($"g.{nameof(dbo_Game.status)} = {(int)GameDto.Status.Active}");
+
         if (!string.IsNullOrEmpty(nameFilter))
         {
             whereClause.Add($"{nameof(dbo_Game.gameName)} like '{nameFilter}%'");

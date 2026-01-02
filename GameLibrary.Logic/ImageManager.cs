@@ -47,18 +47,9 @@ public static class ImageManager
         }
         else
         {
-            if (!File.Exists(game.getAbsoluteIconPath))
-            {
-                cachedImages.TryAdd(game.gameId, null);
-                onFetch?.Invoke(game.gameId, default);
-
-                return;
-            }
-
             queuedImageFetch.TryAdd(game.gameId, new ImageFetchRequest()
             {
-                gameId = game.gameId,
-                absoluteImagePath = game.getAbsoluteIconPath,
+                game = game,
                 callback = MediateReturn
             });
         }
@@ -85,9 +76,17 @@ public static class ImageManager
                 if (!queuedImageFetch.TryGetValue(id, out ImageFetchRequest req))
                     return;
 
-                object? response = await fetcher!.GetIcon(req.absoluteImagePath);
+                string? path = await req.game.FetchIconFilePath();
 
-                fetcher.InvokeOnUIThread(() =>
+                if (!File.Exists(path))
+                {
+                    cachedImages.TryAdd(req.game.gameId, null);
+                    return;
+                }
+
+                object? response = await fetcher!.GetIcon(path);
+
+                fetcher?.InvokeOnUIThread(() =>
                 {
                     req.callback?.Invoke(id, response);
                     onGlobalImageChange?.Invoke(id, response);
@@ -111,9 +110,7 @@ public static class ImageManager
 
     private struct ImageFetchRequest
     {
-        public int gameId;
-        public string absoluteImagePath;
-
+        public GameDto game;
         public FetchImageEvent callback;
     }
 }

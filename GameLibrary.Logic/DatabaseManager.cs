@@ -36,7 +36,7 @@ public static class DatabaseManager
             throw new Exception("Invalid pointer file");
         }
 
-        await Database_Manager.Init(cachedDBLocation);
+        await Database_Manager.Init(cachedDBLocation, HandleException);
     }
 
     public static async Task CreateDBPointerFile(string path)
@@ -48,5 +48,10 @@ public static class DatabaseManager
 
         await File.WriteAllTextAsync(dbPointerFile, path);
         cachedDBLocation = path;
+    }
+
+    private static async void HandleException(Exception e)
+    {
+        await DependencyManager.uiLinker!.OpenYesNoModal("SQL exception", e.Message);
     }
 }

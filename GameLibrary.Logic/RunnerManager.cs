@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.IO.IsolatedStorage;
 using System.Runtime.InteropServices;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
@@ -262,6 +263,15 @@ public static class RunnerManager
     {
         activeGames.Remove(identifier);
         onGameStatusChange?.Invoke(identifier, false);
+    }
+
+
+    public static async Task RunSteamGame(long appId)
+    {
+        GameLaunchData dat = new GameLaunchData() { command = "steam" };
+        dat.arguments.AddLast($"steam://rungameid/{appId}");
+
+        ExecuteRunRequest(dat, appId.ToString(), null);
     }
 
 

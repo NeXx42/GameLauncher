@@ -7,6 +7,13 @@ namespace GameLibrary.Logic.Objects;
 
 public abstract class GameDto
 {
+    public enum Status
+    {
+        Active = 1,
+        Deleted = 2,
+        Placeholder = 3,
+    }
+
     public readonly int gameId;
 
     public string gameName { protected set; get; }
@@ -17,6 +24,7 @@ public abstract class GameDto
 
     public int? libraryId { protected set; get; }
     public int? runnerId { protected set; get; }
+    public Status status { protected set; get; }
 
     public bool? captureLogs { protected set; get; }
     public bool? useRegionEmulation { protected set; get; }
@@ -50,7 +58,7 @@ public abstract class GameDto
         }
     }
 
-    public virtual string getAbsoluteIconPath => Path.Combine(getAbsoluteFolderLocation, iconPath ?? "INVALID.INVALID");
+    protected virtual string getAbsoluteIconPath => Path.Combine(getAbsoluteFolderLocation, iconPath ?? "");
     public virtual string getAbsoluteBinaryLocation => Path.Combine(getAbsoluteFolderLocation, binaryPath ?? "INVALID.INVALID");
 
 
@@ -80,6 +88,7 @@ public abstract class GameDto
 
         this.runnerId = game.runnerId;
         this.libraryId = game.libraryId;
+        this.status = (Status)game.status;
 
         this.tags = tags.Select(x => x.TagId).ToHashSet();
     }
@@ -101,7 +110,8 @@ public abstract class GameDto
             lastPlayed = lastPlayed,
 
             runnerId = runnerId,
-            libraryId = libraryId
+            libraryId = libraryId,
+            status = (int)status
 
         }, SQLFilter.Equal(nameof(dbo_Game.id), gameId), columns);
     }
@@ -116,7 +126,7 @@ public abstract class GameDto
 
     public async Task UpdateGameIcon(string path)
     {
-        if (File.Exists(getAbsoluteIconPath))
+        if (!string.IsNullOrEmpty(iconPath) && File.Exists(getAbsoluteIconPath))
         {
             try
             {
@@ -176,6 +186,7 @@ public abstract class GameDto
     // required behaviour    
 
     public abstract Task Launch();
+    public abstract Task<string?> FetchIconFilePath();
 
     // overridable behaviour    
 

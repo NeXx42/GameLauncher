@@ -75,4 +75,6 @@ public class GameDto_Custom : GameDto
         List<string> binaries = Directory.GetFiles(getAbsoluteFolderLocation).Where(RunnerManager.IsUniversallyAcceptedExecutableFormat).Select(x => Path.GetFileName(x)).ToList();
         return (binaries.IndexOf(binaryPath!), binaries.ToArray());
     }
+
+    public override Task<string?> FetchIconFilePath() => Task.FromResult(string.IsNullOrEmpty(iconPath) ? null : getAbsoluteIconPath);
 }
