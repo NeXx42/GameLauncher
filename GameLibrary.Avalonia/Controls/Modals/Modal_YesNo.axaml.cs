@@ -30,7 +30,7 @@ public partial class Modal_YesNo : UserControl
         return boolResponse.Task;
     }
 
-    public Task RequestModal(string title, string paragraph, Func<Task> positiveCallback, string? loadingMessage)
+    public Task<bool> RequestModal(string title, string paragraph, Func<Task> positiveCallback, string? loadingMessage)
     {
         boolResponse = new TaskCompletionSource<bool>();
         btn_Positive.RegisterClick(OnPositiveClick, loadingMessage);

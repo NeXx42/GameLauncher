@@ -19,5 +19,5 @@
     </Style>
   </UserControl.Styles>
 
-  <ComboBox x:Name="inp" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Foreground="White" Background="#2C2C2C" VerticalAlignment="Stretch" HorizontalAlignment="Stretch"/>
+  <ComboBox x:Name="inp" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Foreground="White" Background="#2C2C2C" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" MinHeight="0"/>
 </UserControl>

@@ -43,13 +43,16 @@ public class UILinker : IUILinker
         }
     }
 
-    public async Task OpenYesNoModalAsync(string title, string paragraph, Func<Task> positiveCallback, string? loadingMessage)
+    public async Task<bool> OpenYesNoModalAsync(string title, string paragraph, Func<Task> positiveCallback, string? loadingMessage)
     {
+        bool res = false;
         await MainWindow.instance!.DisplayModal<Modal_YesNo>(ModalRequest);
+
+        return res;
 
         async Task ModalRequest(Modal_YesNo modal)
         {
-            await modal.RequestModal(title, paragraph, positiveCallback, loadingMessage);
+            res = await modal.RequestModal(title, paragraph, positiveCallback, loadingMessage);
         }
     }
 }

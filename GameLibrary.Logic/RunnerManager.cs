@@ -1,5 +1,7 @@
 using System.Diagnostics;
+using System.Runtime.InteropServices;
 using CSharpSqliteORM;
+using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Database.Tables;
 using GameLibrary.Logic.GameEmbeds;
 using GameLibrary.Logic.GameRunners;
@@ -56,11 +58,20 @@ public static class RunnerManager
 
         try
         {
-            IGameRunner? runner = await GetAppropriateRunner(game.runnerId);
+            dbo_Runner? selectedRunner = await Database_Manager.GetItem<dbo_Runner>(game.runnerId.HasValue ?
+                SQLFilter.Equal(nameof(dbo_Runner.runnerId), game.runnerId.Value) :
+                SQLFilter.OrderAsc(nameof(dbo_Runner.runnerId)));
+
+            if (selectedRunner == null)
+            {
+                throw new Exception($"Couldn't find runner in the database. used id {game.runnerId ?? -1}");
+            }
+
+            IGameRunner? runner = await GetAppropriateRunner(selectedRunner);
 
             if (runner == null)
             {
-                throw new Exception($"Invalid runner type - {game.runnerId}");
+                throw new Exception($"Invalid runner type - {selectedRunner.runnerId}");
             }
 
             if (game.gameId.HasValue && !File.Exists(game.path))
@@ -73,27 +84,29 @@ public static class RunnerManager
                 throw new Exception($"Invalid file for the runner - {game.path}");
             }
 
-            Dictionary<string, string?> args = await GetRunnerArguments(game.gameId, game.runnerId);
+            LibraryHandler.TryGetCachedGame(game.gameId, out GameDto? gameDto);
+            Dictionary<string, string?> args = await GetRunnerArguments(game.gameId, selectedRunner.runnerId);
 
             await runner.SetupRunner(args);
             GameLaunchData req = await runner.InitRunDetails(game);
 
             await HandleEmbeds(game, req, args);
-            ExecuteRunRequest(req, game.path);
+            ExecuteRunRequest(req, game.path, gameDto?.getAbsoluteLogFile);
 
-            if (game.gameId.HasValue)
+            if (gameDto != null)
             {
-                GameDto? gameDto = LibraryHandler.TryGetCachedGame(game.gameId.Value);
-
                 if (string.IsNullOrEmpty(gameDto!.getGame.iconPath))
                 {
                     await OverlayManager.LaunchOverlay(gameDto!.getGameId);
                 }
+
+                gameDto.getGame.lastPlayed = DateTime.UtcNow;
+                await gameDto.UpdateGame();
             }
         }
-        catch
+        catch (Exception e)
         {
-
+            await DependencyManager.uiLinker!.OpenYesNoModal("Failed to launch game!", e.Message);
         }
         finally
         {
@@ -103,7 +116,9 @@ public static class RunnerManager
 
     public static async Task RunWineTricks(int runnerId)
     {
-        IGameRunner runner = (await GetAppropriateRunner(runnerId))!;
+        dbo_Runner runnerDto = (await Database_Manager.GetItem<dbo_Runner>(SQLFilter.Equal(nameof(dbo_Runner.runnerId), runnerId)))!;
+        IGameRunner runner = (await GetAppropriateRunner(runnerDto))!;
+
         Dictionary<string, string?> args = await GetRunnerArguments(null, runnerId);
 
         await runner.SetupRunner(args);
@@ -112,7 +127,7 @@ public static class RunnerManager
         req.command = "wine";
         req.arguments.AddFirst("winecfg");
 
-        ExecuteRunRequest(req, "winecfg");
+        ExecuteRunRequest(req, "winecfg", null);
     }
 
 
@@ -193,7 +208,7 @@ public static class RunnerManager
             embed.Embed(dat, args);
     }
 
-    private static void ExecuteRunRequest(GameLaunchData req, string identifier)
+    private static void ExecuteRunRequest(GameLaunchData req, string identifier, string? logFile)
     {
         ProcessStartInfo info = new ProcessStartInfo();
         info.FileName = req.command;
@@ -220,18 +235,13 @@ public static class RunnerManager
         process.EnableRaisingEvents = true;
 
         // ActiveProcess - starts the process
-        activeGames.Add(identifier, new ActiveProcess(identifier, process));
+        activeGames.Add(identifier, new ActiveProcess(identifier, process, logFile));
         onGameStatusChange?.Invoke(identifier, true);
     }
 
 
-    private static async Task<IGameRunner?> GetAppropriateRunner(int runnerId)
+    private static async Task<IGameRunner?> GetAppropriateRunner(dbo_Runner runner)
     {
-        dbo_Runner? runner = await Database_Manager.GetItem<dbo_Runner>(SQLFilter.Equal(nameof(dbo_Runner.runnerId), runnerId));
-
-        if (runner == null)
-            return null;
-
         switch ((RunnerType)runner.runnerType)
         {
             case RunnerType.AppImage: return new GameRunner_AppImage();
@@ -246,7 +256,7 @@ public static class RunnerManager
     public static void KillProcess(string identifier)
     {
         if (activeGames.ContainsKey(identifier))
-            activeGames[identifier].Kill();
+            activeGames[identifier].Dispose();
     }
 
     public static void OnExitProcess(string identifier)
@@ -261,7 +271,7 @@ public static class RunnerManager
 
 
     public static async Task<List<(int id, string name)>> GetRunnerProfiles()
-        => (await Database_Manager.GetItems<dbo_Runner>()).Select(x => (x.runnerId, x.runnerName)).ToList();
+        => (await Database_Manager.GetItems<dbo_Runner>(SQLFilter.OrderAsc(nameof(dbo_Runner.runnerId)))).Select(x => (x.runnerId, x.runnerName)).ToList();
 
     public static async Task<dbo_Runner?> GetRunnerProfile(int runnerId)
         => await Database_Manager.GetItem<dbo_Runner>(SQLFilter.Equal(nameof(dbo_Runner.runnerId), runnerId));
@@ -309,8 +319,8 @@ public static class RunnerManager
     public struct GameLaunchRequest
     {
         public int? gameId;
+        public int? runnerId;
         public string path;
-        public int runnerId;
     }
 
 
@@ -328,10 +338,23 @@ public static class RunnerManager
         private readonly string identifier;
         private readonly Process process;
 
+        private StreamWriter? writer;
+        private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
+
         public bool IsActive => !process.HasExited;
 
-        public ActiveProcess(string identifier, Process process)
+        public ActiveProcess(string identifier, Process process, string? logFile)
         {
+            if (!string.IsNullOrEmpty(logFile))
+            {
+                writer = new StreamWriter(logFile, System.Text.Encoding.ASCII, new FileStreamOptions()
+                {
+                    Mode = FileMode.OpenOrCreate,
+                    Access = FileAccess.ReadWrite,
+                    Share = FileShare.ReadWrite
+                });
+            }
+
             this.identifier = identifier;
             this.process = process;
 
@@ -346,10 +369,27 @@ public static class RunnerManager
             process.BeginErrorReadLine();
         }
 
-        private void OnOutput(object sender, DataReceivedEventArgs args)
+        private async void OnOutput(object sender, DataReceivedEventArgs args)
         {
             if (!string.IsNullOrEmpty(args.Data))
+            {
+                if (writer != null)
+                {
+                    await _writeLock.WaitAsync();
+
+                    try
+                    {
+                        await writer.WriteLineAsync(args.Data);
+                        await writer.FlushAsync();
+                    }
+                    finally
+                    {
+                        _writeLock.Release();
+                    }
+                }
+
                 Console.WriteLine(args.Data);
+            }
         }
 
         private void HandleExit(object? sender, EventArgs args)
@@ -360,12 +400,45 @@ public static class RunnerManager
 
         public void Dispose()
         {
-            Kill();
+            KillProcessTree(process.Id);
+            writer?.Close();
         }
 
-        public void Kill()
+
+        [DllImport("libc")]
+        private static extern int kill(int pid, int sig);
+
+        public static void KillProcessTree(int pid)
         {
-            process.Kill();
+            var children = new List<int>();
+            try
+            {
+                var psi = new ProcessStartInfo("pgrep", $"-P {pid}")
+                {
+                    RedirectStandardOutput = true,
+                    UseShellExecute = false
+                };
+                using var pgrep = Process.Start(psi);
+                string? line;
+
+                while ((line = pgrep!.StandardOutput.ReadLine()) != null)
+                {
+                    if (int.TryParse(line, out int childPid))
+                        children.Add(childPid);
+                }
+
+                pgrep.WaitForExit();
+            }
+            catch { }
+
+            foreach (var child in children)
+                KillProcessTree(child);
+
+            try
+            {
+                kill(pid, 9);
+            }
+            catch { }
         }
     }
 }

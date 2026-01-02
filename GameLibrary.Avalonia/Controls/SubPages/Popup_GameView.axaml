@@ -90,7 +90,6 @@
               <ScrollViewer>
                 <TextBlock x:Name="lbl_Logs" Text="YO"/>
               </ScrollViewer>
-              <common:Common_Button x:Name="btn_RefreshLogs" VerticalAlignment="Top" HorizontalAlignment="Right" Label="🔃" Height="30" Width="30"/>
             </Grid>
 
 

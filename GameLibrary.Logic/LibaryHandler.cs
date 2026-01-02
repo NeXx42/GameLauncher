@@ -49,15 +49,8 @@ namespace GameLibrary.Logic
             tags = await Database_Manager.GetItems<dbo_Tag>();
         }
 
-        public static async Task ImportGames(List<FileManager.IImportEntry> availableImports)
+        public static async Task ImportGames(List<FileManager.IImportEntry> availableImports, int? libraryId)
         {
-            dbo_Libraries? chosenLibrary = await Database_Manager.GetItem<dbo_Libraries>();
-
-            if (chosenLibrary == null)
-            {
-                throw new Exception("No library to import into");
-            }
-
             bool useGuidFolderNames = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Import_GUIDFolderNames, true);
 
             for (int i = availableImports.Count - 1; i >= 0; i--)
@@ -68,20 +61,36 @@ namespace GameLibrary.Logic
                     continue;
 
                 string gameName = folder.getPotentialName;
+                string absoluteFolder;
+
+                if (folder is FileManager.ImportEntry_Binary binaryImport)
+                {
+                    absoluteFolder = FileManager.CreateEmptyGameFolder(binaryImport.binaryLocation);
+                }
+                else
+                {
+                    absoluteFolder = folder.getBinaryFolder!;
+                }
 
                 dbo_Game newGame = new dbo_Game
                 {
                     gameName = gameName,
-                    gameFolder = useGuidFolderNames ? Guid.NewGuid().ToString() : gameName,
+                    gameFolder = absoluteFolder,
                     executablePath = Path.GetFileName(folder.getBinaryPath),
-                    libaryId = chosenLibrary.libaryId
+                    libraryId = libraryId
                 };
 
                 try
                 {
-                    await Database_Manager.InsertItem(newGame);
-                    await FileManager.MoveGameToItsLibrary(newGame, folder.getBinaryPath, chosenLibrary.rootPath, string.IsNullOrEmpty(folder.getBinaryFolder));
+                    if (libraryId.HasValue)
+                    {
+                        newGame.gameFolder = useGuidFolderNames ? Guid.NewGuid().ToString() : gameName;
+                        dbo_Libraries library = (await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libaryId), libraryId.Value)))!;
 
+                        await FileManager.MoveGameToItsLibrary(newGame, folder.getBinaryPath, library.rootPath);
+                    }
+
+                    await Database_Manager.InsertItem(newGame);
                     availableImports.RemoveAt(i);
                 }
                 catch
@@ -92,6 +101,17 @@ namespace GameLibrary.Logic
         }
 
         public static int GetMaxPages(int limit) => (int)Math.Ceiling(filteredGameCount / (float)limit) - 1;
+
+
+        public static bool TryGetCachedGame(int? gameId, out GameDto? game)
+        {
+            game = null;
+
+            if (!gameId.HasValue)
+                return false;
+
+            return activeGameList.TryGetValue(gameId.Value, out game);
+        }
         public static GameDto? TryGetCachedGame(int gameId) => activeGameList[gameId];
 
         public static async Task<int[]> GetGameList(GameFilterRequest filterRequest)
@@ -164,6 +184,9 @@ namespace GameLibrary.Logic
                 rootPath = path
             });
         }
+
+        public static async Task<(int id, string name)[]> GetLibraries()
+            => (await Database_Manager.GetItems<dbo_Libraries>(SQLFilter.OrderAsc(nameof(dbo_Libraries.libaryId)))).Select(x => (x.libaryId, x.rootPath)).ToArray();
 
         public static async Task CreateTag(string tagName)
         {

@@ -1,4 +1,5 @@
 using System.Diagnostics;
+using System.Text;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
 
@@ -91,7 +92,10 @@ public class GameDto : IGameDto
 
     public async Task LoadLibrary()
     {
-        library = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libaryId), game!.libaryId));
+        if (game!.libraryId == null)
+            return;
+
+        library = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libaryId), game!.libraryId));
     }
 
 
@@ -105,10 +109,31 @@ public class GameDto : IGameDto
     public dbo_Game getGame => game!;
     public HashSet<int> getTags => tags!;
 
-    public string getAbsoluteFolderLocation => Path.Combine(library!.rootPath, game!.gameFolder!);
+    public string getAbsoluteFolderLocation
+    {
+        get
+        {
+            if (library == null)
+                return game!.gameFolder;
+
+            return Path.Combine(library!.rootPath, game!.gameFolder!);
+        }
+    }
 
     public string getAbsoluteIconPath => Path.Combine(getAbsoluteFolderLocation, game?.iconPath ?? "INVALID.INVALID");
     public string getAbsoluteBinaryLocation => Path.Combine(getAbsoluteFolderLocation, game?.executablePath ?? "INVALID.INVALID");
+    public string? getAbsoluteLogFile
+    {
+        get
+        {
+            if (!(game?.captureLogs ?? false))
+            {
+                return null;
+            }
+
+            return $"{getAbsoluteBinaryLocation}.log";
+        }
+    }
 
 
     // changing properties
@@ -155,11 +180,10 @@ public class GameDto : IGameDto
         await UpdateGame();
     }
 
-    public async Task ChangeWineProfile(int? wineProfile)
+    public async Task ChangeRunnerId(int? runnerId)
     {
-        game!.runnerId = wineProfile;
+        game!.runnerId = runnerId;
         await UpdateGame();
-        //await LoadWineProfile();
     }
 
     public async Task UpdateGameName(string newName)
@@ -232,13 +256,40 @@ public class GameDto : IGameDto
         {
             gameId = getGameId,
             path = getAbsoluteBinaryLocation,
-            runnerId = game?.runnerId ?? -1
+            runnerId = game?.runnerId
         });
     }
 
-    public async Task UpdateLastPlayed()
+    public async Task<string?> ReadLogs()
     {
-        game!.lastPlayed = DateTime.UtcNow;
-        await Database_Manager.AddOrUpdate(game, SQLFilter.Equal(nameof(dbo_Game.id), gameId), nameof(dbo_Game.lastPlayed));
+        string? path = getAbsoluteLogFile;
+
+        if (string.IsNullOrEmpty(path) || !File.Exists(path))
+            return null;
+
+        using (FileStream stream = new FileStream(path, new FileStreamOptions()
+        {
+            Access = FileAccess.Read,
+            Mode = FileMode.Open,
+            Share = FileShare.ReadWrite
+        }))
+        {
+            const int maxBytes = 100 * 1024;
+            long start = Math.Max(0, stream.Length - maxBytes);
+
+            stream.Seek(start, SeekOrigin.Begin);
+
+            using (StreamReader reader = new StreamReader(stream))
+            {
+                LinkedList<string?> log = new LinkedList<string?>();
+
+                while (!reader.EndOfStream)
+                {
+                    log.AddFirst(await reader.ReadLineAsync());
+                }
+
+                return string.Join(Environment.NewLine, log);
+            }
+        }
     }
 }

@@ -6,5 +6,5 @@ public interface IUILinker
 
     public Task<string?> OpenStringInputModal(string title, string? existingText = "");
     public Task<bool> OpenYesNoModal(string title, string paragraph);
-    public Task OpenYesNoModalAsync(string title, string paragraph, Func<Task> positiveCallback, string loadingMessage);
+    public Task<bool> OpenYesNoModalAsync(string title, string paragraph, Func<Task> positiveCallback, string loadingMessage);
 }

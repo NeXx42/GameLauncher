@@ -14,7 +14,7 @@ namespace GameLibrary.DB.Tables
         public string? iconPath { get; set; }
         public bool useEmulator { get; set; }
         public DateTime? lastPlayed { get; set; }
-        public required int libaryId { get; set; }
+        public int? libraryId { get; set; }
         public required string gameFolder { get; set; }
         public bool? captureLogs { get; set; }
         public int? runnerId { get; set; }
@@ -36,7 +36,7 @@ namespace GameLibrary.DB.Tables
             new Database_Column() {  columnName = nameof(useEmulator), columnType = Database_ColumnType.BIT },
 
             new Database_Column() {  columnName = nameof(lastPlayed), columnType = Database_ColumnType.DATETIME, allowNull = true },
-            new Database_Column() {  columnName = nameof(libaryId), columnType = Database_ColumnType.INTEGER, allowNull = false },
+            new Database_Column() {  columnName = nameof(libraryId), columnType = Database_ColumnType.INTEGER, allowNull = true },
 
             new Database_Column() {  columnName = nameof(gameFolder), columnType = Database_ColumnType.TEXT, allowNull = true },
 

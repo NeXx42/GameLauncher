@@ -16,6 +16,8 @@ namespace GameLibrary.Avalonia.Controls.SubPage.Indexer;
 public partial class Indexer_ImportView : UserControl
 {
     private Popup_AddGames? master;
+
+    private (int, string)[]? availableLibraries;
     private List<FileManager.IImportEntry> availableImports = new List<FileManager.IImportEntry>();
 
     public Indexer_ImportView()
@@ -23,10 +25,15 @@ public partial class Indexer_ImportView : UserControl
         InitializeComponent();
     }
 
-    public void Setup(Popup_AddGames master)
+    public async void Setup(Popup_AddGames master)
     {
         this.master = master;
         cont_FoundGames.Children.Clear();
+
+        availableLibraries = await LibraryHandler.GetLibraries();
+        string[] libraries = ["No Library", .. availableLibraries.Select(x => x.Item2)];
+
+        inp_Library.Setup(libraries, 0, null);
 
         btn_Search.RegisterClick(ScanDirectory);
         btn_Import.RegisterClick(AttemptImport);
@@ -87,11 +94,20 @@ public partial class Indexer_ImportView : UserControl
 
     private async Task AttemptImport()
     {
-        await LibraryHandler.ImportGames(availableImports);
+        (int, string)? selectedLibrary = inp_Library.selectedIndex == 0 ? null : availableLibraries![inp_Library.selectedIndex - 1];
+        string paragraph = !selectedLibrary.HasValue ? "Import without moving" : $"Import and move files into the following directory? \n\n{selectedLibrary.Value.Item2}";
 
-        cont_FoundGames.Children.Clear();
-        availableImports.Clear();
+        if (await DependencyManager.uiLinker!.OpenYesNoModalAsync("Import?", paragraph, Import, "Importing"))
+        {
+            cont_FoundGames.Children.Clear();
+            availableImports.Clear();
 
-        await master!.onReimportGames!();
+            await master!.onReimportGames!();
+        }
+
+        async Task Import()
+        {
+            await LibraryHandler.ImportGames(availableImports, selectedLibrary?.Item1);
+        }
     }
 }

@@ -286,19 +286,14 @@ public partial class Popup_GameView : UserControl
                 if (lastGame != game)
                 {
                     possibleRunners = await RunnerManager.GetRunnerProfiles();// await DatabaseHandler.GetItems<dbo_WineProfile>(QueryBuilder.OrderBy(nameof(dbo_WineProfile.isDefault), true));
+                    string firstProfile = possibleRunners.Count > 0 ? possibleRunners[0].name : "INVALID";
 
-                    if (ConfigHandler.isOnLinux)
-                    {
-                        string[] profileOptions = possibleRunners!.Select(x => x.name)!.ToArray();
-                        int selectedProfile = possibleRunners.Select(x => x.id).ToList().IndexOf(game.getGame.runnerId ?? -1);
+                    string[] profileOptions = [$"Default ({firstProfile})", .. possibleRunners!.Select(x => x.name)!.ToArray()];
+                    int selectedProfile = possibleRunners.Select(x => x.id).ToList().IndexOf(game?.getGame.runnerId ?? -1);
 
-                        groupMaster!.master.inp_WineProfile.IsVisible = true;
-                        groupMaster!.master.inp_WineProfile.SetupAsync(profileOptions, selectedProfile >= 0 ? selectedProfile : 0, HandleWineProfileChange);
-                    }
-                    else
-                    {
-                        groupMaster!.master.inp_WineProfile.IsVisible = false;
-                    }
+                    groupMaster!.master.inp_WineProfile.IsVisible = true;
+                    groupMaster!.master.inp_WineProfile.SetupAsync(profileOptions, selectedProfile >= 0 ? (selectedProfile + 1) : 0, HandleWineProfileChange);
+
                 }
 
                 groupMaster!.master.inp_Emulate.SilentSetValue(game!.useRegionEmulation);
@@ -315,12 +310,12 @@ public partial class Popup_GameView : UserControl
                 int? newProfileId = null;
                 int selectedIndex = groupMaster!.master.inp_WineProfile.selectedIndex;
 
-                //if (selectedIndex != 0) // default profile
-                //{
-                //    newProfileId = possibleWineProfiles!.ElementAt(selectedIndex - 1)?.id;
-                //}
+                if (selectedIndex != 0) // default profile
+                {
+                    newProfileId = possibleRunners![selectedIndex - 1].id;
+                }
 
-                await lastGame!.ChangeWineProfile(possibleRunners![selectedIndex].id);
+                await lastGame!.ChangeRunnerId(newProfileId);
             }
         }
 
@@ -328,12 +323,6 @@ public partial class Popup_GameView : UserControl
         {
             public override TabBase Setup(Border btn, Grid container, TabGroup groupMaster)
             {
-                groupMaster.master.btn_RefreshLogs.RegisterClick(async () =>
-                {
-                    if (lastGame != null)
-                        await RefreshLogs(lastGame);
-                });
-
                 return base.Setup(btn, container, groupMaster);
             }
 
@@ -345,8 +334,13 @@ public partial class Popup_GameView : UserControl
 
             private async Task RefreshLogs(GameDto? game)
             {
-                //string txt = await GameLauncher.GetLatestLogs(game!.getGameId);
-                //groupMaster!.master.lbl_Logs.Text = txt;
+                if (game == null)
+                {
+                    groupMaster!.master.lbl_Logs.Text = "";
+                    return;
+                }
+
+                groupMaster!.master.lbl_Logs.Text = await game.ReadLogs();
             }
         }
     }

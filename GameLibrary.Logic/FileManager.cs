@@ -42,18 +42,20 @@ namespace GameLibrary.Logic
             await game.UpdateGameIcon(localPath);
         }
 
-        public static Task MoveGameToItsLibrary(dbo_Game game, string binaryAbsolutePath, string libraryRootLocation, bool hasNoFolder)
+        public static string CreateEmptyGameFolder(string absoluteBinaryFile)
+        {
+            string folderName = Path.Combine(Path.GetDirectoryName(absoluteBinaryFile)!, Path.GetFileName(absoluteBinaryFile).Replace(" ", string.Empty));
+
+            Directory.CreateDirectory(folderName);
+            Directory.Move(absoluteBinaryFile, folderName);
+
+            return folderName;
+        }
+
+        public static Task MoveGameToItsLibrary(dbo_Game game, string binaryAbsolutePath, string libraryRootLocation)
         {
             string destination = Path.Combine(libraryRootLocation, game.gameFolder);
             string existingFolderPath = Path.GetDirectoryName(binaryAbsolutePath)!;
-
-            if (hasNoFolder)
-            {
-                existingFolderPath = Path.Combine(existingFolderPath, game.gameFolder);
-
-                Directory.CreateDirectory(existingFolderPath);
-                File.Move(binaryAbsolutePath, Path.Combine(existingFolderPath, Path.GetFileName(binaryAbsolutePath)));
-            }
 
             try
             {
@@ -210,8 +212,8 @@ namespace GameLibrary.Logic
 
             public ImportEntry_Folder(string? extract, string? extractedFolder)
             {
-                this.archiveFile = extract;
-                this.extractedEntry = extractedFolder;
+                this.archiveFile = extract?.Replace("%20", " ");
+                this.extractedEntry = extractedFolder?.Replace("%20", " ");
 
                 if (!string.IsNullOrEmpty(extractedEntry))
                     CrawlForExecutable(extractedEntry);
