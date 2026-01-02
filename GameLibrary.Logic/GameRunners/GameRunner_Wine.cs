@@ -6,6 +6,7 @@ namespace GameLibrary.Logic.GameRunners;
 
 public class GameRunner_Wine : IGameRunner
 {
+    protected readonly string version;
     protected readonly string rootLoc;
     protected readonly string binaryFolder;
     protected readonly string dxvkFolder;
@@ -23,6 +24,7 @@ public class GameRunner_Wine : IGameRunner
 
     public GameRunner_Wine(dbo_Runner data)
     {
+        version = data.runnerVersion;
         rootLoc = Path.Combine(data.runnerRoot, data.runnerName.Replace(" ", string.Empty));
 
         GameRunnerHelperMethods.EnsureDirectoryExists(rootLoc);

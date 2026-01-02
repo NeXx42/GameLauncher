@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Net;
 using System.Text.Json;
 using GameLibrary.Logic.Database.Tables;
+using ZstdSharp.Unsafe;
 
 namespace GameLibrary.Logic.GameRunners;
 
@@ -11,6 +12,11 @@ public class GameRunner_WineGE : GameRunner_Wine
 
     public static new async Task<string[]?> GetRunnerVersions()
     {
+        return (await GetVersionData()).OrderByDescending(x => x.id).Select(x => x.json.GetProperty("tag_name").GetString()).ToArray()!;
+    }
+
+    private static async Task<(int id, JsonElement json)[]> GetVersionData()
+    {
         using (HttpClient client = new HttpClient())
         {
             client.DefaultRequestHeaders.Add("User-Agent", "test");
@@ -19,7 +25,15 @@ public class GameRunner_WineGE : GameRunner_Wine
             var json = await res.Content.ReadAsStringAsync();
             JsonDocument doc = JsonDocument.Parse(json);
 
-            return ["5.12"];
+            List<(int id, JsonElement)> versions = new List<(int id, JsonElement)>();
+
+            foreach (JsonElement el in doc.RootElement.EnumerateArray())
+            {
+                int version = el.GetProperty("id").GetInt32();
+                versions.Add((version, el));
+            }
+
+            return versions.ToArray();
         }
     }
 
@@ -29,10 +43,39 @@ public class GameRunner_WineGE : GameRunner_Wine
 
     protected override async Task InstallWine()
     {
-        await DownloadFile($"https://github.com/{GITHUB_NAME}/releases/download/GE-Proton8-26/wine-lutris-GE-Proton8-26-x86_64.tar.xz", $"{binaryFolder}.tar.xz");
-        await ExtractFile($"{binaryFolder}.tar.xz", binaryFolder);
+        int? selectedVersion = null;
+        (int, JsonElement json)[] releases = await GetVersionData();
 
-        await RunWine("wineboot");
+        for (int i = 0; i < releases.Length; i++)
+        {
+            if (releases[i].json.GetProperty("tag_name").GetString() == version)
+            {
+                selectedVersion = i;
+                break;
+            }
+        }
+
+        if (selectedVersion == null)
+            throw new Exception("Couldn't match version with tag");
+
+        foreach (JsonElement asset in releases[selectedVersion.Value].json.GetProperty("assets").EnumerateArray())
+        {
+            if (asset.GetProperty("content_type").GetString() == "application/x-xz")
+            {
+                string url = asset.GetProperty("browser_download_url").GetString()!;
+
+                await DownloadFile(url, $"{binaryFolder}.tar.xz");
+                await ExtractFile($"{binaryFolder}.tar.xz", binaryFolder);
+
+                File.Delete($"{binaryFolder}.tar.xz");
+
+                await RunWine("wineboot");
+
+                return;
+            }
+        }
+
+        throw new Exception("Failed to find asset to download");
     }
 
     protected override async Task InstallDXVK()
