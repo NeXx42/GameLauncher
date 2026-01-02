@@ -5,16 +5,16 @@ publish:
 	rm -rf ${OUTPUT_DIR}
 	
 	# app
-	dotnet publish GameLibrary.Avalonia/GameLibrary.Avalonia.csproj \
+	dotnet publish GameLibrary.AvaloniaUIUI/GameLibrary.AvaloniaUIUI.csproj \
 		-c Release \
 		-r linux-x64 \
 		--self-contained true \
 		/p:PublishSingleFile=false \
 		/p:IncludeAllContentForSelfExtract=true \
-		-o ${OUTPUT_DIR}/Avalonia
+		-o ${OUTPUT_DIR}/AvaloniaUI
 		
 	# gtk overlay
 	cd GameLibrary_GTKOverlay && cargo build --release
-	cp GameLibrary_GTKOverlay/target/release/GameLibrary_GTKOverlay ${OUTPUT_DIR}/Avalonia/
+	cp GameLibrary_GTKOverlay/target/release/GameLibrary_GTKOverlay ${OUTPUT_DIR}/AvaloniaUI/
 		
-	tar -czvf ${OUTPUT_DIR}/GameLibrary.Avalonia.tar.gz -C ${OUTPUT_DIR} Avalonia
+	tar -czvf ${OUTPUT_DIR}/GameLibrary.AvaloniaUIUI.tar.gz -C ${OUTPUT_DIR} AvaloniaUI

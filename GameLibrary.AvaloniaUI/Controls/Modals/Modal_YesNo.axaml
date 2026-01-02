@@ -1,0 +1,20 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.AvaloniaUI.Controls.Modals.Modal_YesNo"
+  xmlns:Controls="clr-namespace:GameLibrary.AvaloniaUI.Controls">
+  <Border VerticalAlignment="Center" HorizontalAlignment="Center" Width="500" Height="200" Background="{DynamicResource bg_BarLight}" CornerRadius="5" ClipToBounds="True">
+    <Grid RowDefinitions="30, *, 30" Margin="10">
+      <Label x:Name="lbl_Title" Grid.Row="0" Content="Title" HorizontalAlignment="Center" FontSize = "18"/>
+      <TextBlock x:Name="lbl_Paragraph" Grid.Row="1" Text="Paragraph" HorizontalAlignment="Center" VerticalAlignment="Top" TextWrapping="Wrap" TextAlignment="Center"/>
+
+      <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
+        <Controls:Common_Button x:Name="btn_Negative" Width="100" Label="No"/>
+
+        <StackPanel x:Name="extraBtns" Orientation="Horizontal" Spacing="5" IsVisible="False">
+        </StackPanel>
+      </StackPanel>
+
+    </Grid>
+  </Border>
+</UserControl>

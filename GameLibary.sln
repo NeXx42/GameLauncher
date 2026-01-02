@@ -1,11 +1,11 @@
-﻿
+
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34622.214
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLibrary.Logic", "GameLibrary.Logic\GameLibrary.Logic.csproj", "{F2532506-FC40-479E-B9E9-84FE2AB6A3B2}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLibrary.Avalonia", "GameLibrary.Avalonia\GameLibrary.Avalonia.csproj", "{06830198-F5EA-46E1-A3A7-EE2CAAB84FEB}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLibrary.AvaloniaUI", "GameLibrary.AvaloniaUI\GameLibrary.AvaloniaUI.csproj", "{06830198-F5EA-46E1-A3A7-EE2CAAB84FEB}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GameLibrary.Database", "GameLibrary.Database", "{C0C021AD-C6B8-ABEB-332B-5FFBC71FEA07}"
 EndProject

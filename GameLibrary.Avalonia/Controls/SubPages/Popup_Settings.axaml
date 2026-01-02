@@ -1,9 +1,0 @@
-<UserControl x:Class="GameLibrary.Avalonia.Controls.SubPage.Popup_Settings"
-  xmlns="https://github.com/avaloniaui"
-  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" d:DesignHeight="450" d:DesignWidth="800" mc:Ignorable="d">
-  <Border Background="{DynamicResource bg_BarLight}" CornerRadius="10,10,0,0" BorderBrush="{DynamicResource bg_Border}" BorderThickness="1">
-    <StackPanel x:Name="content" Margin="15" />
-  </Border>
-</UserControl>

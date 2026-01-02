@@ -1,0 +1,23 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.AvaloniaUI.Controls.Common_Dropdown" ClipToBounds="False">
+  <UserControl.Styles>
+    <Style Selector="ComboBox">
+      <Setter Property="BorderBrush" Value="#FF444444"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="2"/>
+      <Setter Property="Background" Value="#2C2C2C"/>
+      <Setter Property="Foreground" Value="#fff"/>
+    </Style>
+
+    <Style Selector="ComboBox /template/ PopupRoot Border">
+      <Setter Property="CornerRadius" Value="2"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="BorderBrush" Value="#FF444444"/>
+      <Setter Property="Background" Value="#2C2C2C"/>
+    </Style>
+  </UserControl.Styles>
+
+  <ComboBox x:Name="inp" HorizontalContentAlignment="Left" VerticalContentAlignment="Center" Foreground="White" Background="#2C2C2C" VerticalAlignment="Stretch" HorizontalAlignment="Stretch" MinHeight="0"/>
+</UserControl>
