@@ -95,13 +95,12 @@ public static class RunnerManager
 
             if (gameDto != null)
             {
-                if (string.IsNullOrEmpty(gameDto!.getGame.iconPath))
+                if (string.IsNullOrEmpty(gameDto!.iconPath))
                 {
-                    await OverlayManager.LaunchOverlay(gameDto!.getGameId);
+                    await OverlayManager.LaunchOverlay(gameDto!.gameId);
                 }
 
-                gameDto.getGame.lastPlayed = DateTime.UtcNow;
-                await gameDto.UpdateGame();
+                await gameDto.UpdateLastPlayed();
             }
         }
         catch (Exception e)
@@ -173,7 +172,7 @@ public static class RunnerManager
 
             if (game != null)
             {
-                if (game.useRegionEmulation)
+                if (game.useRegionEmulation ?? false)
                     embeds.Add(new GameEmbed_Locale());
             }
         }

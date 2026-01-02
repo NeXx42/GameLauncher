@@ -10,6 +10,7 @@ using Avalonia.Platform.Storage;
 using GameLibrary.Avalonia.Controls.SubPage;
 using GameLibrary.Avalonia.Helpers;
 using GameLibrary.Logic;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Avalonia.Controls.SubPage.Indexer;
 
@@ -17,7 +18,7 @@ public partial class Indexer_ImportView : UserControl
 {
     private Popup_AddGames? master;
 
-    private (int, string)[]? availableLibraries;
+    private LibraryDto[]? availableLibraries;
     private List<FileManager.IImportEntry> availableImports = new List<FileManager.IImportEntry>();
 
     public Indexer_ImportView()
@@ -30,8 +31,8 @@ public partial class Indexer_ImportView : UserControl
         this.master = master;
         cont_FoundGames.Children.Clear();
 
-        availableLibraries = await LibraryHandler.GetLibraries();
-        string[] libraries = ["No Library", .. availableLibraries.Select(x => x.Item2)];
+        availableLibraries = LibraryHandler.GetLibraries().Where(x => x.externalType == null).ToArray();
+        string[] libraries = ["No Library", .. availableLibraries.Select(x => x.root)];
 
         inp_Library.Setup(libraries, 0, null);
 
@@ -94,8 +95,8 @@ public partial class Indexer_ImportView : UserControl
 
     private async Task AttemptImport()
     {
-        (int, string)? selectedLibrary = inp_Library.selectedIndex == 0 ? null : availableLibraries![inp_Library.selectedIndex - 1];
-        string paragraph = !selectedLibrary.HasValue ? "Import without moving" : $"Import and move files into the following directory? \n\n{selectedLibrary.Value.Item2}";
+        LibraryDto? selectedLibrary = inp_Library.selectedIndex == 0 ? null : availableLibraries![inp_Library.selectedIndex - 1];
+        string paragraph = selectedLibrary == null ? "Import without moving" : $"Import and move files into the following directory? \n\n{selectedLibrary!.root}";
 
         if (await DependencyManager.uiLinker!.OpenYesNoModalAsync("Import?", paragraph, Import, "Importing"))
         {
@@ -107,7 +108,8 @@ public partial class Indexer_ImportView : UserControl
 
         async Task Import()
         {
-            await LibraryHandler.ImportGames(availableImports, selectedLibrary?.Item1);
+            // maybe move the inner logic into the dto
+            await LibraryHandler.ImportGames(availableImports, selectedLibrary?.libraryId);
         }
     }
 }

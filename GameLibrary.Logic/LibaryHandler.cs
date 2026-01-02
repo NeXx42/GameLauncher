@@ -7,11 +7,9 @@ namespace GameLibrary.Logic
 {
     public static class LibraryHandler
     {
-        public enum OrderType
+        public enum ExternalLibraryTypes
         {
-            Id,
-            Name,
-            LastPlayed,
+            Steam
         }
 
         public static Action? onGameDeletion;
@@ -22,6 +20,7 @@ namespace GameLibrary.Logic
 
         private static int filteredGameCount;
         private static Dictionary<int, GameDto> activeGameList = new Dictionary<int, GameDto>();
+        private static Dictionary<int, LibraryDto> cachedLibraries = new Dictionary<int, LibraryDto>();
 
         public static bool getAreTagsDirty
         {
@@ -41,8 +40,16 @@ namespace GameLibrary.Logic
 
         public static async Task Setup()
         {
+            await FindLibraries();
             await FindTags();
         }
+
+        private static async Task FindLibraries()
+        {
+            dbo_Libraries[] libraries = await Database_Manager.GetItems<dbo_Libraries>();
+            cachedLibraries = libraries.ToDictionary(x => x.libaryId, x => new LibraryDto(x));
+        }
+
 
         private static async Task FindTags()
         {
@@ -120,21 +127,30 @@ namespace GameLibrary.Logic
 
             foreach (dbo_Game game in games)
             {
-                if (activeGameList.TryGetValue(game.id, out GameDto? gameObject))
-                {
-                    // may as well update the entry with the latest db version
-                    await gameObject!.LoadGame(game);
-                }
-                else
-                {
-                    gameObject = new GameDto(game);
-                    await gameObject.LoadAll();
-
-                    activeGameList[game.id] = gameObject;
-                }
+                if (!activeGameList.TryGetValue(game.id, out GameDto? gameObject))
+                    await LoadGame(game);
             }
 
             return games.Select(x => x.id).ToArray();
+        }
+
+        private static async Task LoadGame(dbo_Game game)
+        {
+            GameDto? dto = null;
+            dbo_GameTag[] gameTags = await Database_Manager.GetItems<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), game.id));
+
+            if (game.libraryId.HasValue && cachedLibraries.TryGetValue(game.libraryId.Value, out LibraryDto? lib) && lib != null)
+            {
+                switch (lib.externalType)
+                {
+                    case LibraryDto.ExternalTypes.Steam:
+                        dto = new GameDto_Steam(game, gameTags);
+                        break;
+                }
+            }
+
+            dto ??= new GameDto_Custom(game, gameTags);
+            activeGameList[game.id] = dto;
         }
 
 
@@ -172,10 +188,10 @@ namespace GameLibrary.Logic
                 }
             }
 
-            await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), game.getGameId));
-            await Database_Manager.Delete<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), game.getGameId));
+            await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), game.gameId));
+            await Database_Manager.Delete<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), game.gameId));
 
-            activeGameList.Remove(game.getGameId);
+            activeGameList.Remove(game.gameId);
             onGameDeletion?.Invoke();
         }
 
@@ -188,9 +204,6 @@ namespace GameLibrary.Logic
             });
         }
 
-        public static async Task<(int id, string name)[]> GetLibraries()
-            => (await Database_Manager.GetItems<dbo_Libraries>(SQLFilter.OrderAsc(nameof(dbo_Libraries.libaryId)))).Select(x => (x.libaryId, x.rootPath)).ToArray();
-
         public static async Task CreateTag(string tagName)
         {
             await Database_Manager.InsertItem(new dbo_Tag()
@@ -199,89 +212,15 @@ namespace GameLibrary.Logic
             });
         }
 
-        public struct GameFilterRequest
+        public static string RouteLibrary(GameDto game)
         {
-            public string? nameFilter;
-            public HashSet<int>? tagList;
+            if (!game.libraryId.HasValue)
+                return game.folderPath;
 
-            public OrderType orderType;
-            public bool orderDirection;
-
-            public int page;
-            public int contentPerPage;
-
-            public string ConstructSQL()
-            {
-                StringBuilder sql = new StringBuilder($"SELECT g.*, count(*) OVER() as total_count FROM {dbo_Game.tableName} g ");
-
-                List<string> joinClause = new List<string>();
-                List<string> whereClause = new List<string>();
-                List<string> groupClause = new List<string>();
-                List<string> havingClause = new List<string>();
-
-                if (!string.IsNullOrEmpty(nameFilter))
-                {
-                    whereClause.Add($"{nameof(dbo_Game.gameName)} like '{nameFilter}%'");
-                }
-
-                if (tagList?.Count > 0)
-                {
-                    joinClause.Add($"JOIN {dbo_GameTag.tableName} gt ON gt.{nameof(dbo_GameTag.GameId)} = {nameof(dbo_Game.id)}");
-                    whereClause.Add($"gt.{nameof(dbo_GameTag.TagId)} in ({string.Join(",", tagList)})");
-
-                    groupClause.Add($"g.{nameof(dbo_Game.id)}");
-                    havingClause.Add($"COUNT(DISTINCT gt.{nameof(dbo_GameTag.TagId)}) = {tagList.Count}");
-                }
-
-                if (joinClause.Count > 0)
-                {
-                    sql.Append(string.Join(" ", joinClause));
-                }
-
-                if (whereClause.Count > 0)
-                {
-                    sql.Append(" WHERE ");
-                    sql.Append(string.Join(" AND ", whereClause));
-                }
-
-                if (groupClause.Count > 0)
-                {
-                    sql.Append(" GROUP BY ");
-                    sql.Append(string.Join(" AND ", groupClause));
-                }
-
-                if (havingClause.Count > 0)
-                {
-                    sql.Append(" HAVING ");
-                    sql.Append(string.Join(" AND ", havingClause));
-                }
-
-                sql.Append(CreateOrderBy());
-                sql.Append(CreateLimit());
-
-                string rawSql = sql.ToString();
-                return rawSql;
-            }
-
-            private StringBuilder CreateOrderBy()
-            {
-                StringBuilder sql = new StringBuilder(" ORDER BY ");
-                switch (orderType)
-                {
-                    case OrderType.Id: sql.Append($"g.{nameof(dbo_Game.id)}"); break;
-                    case OrderType.Name: sql.Append($"g.{nameof(dbo_Game.gameName)}"); break;
-                    case OrderType.LastPlayed: sql.Append($"g.{nameof(dbo_Game.lastPlayed)}"); break;
-                }
-
-                sql.Append(orderDirection ? " ASC" : " DESC");
-                return sql;
-            }
-
-            private string CreateLimit()
-            {
-                int skip = contentPerPage * page;
-                return $" LIMIT {contentPerPage} OFFSET {skip};";
-            }
+            // want it to error if this doesn't exist
+            return Path.Combine(cachedLibraries[game.libraryId.Value].root, game.folderPath);
         }
+
+        public static LibraryDto[] GetLibraries() => cachedLibraries.Values.ToArray();
     }
 }

@@ -35,13 +35,13 @@ public static class ImageManager
 
     public static async Task GetGameImage<T>(GameDto game, Action<int, T?> onFetch)
     {
-        if (cachedImages.TryGetValue(game.getGameId, out object? res))
+        if (cachedImages.TryGetValue(game.gameId, out object? res))
         {
-            onFetch?.Invoke(game.getGameId, (T?)res);
+            onFetch?.Invoke(game.gameId, (T?)res);
             return;
         }
 
-        if (queuedImageFetch.TryGetValue(game.getGameId, out ImageFetchRequest existingFetchRequest))
+        if (queuedImageFetch.TryGetValue(game.gameId, out ImageFetchRequest existingFetchRequest))
         {
             existingFetchRequest.callback += MediateReturn;
         }
@@ -49,15 +49,15 @@ public static class ImageManager
         {
             if (!File.Exists(game.getAbsoluteIconPath))
             {
-                cachedImages.TryAdd(game.getGameId, null);
-                onFetch?.Invoke(game.getGameId, default);
+                cachedImages.TryAdd(game.gameId, null);
+                onFetch?.Invoke(game.gameId, default);
 
                 return;
             }
 
-            queuedImageFetch.TryAdd(game.getGameId, new ImageFetchRequest()
+            queuedImageFetch.TryAdd(game.gameId, new ImageFetchRequest()
             {
-                gameId = game.getGameId,
+                gameId = game.gameId,
                 absoluteImagePath = game.getAbsoluteIconPath,
                 callback = MediateReturn
             });

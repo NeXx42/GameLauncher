@@ -54,7 +54,7 @@ public partial class Library_Game : UserControl
             await ImageManager.GetGameImage<ImageBrush>(game, RedrawIcon);
         }
 
-        title.Text = game.getGame.gameName;
+        title.Text = game.gameName;
     }
 
     public void RedrawIcon(int gameId, ImageBrush? bitmapImg)

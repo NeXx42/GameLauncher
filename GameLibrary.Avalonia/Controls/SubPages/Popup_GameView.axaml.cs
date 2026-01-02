@@ -53,15 +53,24 @@ public partial class Popup_GameView : UserControl
         await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
         await tabGroup.OpenFresh();
 
-        lbl_Title.Content = game.getGame.gameName;
+        lbl_Title.Content = game.gameName;
 
-        (int? currentExecutable, string[] possibleBinaries) = game.GetPossibleBinaries();
-        inp_binary.SetupAsync(possibleBinaries.Select(x => Path.GetFileName(x)), currentExecutable, HandleBinaryChange);
+        (int? currentExecutable, string[] possibleBinaries)? options = game.GetPossibleBinaries();
+
+        if (options != null)
+        {
+            inp_binary.IsVisible = true;
+            inp_binary.SetupAsync(options.Value.possibleBinaries.Select(x => Path.GetFileName(x)), options.Value.currentExecutable, HandleBinaryChange);
+        }
+        else
+        {
+            inp_binary.IsVisible = false;
+        }
     }
 
     private void UpdateGameIcon(int gameId, ImageBrush? img)
     {
-        if (inspectingGame?.getGameId != gameId)
+        if (inspectingGame?.gameId != gameId)
             return;
 
         img_bg.Background = img;
@@ -94,12 +103,12 @@ public partial class Popup_GameView : UserControl
         ]);
     }
 
-    private async Task OpenOverlay() => await OverlayManager.LaunchOverlay(inspectingGame!.getGameId);
+    private async Task OpenOverlay() => await OverlayManager.LaunchOverlay(inspectingGame!.gameId);
     private async Task HandleBinaryChange() => await inspectingGame!.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
 
     private async Task StartNameChange()
     {
-        string? res = await DependencyManager.uiLinker!.OpenStringInputModal("Game Name", inspectingGame!.getGame.gameName);
+        string? res = await DependencyManager.uiLinker!.OpenStringInputModal("Game Name", inspectingGame!.gameName);
 
         if (!string.IsNullOrEmpty(res))
             await inspectingGame!.UpdateGameName(res);
@@ -107,7 +116,7 @@ public partial class Popup_GameView : UserControl
 
     private async Task RefreshSelectedGame(int gameId)
     {
-        if (gameId != inspectingGame?.getGameId)
+        if (gameId != inspectingGame?.gameId)
             return;
 
         await Draw(inspectingGame!);
@@ -267,7 +276,7 @@ public partial class Popup_GameView : UserControl
                 foreach (KeyValuePair<int, Library_Tag> tag in allTags)
                 {
                     tag.Value.Margin = new Thickness(0, 0, 0, 5);
-                    tag.Value.Toggle(game?.getTags.Contains(tag.Key) ?? false);
+                    tag.Value.Toggle(game?.tags.Contains(tag.Key) ?? false);
                 }
             }
         }
@@ -293,15 +302,15 @@ public partial class Popup_GameView : UserControl
                     string firstProfile = possibleRunners.Count > 0 ? possibleRunners[0].name : "INVALID";
 
                     string[] profileOptions = [$"Default ({firstProfile})", .. possibleRunners!.Select(x => x.name)!.ToArray()];
-                    int selectedProfile = possibleRunners.Select(x => x.id).ToList().IndexOf(game?.getGame.runnerId ?? -1);
+                    int selectedProfile = possibleRunners.Select(x => x.id).ToList().IndexOf(game?.runnerId ?? -1);
 
                     groupMaster!.master.inp_WineProfile.IsVisible = true;
                     groupMaster!.master.inp_WineProfile.SetupAsync(profileOptions, selectedProfile >= 0 ? (selectedProfile + 1) : 0, HandleWineProfileChange);
 
                 }
 
-                groupMaster!.master.inp_Emulate.SilentSetValue(game!.useRegionEmulation);
-                groupMaster!.master.inp_CaptureLogs.SilentSetValue(game!.captureLogs);
+                groupMaster!.master.inp_Emulate.SilentSetValue(game!.useRegionEmulation ?? false);
+                groupMaster!.master.inp_CaptureLogs.SilentSetValue(game!.captureLogs ?? false);
 
                 await base.Open(game);
             }

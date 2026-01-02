@@ -5,40 +5,54 @@ using GameLibrary.DB.Tables;
 
 namespace GameLibrary.Logic.Objects;
 
-public interface IGameDto
+public abstract class GameDto
 {
-    public int getGameId { get; }
+    public readonly int gameId;
 
-    public bool captureLogs { get; }
-    public bool useRegionEmulation { get; }
+    public string gameName { protected set; get; }
+    public string folderPath { protected set; get; }
 
-    public string getAbsoluteFolderLocation { get; }
-    public string getAbsoluteBinaryLocation { get; }
-}
+    public string? iconPath { protected set; get; }
+    public string? binaryPath { protected set; get; }
 
-public class GameForge : IGameDto
-{
-    public required string path;
+    public int? libraryId { protected set; get; }
+    public int? runnerId { protected set; get; }
 
-    public int getGameId => -1;
-    public bool captureLogs => false;
+    public bool? captureLogs { protected set; get; }
+    public bool? useRegionEmulation { protected set; get; }
 
-    public bool useRegionEmulation => false;
+    public DateTime? lastPlayed { protected set; get; }
 
-    public string getAbsoluteFolderLocation => Path.GetDirectoryName(path)!;
-    public string getAbsoluteBinaryLocation => path;
-}
+    public HashSet<int> tags { protected set; get; }
 
-public class GameDto : IGameDto
-{
-    private int gameId;
 
-    private dbo_Game? game;
+    public virtual string getAbsoluteFolderLocation
+    {
+        get
+        {
+            if (libraryId == null)
+                return folderPath;
 
-    private HashSet<int>? tags;
-    private dbo_Libraries? library;
+            return LibraryHandler.RouteLibrary(this);
+        }
+    }
 
-    // loading
+    public virtual string? getAbsoluteLogFile
+    {
+        get
+        {
+            if (!(captureLogs ?? false))
+            {
+                return null;
+            }
+
+            return $"{getAbsoluteBinaryLocation}.log";
+        }
+    }
+
+    public virtual string getAbsoluteIconPath => Path.Combine(getAbsoluteFolderLocation, iconPath ?? "INVALID.INVALID");
+    public virtual string getAbsoluteBinaryLocation => Path.Combine(getAbsoluteFolderLocation, binaryPath ?? "INVALID.INVALID");
+
 
     public bool IsInFilter(ref HashSet<int> filters)
     {
@@ -52,91 +66,53 @@ public class GameDto : IGameDto
         return true;
     }
 
-    public GameDto(dbo_Game game)
+    public GameDto(dbo_Game game, dbo_GameTag[] tags)
     {
         this.gameId = game.id;
-        this.game = game;
+        this.gameName = game.gameName;
+
+        this.iconPath = game.iconPath;
+        this.folderPath = game.gameFolder;
+        this.binaryPath = game.executablePath;
+
+        this.captureLogs = game.captureLogs;
+        this.useRegionEmulation = game.useEmulator;
+
+        this.runnerId = game.runnerId;
+        this.libraryId = game.libraryId;
+
+        this.tags = tags.Select(x => x.TagId).ToHashSet();
     }
 
-    public async Task LoadAll(bool reloadGame = true)
+    protected async Task UpdateDatabaseEntry(params string[] columns)
     {
-        if (reloadGame)
-            await LoadGame();
-
-        await LoadTags();
-        await LoadLibrary();
-    }
-
-    public async Task LoadGame(dbo_Game? dbGame = null)
-    {
-        if (dbGame != null)
+        await Database_Manager.Update(new dbo_Game()
         {
-            game = dbGame;
-            return;
-        }
+            id = gameId,
 
-        game = await Database_Manager.GetItem<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), gameId));
+            gameName = gameName,
+            gameFolder = folderPath,
+
+            captureLogs = captureLogs,
+            useEmulator = useRegionEmulation ?? false,
+
+            iconPath = iconPath,
+            executablePath = binaryPath,
+            lastPlayed = lastPlayed,
+
+            runnerId = runnerId,
+            libraryId = libraryId
+
+        }, SQLFilter.Equal(nameof(dbo_Game.id), gameId), columns);
     }
 
-    public async Task UpdateGame()
+    // updating properties
+
+    public async Task UpdateGameName(string newName)
     {
-        await Database_Manager.Update(game!, SQLFilter.Equal(nameof(dbo_Game.id), getGameId));
-        LibraryHandler.onGameDetailsUpdate?.Invoke(gameId);
+        gameName = newName;
+        await UpdateDatabaseEntry(nameof(dbo_Game.gameName));
     }
-
-    public async Task LoadTags()
-    {
-        dbo_GameTag[] actualTags = await Database_Manager.GetItems<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), gameId));
-        tags = actualTags.Select(x => x.TagId).ToHashSet();
-    }
-
-    public async Task LoadLibrary()
-    {
-        if (game!.libraryId == null)
-            return;
-
-        library = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libaryId), game!.libraryId));
-    }
-
-
-
-    // props
-
-    public int getGameId => gameId;
-    public bool captureLogs => game?.captureLogs ?? false;
-    public bool useRegionEmulation => game?.useEmulator ?? false;
-
-    public dbo_Game getGame => game!;
-    public HashSet<int> getTags => tags!;
-
-    public string getAbsoluteFolderLocation
-    {
-        get
-        {
-            if (library == null)
-                return game!.gameFolder;
-
-            return Path.Combine(library!.rootPath, game!.gameFolder!);
-        }
-    }
-
-    public string getAbsoluteIconPath => Path.Combine(getAbsoluteFolderLocation, game?.iconPath ?? "INVALID.INVALID");
-    public string getAbsoluteBinaryLocation => Path.Combine(getAbsoluteFolderLocation, game?.executablePath ?? "INVALID.INVALID");
-    public string? getAbsoluteLogFile
-    {
-        get
-        {
-            if (!(game?.captureLogs ?? false))
-            {
-                return null;
-            }
-
-            return $"{getAbsoluteBinaryLocation}.log";
-        }
-    }
-
-
-    // changing properties
 
     public async Task UpdateGameIcon(string path)
     {
@@ -149,49 +125,27 @@ public class GameDto : IGameDto
             catch { }
         }
 
-        game!.iconPath = path;
+        iconPath = path;
 
-        await Database_Manager.Update(game, SQLFilter.Equal(nameof(dbo_Game.id), game.id), nameof(dbo_Game.iconPath));
-        ImageManager.ClearCache(game.id);
+        await UpdateDatabaseEntry(nameof(dbo_Game.iconPath));
+        ImageManager.ClearCache(gameId);
     }
 
-    public async Task UpdateGameEmulationStatus(bool to)
-    {
-        game!.useEmulator = to;
-        await UpdateGame();
-    }
+    // default behaviour 
 
-    public async Task UpdateCaptureLogsStatus(bool to)
+    public async Task ToggleTag(int tagId)
     {
-        game!.captureLogs = to;
-        await UpdateGame();
-    }
-
-    public async Task ChangeBinaryLocation(string? path)
-    {
-        string newAbsolutePath = Path.Combine(getAbsoluteFolderLocation, path!);
-
-        if (!File.Exists(newAbsolutePath))
+        if (tags!.Contains(tagId))
         {
-            return;
+            tags.Remove(tagId);
+            await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), gameId).Equal(nameof(dbo_GameTag.TagId), tagId));
         }
-
-        game!.executablePath = path;
-        await UpdateGame();
+        else
+        {
+            tags.Add(tagId);
+            await Database_Manager.InsertItem(new dbo_GameTag() { GameId = gameId, TagId = tagId });
+        }
     }
-
-    public async Task ChangeRunnerId(int? runnerId)
-    {
-        game!.runnerId = runnerId;
-        await UpdateGame();
-    }
-
-    public async Task UpdateGameName(string newName)
-    {
-        game!.gameName = newName;
-        await UpdateGame();
-    }
-
 
     public void BrowseToGame()
     {
@@ -213,54 +167,19 @@ public class GameDto : IGameDto
         }
     }
 
-
-    public string PromoteTempFile(string path)
+    public async Task UpdateLastPlayed()
     {
-        string extension = Path.GetExtension(path);
-        string newName = $"{Guid.NewGuid()}{extension}";
-
-        File.Move(path, Path.Combine(getAbsoluteFolderLocation, newName));
-        return newName;
+        lastPlayed = DateTime.UtcNow;
+        await UpdateDatabaseEntry(nameof(dbo_Game.lastPlayed));
     }
 
-    public async Task ToggleTag(int tagId)
-    {
-        if (tags!.Contains(tagId))
-        {
-            tags.Remove(tagId);
-            await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), gameId).Equal(nameof(dbo_GameTag.TagId), tagId));
-        }
-        else
-        {
-            tags.Add(tagId);
-            await Database_Manager.InsertItem(new dbo_GameTag() { GameId = gameId, TagId = tagId });
-        }
-    }
+    // required behaviour    
 
+    public abstract Task Launch();
 
-    // misc
+    // overridable behaviour    
 
-
-    public (int? selected, string[] options) GetPossibleBinaries()
-    {
-        if (!Directory.Exists(getAbsoluteFolderLocation))
-            return (null, []);
-
-        List<string> binaries = Directory.GetFiles(getAbsoluteFolderLocation).Where(RunnerManager.IsUniversallyAcceptedExecutableFormat).Select(x => Path.GetFileName(x)).ToList();
-        return (binaries.IndexOf(game!.executablePath!), binaries.ToArray());
-    }
-
-    public async Task Launch()
-    {
-        await RunnerManager.RunGame(new RunnerManager.GameLaunchRequest()
-        {
-            gameId = getGameId,
-            path = getAbsoluteBinaryLocation,
-            runnerId = game?.runnerId
-        });
-    }
-
-    public async Task<string?> ReadLogs()
+    public virtual async Task<string?> ReadLogs()
     {
         string? path = getAbsoluteLogFile;
 
@@ -292,4 +211,14 @@ public class GameDto : IGameDto
             }
         }
     }
+
+    // custom game specific
+
+    public virtual Task UpdateGameEmulationStatus(bool to) => Task.CompletedTask;
+    public virtual Task UpdateCaptureLogsStatus(bool to) => Task.CompletedTask;
+    public virtual Task ChangeBinaryLocation(string? to) => Task.CompletedTask;
+    public virtual Task ChangeRunnerId(int? runnerId) => Task.CompletedTask;
+
+    public virtual string PromoteTempFile(string path) => string.Empty;
+    public virtual (int? selected, string[] options)? GetPossibleBinaries() => null;
 }

@@ -16,7 +16,7 @@ public partial class Page_Library : UserControl
     private Dictionary<int, Library_Tag> existingTags = new Dictionary<int, Library_Tag>();
 
     private bool currentSortAscending = true;
-    private LibraryHandler.OrderType currentSort = LibraryHandler.OrderType.Id;
+    private GameFilterRequest.OrderType currentSort = GameFilterRequest.OrderType.Id;
 
     private LibraryPageBase gameList;
 
@@ -67,7 +67,7 @@ public partial class Page_Library : UserControl
 
         inp_Search.KeyUp += (_, __) => gameList.DrawGames();
         btn_SortDir.RegisterClick(UpdateSortDirection);
-        inp_SortType.Setup(Enum.GetValues(typeof(LibraryHandler.OrderType)), 0, UpdateSortType);
+        inp_SortType.Setup(Enum.GetValues(typeof(GameFilterRequest.OrderType)), 0, UpdateSortType);
     }
 
     public async Task DrawTags()
@@ -200,7 +200,7 @@ public partial class Page_Library : UserControl
 
     private async void UpdateSortType()
     {
-        currentSort = (LibraryHandler.OrderType)inp_SortType.selectedIndex;
+        currentSort = (GameFilterRequest.OrderType)inp_SortType.selectedIndex;
         await gameList.DrawGames();
     }
 
@@ -209,9 +209,9 @@ public partial class Page_Library : UserControl
         btn_SortDir.Label = currentSortAscending ? "Ascending" : "Descending";
     }
 
-    public LibraryHandler.GameFilterRequest GetGameFilter(int page, int contentPerPage)
+    public GameFilterRequest GetGameFilter(int page, int contentPerPage)
     {
-        return new LibraryHandler.GameFilterRequest()
+        return new GameFilterRequest()
         {
             nameFilter = inp_Search.Text,
             tagList = activeTags,

@@ -17,16 +17,16 @@ public static class ExtensionMethods
         if (string.IsNullOrEmpty(textFilter))
             return inp;
 
-        return inp.Where(x => x.getGame.gameName.StartsWith(textFilter, StringComparison.InvariantCultureIgnoreCase));
+        return inp.Where(x => x.gameName.StartsWith(textFilter, StringComparison.InvariantCultureIgnoreCase));
     }
 
-    public static IEnumerable<GameDto> Filter_OrderType(this IEnumerable<GameDto> inp, LibraryHandler.OrderType orderType)
+    public static IEnumerable<GameDto> Filter_OrderType(this IEnumerable<GameDto> inp, GameFilterRequest.OrderType orderType)
     {
         switch (orderType)
         {
-            case LibraryHandler.OrderType.Id: return inp.OrderBy(x => x.getGameId);
-            case LibraryHandler.OrderType.Name: return inp.OrderBy(x => x.getGame.gameName);
-            case LibraryHandler.OrderType.LastPlayed: return inp.OrderBy(x => x.getGame.lastPlayed);
+            case GameFilterRequest.OrderType.Id: return inp.OrderBy(x => x.gameId);
+            case GameFilterRequest.OrderType.Name: return inp.OrderBy(x => x.gameName);
+            case GameFilterRequest.OrderType.LastPlayed: return inp.OrderBy(x => x.lastPlayed);
         }
 
         return inp;
