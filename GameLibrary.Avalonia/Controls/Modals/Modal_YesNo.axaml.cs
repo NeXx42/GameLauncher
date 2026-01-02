@@ -8,7 +8,7 @@ namespace GameLibrary.Avalonia.Controls.Modals;
 
 public partial class Modal_YesNo : UserControl
 {
-    private TaskCompletionSource<bool>? boolResponse;
+    private TaskCompletionSource<int>? completeResponse;
     private (Func<Task>, string?)? asyncModalOptions;
 
 
@@ -16,34 +16,54 @@ public partial class Modal_YesNo : UserControl
     {
         InitializeComponent();
 
-        btn_Negative.RegisterClick(() => boolResponse?.SetResult(false));
+        btn_Negative.RegisterClick(() => completeResponse?.SetResult(-1));
     }
 
-    public Task<bool> RequestModal(string title, string paragraph)
+    public Task<int> RequestModal(string title, string paragraph)
     {
-        boolResponse = new TaskCompletionSource<bool>();
-        btn_Positive.RegisterClick(() => boolResponse?.SetResult(true));
+        completeResponse = new TaskCompletionSource<int>();
+        DrawGenericDetails(title, paragraph, ("Yes", () => Task.CompletedTask, null));
 
+        return completeResponse.Task;
+    }
+
+    public Task<int> RequestGeneric(string title, string paragraph, params (string btnText, Func<Task> callback, string? loadingMessage)[] btns)
+    {
+        completeResponse = new TaskCompletionSource<int>();
+
+        extraBtns.IsVisible = true;
+        DrawGenericDetails(title, paragraph, btns);
+
+        return completeResponse.Task;
+    }
+
+    private void DrawGenericDetails(string title, string paragraph, params (string btnText, Func<Task> callback, string? loadingMessage)[]? btns)
+    {
         lbl_Title.Content = title;
         lbl_Paragraph.Text = paragraph;
 
-        return boolResponse.Task;
-    }
-
-    public Task<bool> RequestModal(string title, string paragraph, Func<Task> positiveCallback, string? loadingMessage)
-    {
-        boolResponse = new TaskCompletionSource<bool>();
-        btn_Positive.RegisterClick(OnPositiveClick, loadingMessage);
-
-        lbl_Title.Content = title;
-        lbl_Paragraph.Text = paragraph;
-
-        return boolResponse.Task;
-
-        async Task OnPositiveClick()
+        if (btns != null)
         {
-            await positiveCallback();
-            boolResponse.SetResult(true);
+            extraBtns.Children.Clear();
+
+            for (int i = 0; i < btns.Length; i++)
+            {
+                int callbackId = i;
+
+                Common_Button btnUI = new Common_Button();
+
+                btnUI.MinWidth = btn_Negative.Width;
+                btnUI.Label = btns[callbackId].btnText;
+                btnUI.RegisterClick(() => GenericCallback(callbackId), btns[callbackId].loadingMessage);
+
+                extraBtns.Children.Add(btnUI);
+            }
+        }
+
+        async Task GenericCallback(int btnId)
+        {
+            await btns[btnId].callback();
+            completeResponse?.SetResult(btnId);
         }
     }
 }

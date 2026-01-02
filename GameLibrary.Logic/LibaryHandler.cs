@@ -155,18 +155,21 @@ namespace GameLibrary.Logic
 
         public static void MarkTagsAsDirty() => m_AreTagsDirty = true;
 
-        public static async Task DeleteGame(GameDto game)
+        public static async Task DeleteGame(GameDto game, bool removeFiles)
         {
-            try
+            if (removeFiles)
             {
-                await FileManager.DeleteGameFiles(game);
-            }
-            catch (Exception e)
-            {
-                string paragraph = $"Failed to delete games files!\n\n{e.Message}\n\nDo you want to delete the record anyway?";
+                try
+                {
+                    await FileManager.DeleteGameFiles(game);
+                }
+                catch (Exception e)
+                {
+                    string paragraph = $"Failed to delete games files!\n\n{e.Message}\n\nDo you want to delete the record anyway?";
 
-                if (!await DependencyManager.uiLinker!.OpenYesNoModal("Delete record?", paragraph))
-                    return;
+                    if (!await DependencyManager.uiLinker!.OpenYesNoModal("Delete record?", paragraph))
+                        return;
+                }
             }
 
             await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), game.getGameId));

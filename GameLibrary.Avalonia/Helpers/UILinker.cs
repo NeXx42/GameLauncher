@@ -39,7 +39,7 @@ public class UILinker : IUILinker
 
         async Task ModalRequest(Modal_YesNo modal)
         {
-            res = await modal.RequestModal(title, paragraph);
+            res = (await modal.RequestModal(title, paragraph)) != -1;
         }
     }
 
@@ -52,7 +52,21 @@ public class UILinker : IUILinker
 
         async Task ModalRequest(Modal_YesNo modal)
         {
-            res = await modal.RequestModal(title, paragraph, positiveCallback, loadingMessage);
+            res = (await modal.RequestGeneric(title, paragraph, ("Yes", positiveCallback, loadingMessage))) != -1;
         }
     }
+
+    public async Task<int> OpenConfirmationAsync(string title, string paragraph, params (string btn, Func<Task> callback, string? loadingMessage)[] controls)
+    {
+        int res = -1;
+        await MainWindow.instance!.DisplayModal<Modal_YesNo>(ModalRequest);
+
+        return res;
+
+        async Task ModalRequest(Modal_YesNo modal)
+        {
+            res = await modal.RequestGeneric(title, paragraph, controls);
+        }
+    }
+
 }

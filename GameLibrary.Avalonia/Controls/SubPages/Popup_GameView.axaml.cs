@@ -86,8 +86,12 @@ public partial class Popup_GameView : UserControl
         if (inspectingGame == null)
             return;
 
-        string paragraph = $"Are you sure you want to delete \"{inspectingGame!.getGame.gameName}\"\n\nAnd its folder\n\"{inspectingGame!.getAbsoluteFolderLocation}\"";
-        await DependencyManager.uiLinker!.OpenYesNoModalAsync("Delete Game?", paragraph, async () => await LibraryHandler.DeleteGame(inspectingGame), "Deleting");
+        string paragraph = $"Files are located:\n\n{inspectingGame!.getAbsoluteFolderLocation}";
+        await DependencyManager.uiLinker!.OpenConfirmationAsync("Delete Game?", paragraph,
+        [
+            ("Remove", async () => await LibraryHandler.DeleteGame(inspectingGame, false), "Removing"),
+            ("Delete Files", async () => await LibraryHandler.DeleteGame(inspectingGame, true), "Deleting"),
+        ]);
     }
 
     private async Task OpenOverlay() => await OverlayManager.LaunchOverlay(inspectingGame!.getGameId);
