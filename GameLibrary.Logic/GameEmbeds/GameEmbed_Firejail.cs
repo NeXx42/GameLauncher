@@ -21,6 +21,8 @@ public class GameEmbed_Firejail : IGameEmbed
 
         if (args.HasConfigValueOf(RunnerManager.RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true))
         {
+            // hide user folder by default
+            argumentsEnd = inp.arguments.AddAfter(argumentsEnd, $"--whitelist={DatabaseManager.GetUserStorageFolder()}");
             //argumentsEnd = inp.arguments.AddAfter(argumentsEnd, "--read-only=~");
 
             foreach (string whitelist in inp.whiteListedDirs)

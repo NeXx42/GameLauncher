@@ -7,14 +7,14 @@
   <Border Background="#0a0e13" CornerRadius="16,16,0,0" BorderBrush="{DynamicResource bg_Border}" BorderThickness="1">
     <Grid>
       <Grid.RowDefinitions>
-        <RowDefinition Height="670"/>
+        <RowDefinition Height="Auto"/>
         <RowDefinition Height="*"/>
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
 
       <!-- img -->
 
-      <Grid VerticalAlignment="Top" ClipToBounds="True" Height="670" Grid.Row="0">
+      <Grid VerticalAlignment="Top" ClipToBounds="True" MinHeight="500" MaxHeight="670" Grid.Row="0">
         <Border x:Name="img_bg" CornerRadius="10" IsHitTestVisible="True">
 
           <Grid>

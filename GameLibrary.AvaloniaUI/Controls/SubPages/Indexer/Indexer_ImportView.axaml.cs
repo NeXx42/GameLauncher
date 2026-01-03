@@ -31,6 +31,7 @@ public partial class Indexer_ImportView : UserControl
         this.master = master;
         cont_FoundGames.Children.Clear();
 
+        var v = LibraryHandler.GetLibraries();
         availableLibraries = LibraryHandler.GetLibraries().Where(x => x.externalType == null).ToArray();
         string[] libraries = ["No Library", .. availableLibraries.Select(x => x.root)];
 

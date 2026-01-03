@@ -18,6 +18,6 @@ public class LibraryDto
     {
         libraryId = lib.libaryId;
         root = lib.rootPath;
-        externalType = (ExternalTypes)lib.libraryExternalType;
+        externalType = lib.libraryExternalType.HasValue ? (ExternalTypes)lib.libraryExternalType : null;
     }
 }

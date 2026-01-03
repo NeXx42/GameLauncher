@@ -62,8 +62,10 @@ public class GameRunner_Wine : IGameRunner
         res.command = getWineExecutable;
         res.arguments.AddLast(game.path);
 
-        res.whiteListedDirs.Add(Path.GetFileName(game.path));
+        res.whiteListedDirs.Add(Path.GetDirectoryName(game.path)!);
         res.whiteListedDirs.Add(prefixFolder);
+        res.whiteListedDirs.Add(rootLoc);
+        res.whiteListedDirs.Add(binaryFolder);
 
         res.environmentArguments.Add("WINEPREFIX", prefixFolder);
         res.environmentArguments.Add("WINEDEBUG", "-all");

@@ -6,7 +6,7 @@
         <FluentTheme />
 
         <Style Selector="TextBlock">
-            <Setter Property="FontFamily" Value="Segoe UI"/>
+            <Setter Property="FontFamily" Value="Ubuntu"/>
         </Style>
 
     </Application.Styles>

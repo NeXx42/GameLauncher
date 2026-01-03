@@ -8,7 +8,7 @@ namespace GameLibrary.DB.Tables
 
         public int libaryId { get; set; }
         public required string rootPath { get; set; }
-        public int libraryExternalType { get; set; }
+        public int? libraryExternalType { get; set; }
 
         public static Database_Column[] getColumns => [
             new Database_Column(){ columnName = nameof(libaryId), columnType = Database_ColumnType.INTEGER, allowNull = false, autoIncrement = true, isPrimaryKey = true },

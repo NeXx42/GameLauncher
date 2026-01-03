@@ -358,7 +358,7 @@ public static class RunnerManager
             {
                 writer = new StreamWriter(logFile, System.Text.Encoding.ASCII, new FileStreamOptions()
                 {
-                    Mode = FileMode.OpenOrCreate,
+                    Mode = FileMode.Create,
                     Access = FileAccess.ReadWrite,
                     Share = FileShare.ReadWrite
                 });

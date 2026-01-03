@@ -42,7 +42,7 @@ public partial class Control_Settings_Toggle : UserControl, ISettingControl
 
     private async Task Toggle(bool to)
     {
-        if (await setting!.SaveSetting(!to))
+        if (await setting!.SaveSetting(to))
         {
             selectedOption = to;
             RedrawButton();

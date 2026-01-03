@@ -198,7 +198,7 @@ public abstract class GameDto
         if (time.TotalHours > 0) return Format(time.TotalHours, "hour");
         if (time.TotalMinutes > 0) return Format(time.TotalMinutes, "min");
 
-        return Format(time.TotalSeconds, "sec");
+        return "Just now";
 
         string Format(double time, string interval)
         {
