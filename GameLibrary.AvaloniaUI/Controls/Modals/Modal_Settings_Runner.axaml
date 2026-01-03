@@ -3,22 +3,14 @@
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080" x:Class="GameLibrary.AvaloniaUI.Controls.Modals.Modal_Settings_Runner"
   xmlns:Controls="clr-namespace:GameLibrary.AvaloniaUI.Controls">
-  <Border VerticalAlignment="Center" HorizontalAlignment="Center" Width="500" Height="400" Background="{DynamicResource bg_BarLight}" CornerRadius="5" ClipToBounds="True">
+  <Border VerticalAlignment="Center" HorizontalAlignment="Center" Width="500" Height="400" Background="#0f1419" CornerRadius="16" ClipToBounds="True" BorderBrush="#1b1f24" BorderThickness="1">
     <Grid RowDefinitions="Auto, *, 50">
 
-      <StackPanel Background="{DynamicResource bg_BackgroundDarker}" VerticalAlignment="Top" Height="30" Orientation="Horizontal" Spacing="1" x:Name="TabGroup_Buttons">
-        <Border Background="{DynamicResource bg_Border}" Width="100">
-          <Label VerticalAlignment="Center" HorizontalAlignment="Center" Content="General"/>
-        </Border>
-        <Border Background="{DynamicResource bg_Border}" Width="100">
-          <Label VerticalAlignment="Center" HorizontalAlignment="Center" Content="Wine"/>
-        </Border>
-        <Border Background="{DynamicResource bg_Border}" Width="100">
-          <Label VerticalAlignment="Center" HorizontalAlignment="Center" Content="xxx"/>
-        </Border>
-        <Border Background="{DynamicResource bg_Border}" Width="100">
-          <Label VerticalAlignment="Center" HorizontalAlignment="Center" Content="xxx"/>
-        </Border>
+      <StackPanel VerticalAlignment="Top" Height="30" Orientation="Horizontal" Spacing="5" x:Name="TabGroup_Buttons" Margin="5">
+        <Controls:Common_ButtonToggle Label="General"/>
+        <Controls:Common_ButtonToggle Label="Wine"/>
+        <Controls:Common_ButtonToggle Label=""/>
+        <Controls:Common_ButtonToggle Label=""/>
       </StackPanel>
 
       <ScrollViewer Grid.Row="1">
@@ -63,7 +55,7 @@
 
       <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right" Margin="10">
         <Controls:Common_Button Width="100" Label="Close" x:Name="btn_Close"/>
-        <Controls:Common_Button Width="100" Label="Save" x:Name="btn_Save" />
+        <Controls:Common_Button Classes="positive" Width="100" Label="Save" x:Name="btn_Save" />
       </StackPanel>
     </Grid>
   </Border>

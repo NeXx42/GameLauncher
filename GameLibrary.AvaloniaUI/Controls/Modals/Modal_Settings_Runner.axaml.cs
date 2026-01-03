@@ -33,7 +33,7 @@ public partial class Modal_Settings_Runner : UserControl
         btn_Dir.RegisterClick(SelectDirectory);
         btn_WineTricks.RegisterClick(OpenWineTricks, "Loading");
 
-        tabGroup = new UITabGroup(TabGroup_Buttons, TabGroup_Content);
+        tabGroup = new UITabGroup(TabGroup_Buttons, TabGroup_Content, true);
     }
 
     public Task HandleOpen(int? runnerId)

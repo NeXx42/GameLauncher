@@ -1,6 +1,8 @@
 using System;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Controls.Primitives;
+using GameLibrary.AvaloniaUI.Controls;
 
 namespace GameLibrary.AvaloniaUI.Helpers;
 
@@ -10,15 +12,30 @@ public class UITabGroup
 
     protected int? selectedGroup;
 
-    public UITabGroup(Panel btns, Panel content)
+    public UITabGroup(Panel btns, Panel content, bool useToggleButtons)
     {
-        groups = new UITabGroup_Group[Math.Min(btns.Children.Count, content.Children.Count)];
-
-        for (int i = 0; i < groups.Length; i++)
+        if (useToggleButtons)
         {
-            groups[i] = new UITabGroup_Group(content.Children[i], (Border)btns.Children[i]);
-            groups[i].Setup(this, i);
+            groups = new UITabGroup_GroupToggleButton[Math.Min(btns.Children.Count, content.Children.Count)];
+
+            for (int i = 0; i < groups.Length; i++)
+            {
+                groups[i] = new UITabGroup_GroupToggleButton(content.Children[i], (Common_ButtonToggle)btns.Children[i]);
+                groups[i].Setup(this, i);
+            }
         }
+        else
+        {
+            groups = new UITabGroup_GroupToggleButton[Math.Min(btns.Children.Count, content.Children.Count)];
+
+            for (int i = 0; i < groups.Length; i++)
+            {
+                groups[i] = new UITabGroup_GroupToggleButton(content.Children[i], (Common_ButtonToggle)btns.Children[i]);
+                groups[i].Setup(this, i);
+            }
+        }
+
+
 
         for (int i = groups.Length; i < btns.Children.Count; i++)
             btns.Children[i].IsVisible = false;
@@ -75,6 +92,37 @@ public class UITabGroup_Group
 
     public virtual Task Open()
     {
+        element.IsVisible = true;
+        return Task.CompletedTask;
+    }
+}
+
+public class UITabGroup_GroupToggleButton : UITabGroup_Group
+{
+    protected new Common_ButtonToggle btn;
+
+    public UITabGroup_GroupToggleButton(Control element, Common_ButtonToggle btn) : base(element, btn)
+    {
+        this.btn = btn;
+        btn.autoToggle = false;
+    }
+
+    public override void Setup(UITabGroup master, int index)
+    {
+        btn.Register(async _ => await master.ChangeSelection(index), null);
+        Close();
+    }
+
+    public override Task Close()
+    {
+        btn.isSelected = false;
+        element.IsVisible = false;
+        return Task.CompletedTask;
+    }
+
+    public override Task Open()
+    {
+        btn.isSelected = true;
         element.IsVisible = true;
         return Task.CompletedTask;
     }

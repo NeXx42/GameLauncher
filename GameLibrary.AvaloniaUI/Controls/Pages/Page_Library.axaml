@@ -6,7 +6,7 @@
     xmlns:components="clr-namespace:GameLibrary.AvaloniaUI.Controls.SubPage">
 
 
-    <Grid Background="#0b1014ff">
+    <Grid Background="Black">
         <Border x:Name="eff_Blur">
             <Grid>
                 <StackPanel Spacing="5">
