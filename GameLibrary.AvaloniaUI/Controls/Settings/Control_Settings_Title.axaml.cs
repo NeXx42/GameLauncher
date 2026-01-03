@@ -18,7 +18,7 @@ public partial class Control_Settings_Title : UserControl, ISettingControl
 
     public ISettingControl Draw(SettingsUI_Title title)
     {
-        lbl.Margin = new Thickness(0, title.margin, 0, 0);
+        this.Margin = new Thickness(0, title.margin, 0, 0);
         lbl.Content = title.title;
         return this;
     }

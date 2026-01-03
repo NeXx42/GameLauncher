@@ -20,6 +20,4 @@ public class LibraryDto
         root = lib.rootPath;
         externalType = (ExternalTypes)lib.libraryExternalType;
     }
-
-    public virtual Task RefreshExternalLibrary() => Task.CompletedTask;
 }

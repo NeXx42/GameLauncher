@@ -1,25 +1,23 @@
 using System.Text.Json;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Objects;
 using ValveKeyValue;
 
-namespace GameLibrary.Logic.Objects;
+namespace GameLibrary.Logic.Integration;
 
-public class LibraryDto_Steam : LibraryDto
+public static class Integration_Steam
 {
-    public LibraryDto_Steam(dbo_Libraries lib) : base(lib)
+    public static async Task SyncLibrary()
     {
-    }
+        int libId = await GetOrCreateLibrary();
 
-
-    public override async Task RefreshExternalLibrary()
-    {
         (string, long)[]? installedApps = await FindMounts();
 
         if (installedApps == null)
             return;
 
-        dbo_Game[]? savedSteamGames = await Database_Manager.GetItems<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.libraryId), libraryId));
+        dbo_Game[]? savedSteamGames = await Database_Manager.GetItems<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.libraryId), libId));
 
         Dictionary<long, dbo_Game> existingGames = savedSteamGames.ToDictionary(x => long.Parse(x.executablePath!), x => x);
         savedSteamGames = null;
@@ -45,7 +43,7 @@ public class LibraryDto_Steam : LibraryDto
                 Stream json = await res.Content.ReadAsStreamAsync();
                 JsonElement doc = (await JsonDocument.ParseAsync(json)).RootElement.EnumerateObject().ElementAt(0).Value;
 
-                dbo_Game? gameObj = await CreateNewGameObject(gameId, root, doc);
+                dbo_Game? gameObj = await CreateNewGameObject(gameId, root, doc, libId);
 
                 if (gameObj != null)
                     newGames.Add(gameObj);
@@ -55,7 +53,26 @@ public class LibraryDto_Steam : LibraryDto
         await Database_Manager.InsertItem(newGames.ToArray());
     }
 
-    private async Task<(string, long)[]?> FindMounts()
+    private static async Task<int> GetOrCreateLibrary()
+    {
+        dbo_Libraries? existingLib = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), (int)LibraryDto.ExternalTypes.Steam));
+
+        if (existingLib == null)
+        {
+            existingLib = new dbo_Libraries()
+            {
+                rootPath = "steamlib",
+                libraryExternalType = (int)LibraryDto.ExternalTypes.Steam,
+            };
+
+            await Database_Manager.InsertItem(existingLib);
+            existingLib = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), (int)LibraryDto.ExternalTypes.Steam)); // need to refetch for auto id
+        }
+
+        return existingLib.libaryId;
+    }
+
+    private static async Task<(string, long)[]?> FindMounts()
     {
         string libraryPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.UserProfile), ".steam/steam/steamapps/libraryfolders.vdf");
 
@@ -89,7 +106,7 @@ public class LibraryDto_Steam : LibraryDto
         return discoveredGames.ToArray();
     }
 
-    private async Task<dbo_Game?> CreateNewGameObject(long id, string root, JsonElement doc)
+    private static async Task<dbo_Game?> CreateNewGameObject(long id, string root, JsonElement doc, int libraryId)
     {
         if (!doc.GetProperty("success").GetBoolean())
             return CreatePlaceholder();

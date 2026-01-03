@@ -14,16 +14,22 @@ public partial class Control_Settings_Toggle : UserControl, ISettingControl
     private bool selectedOption = false;
     private SettingBase? setting;
 
+    private string? posText;
+    private string? negText;
+
     public Control_Settings_Toggle()
     {
         InitializeComponent();
-        btn.RegisterClick(Toggle, "Updating");
+        btn.RegisterClick(Toggle, "Saving");
     }
 
     public ISettingControl Draw(SettingBase setting, SettingsUI_Toggle info)
     {
         this.setting = setting;
         title.Content = setting.getName;
+
+        posText = info.positiveText;
+        negText = info.negativeText;
 
         return this;
     }
@@ -45,6 +51,6 @@ public partial class Control_Settings_Toggle : UserControl, ISettingControl
 
     private void RedrawButton()
     {
-        btn.Label = selectedOption ? "Enabled" : "Disabled";
+        btn.Label = selectedOption ? (posText ?? "Enabled") : (negText ?? "Disabled");
     }
 }

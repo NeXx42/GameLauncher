@@ -68,6 +68,8 @@ namespace GameLibrary.Logic
                     "Libraries",
                     [
                         new Setting_Title("Libraries", 0, SettingOSCompatibility.Universal),
+                        new Setting_Title("Integration", 0, SettingOSCompatibility.Universal),
+                        new Setting_SteamIntegration(),
                     ]
                 },
                 {

@@ -47,17 +47,7 @@ namespace GameLibrary.Logic
         private static async Task FindLibraries()
         {
             dbo_Libraries[] libraries = await Database_Manager.GetItems<dbo_Libraries>();
-            cachedLibraries = libraries.ToDictionary(x => x.libaryId, x =>
-            {
-                switch ((LibraryDto.ExternalTypes)x.libraryExternalType)
-                {
-                    case LibraryDto.ExternalTypes.Steam: return new LibraryDto_Steam(x);
-                }
-
-                return new LibraryDto(x);
-            });
-
-            await Task.WhenAll(cachedLibraries.Values.Select(x => x.RefreshExternalLibrary()));
+            cachedLibraries = libraries.ToDictionary(x => x.libaryId, x => new LibraryDto(x));
         }
 
 
