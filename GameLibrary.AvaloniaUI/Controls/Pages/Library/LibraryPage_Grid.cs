@@ -5,15 +5,37 @@ using Avalonia;
 using Avalonia.Media;
 using GameLibrary.AvaloniaUI.Controls;
 using GameLibrary.Logic;
+using ZstdSharp.Unsafe;
 
 namespace GameLibrary.AvaloniaUI.Controls.Pages.Library;
 
 public class LibraryPage_Grid : LibraryPageBase
 {
-    public static (int x, int y) ContentPerPage = (5, 4);
+    public static (int x, int y) ContentPerPage = (6, 3);
+    public static (int width, int height) CardSize = (290, 257);
+
     public int getTotalContentPerPage => ContentPerPage.x * ContentPerPage.y;
 
     private int page;
+    private int? hoveredGame
+    {
+        get => m_HoveredGame;
+        set
+        {
+            if (m_HoveredGame.HasValue)
+            {
+                cacheUI[m_HoveredGame.Value].ToggleHover(false);
+            }
+
+            m_HoveredGame = value;
+
+            if (m_HoveredGame.HasValue)
+            {
+                cacheUI[m_HoveredGame.Value].ToggleHover(true);
+            }
+        }
+    }
+    private int? m_HoveredGame;
 
     private Library_Game[] cacheUI;
     private Dictionary<int, int> activeUI;
@@ -21,7 +43,6 @@ public class LibraryPage_Grid : LibraryPageBase
     public LibraryPage_Grid(Page_Library library) : base(library)
     {
         this.library = library;
-        const float ratio = 0.1927083333f;
 
         cacheUI = new Library_Game[getTotalContentPerPage];
         activeUI = new Dictionary<int, int>();
@@ -31,12 +52,15 @@ public class LibraryPage_Grid : LibraryPageBase
         for (int i = 0; i < cacheUI.Length; i++)
         {
             Library_Game ui = new Library_Game();
-            ui.Width = 1920 * ratio;
-            ui.Height = 1080 * ratio; // + padding + title
+            ui.Width = CardSize.width;
+            ui.Height = CardSize.height; // + padding + title
             ui.Margin = new Thickness(0, 0, 2, 0);
 
             library.cont_Games.Children.Add(ui);
             cacheUI[i] = ui;
+
+            int temp = i;
+            ui.pointerStatusChange += (enter) => hoveredGame = (enter ? temp : null);
         }
 
         ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateImage);
@@ -66,16 +90,20 @@ public class LibraryPage_Grid : LibraryPageBase
             }
 
             cacheUI[i].IsVisible = true;
+            cacheUI[i].ToggleHover(false);
+
             await cacheUI[i].Draw(games[i], library.ToggleGameView);
 
             activeUI.Add(games[i], i);
         }
+
+        hoveredGame = null;
     }
 
-    public async Task RedrawGame(int gameId)
+    public override async Task RefreshGame(int gameId)
     {
         if (activeUI.TryGetValue(gameId, out int uiPos))
-            await cacheUI[uiPos].RedrawGameDetails(gameId, false);
+            await cacheUI[uiPos].RedrawGameDetails(gameId);
     }
 
     public void UpdateImage(int gameId, ImageBrush? brush)

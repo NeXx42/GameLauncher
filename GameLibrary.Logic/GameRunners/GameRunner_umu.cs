@@ -60,6 +60,16 @@ public class GameRunner_umu : IGameRunner
         return Task.FromResult(res);
     }
 
-    public static Task<string[]?> GetRunnerVersions() => Task.FromResult<string[]?>(Directory.GetDirectories(getRuntimeLocationRoot).Select(x => Path.GetFileName(x)).ToArray());
+    public static async Task<string[]?> GetRunnerVersions()
+    {
+        if (!Directory.Exists(getRuntimeLocationRoot))
+        {
+            await DependencyManager.uiLinker!.OpenYesNoModal("UMU failure", "No runtimes found");
+            return ["INVALID"];
+        }
+
+        string[] files = Directory.GetDirectories(getRuntimeLocationRoot);
+        return files.Select(x => Path.GetFileName(x)).ToArray();
+    }
 
 }

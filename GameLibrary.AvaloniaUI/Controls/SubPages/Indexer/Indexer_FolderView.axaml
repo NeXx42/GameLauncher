@@ -15,7 +15,7 @@
     </StackPanel>
 
 
-    <Border Background="Black" VerticalAlignment="Bottom">
+    <Border VerticalAlignment="Bottom" BorderBrush="#21262b" BorderThickness="0 1 0 0">
       <Grid>
         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" x:Name="cont_FolderView_BTNS">
           <Common:Common_Button Margin="5" x:Name="btn_FolderView_Close" Height="40" Width="200" Label="Close" HorizontalAlignment="Center" VerticalAlignment="Center"/>

@@ -3,7 +3,29 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" x:Class="GameLibrary.AvaloniaUI.Controls.Common_Button"
     xmlns:local="clr-namespace:GameLibrary.AvaloniaUI.Controls" x:DataType="local:Common_Button">
-    <Border x:Name="ctrl" CornerRadius="2" Background="{DynamicResource btn_Background}" BorderBrush="{DynamicResource btn_Border}" BorderThickness="1">
-        <TextBlock Margin="5,0" Text="{Binding Label, Mode=OneWay}" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White"/>
+
+    <UserControl.Styles>
+        <Style Selector="Border#ctrl">
+            <Setter Property="Background" Value="#111920"/>
+            <Setter Property="BorderBrush" Value="#262b30"/>
+        </Style>
+
+        <Style Selector="local|Common_Button.positive Border#ctrl">
+            <Setter Property="Background" Value="#ff1a9fff"/>
+            <Setter Property="BorderBrush" Value="#ff1a9fff"/>
+        </Style>
+
+        <Style Selector="local|Common_Button.negative Border#ctrl">
+            <Setter Property="Background" Value="#4dff6b6b"/>
+            <Setter Property="BorderBrush" Value="#80ff6b6b"/>
+        </Style>
+
+        <Style Selector=":host:pointerover Border#ctrl">
+            <Setter Property="Background" Value="Red"/>
+        </Style>
+    </UserControl.Styles>
+
+    <Border x:Name="ctrl" CornerRadius="8" BorderThickness="1">
+        <TextBlock Margin="5,0" Text="{Binding Label, Mode=OneWay}" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="300"/>
     </Border>
 </UserControl>

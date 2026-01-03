@@ -12,6 +12,7 @@ public abstract class LibraryPageBase
     }
 
     public abstract Task DrawGames();
+    public abstract Task RefreshGame(int gameId);
 
     public virtual Task FirstPage() { return Task.CompletedTask; }
     public virtual Task NextPage() { return Task.CompletedTask; }

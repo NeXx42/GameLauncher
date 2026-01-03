@@ -11,8 +11,8 @@
 
     <!-- Controls -->
 
-    <Border Background="Black" VerticalAlignment="Bottom">
-      <Grid Margin="10">
+    <Border VerticalAlignment="Bottom" BorderBrush="#21262b" BorderThickness="0 1 0 0">
+      <Grid Margin="15">
         <StackPanel Orientation="Horizontal" x:Name="cont_ImportView_BTNS" HorizontalAlignment="Left" Spacing="5">
           <Common:Common_Button x:Name="btn_Search" Height="30" Width="150" Label="Search Folder" HorizontalAlignment="Center" VerticalAlignment="Center"/>
           <Common:Common_Button x:Name="btn_SelectFolder" Height="30" Width="150" Label="Add Folder" HorizontalAlignment="Center" VerticalAlignment="Center"/>

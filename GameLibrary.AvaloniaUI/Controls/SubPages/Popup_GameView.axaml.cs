@@ -11,6 +11,7 @@ using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using GameLibrary.AvaloniaUI.Controls.Pages.Library;
+using GameLibrary.AvaloniaUI.Helpers;
 using GameLibrary.AvaloniaUI.Utils;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
@@ -21,13 +22,13 @@ namespace GameLibrary.AvaloniaUI.Controls.SubPage;
 public partial class Popup_GameView : UserControl
 {
     private GameDto? inspectingGame;
-    private TabGroup tabGroup; // change this to be based on the generic one i made
+    private GameView_Tabs tabs;
 
     public Popup_GameView()
     {
         InitializeComponent();
 
-        tabGroup = new TabGroup(this);
+        tabs = new GameView_Tabs(this, new GameView_TabGroup.Tab_Tags(tab_Tags, groupBtn_Tags), new GameView_TabGroup.Tab_LaunchSettings(tab_Settings, groupBtn_Settings), new GameView_TabGroup.Tab_Logs(tab_Logs, groupBtn_Logs));
 
         btn_Delete.RegisterClick(DeleteGame);
         btn_Overlay.RegisterClick(OpenOverlay);
@@ -50,10 +51,12 @@ public partial class Popup_GameView : UserControl
 
         UpdateRunningGameStatus(game.getAbsoluteBinaryLocation, RunnerManager.IsBinaryRunning(game.getAbsoluteBinaryLocation));
 
-        await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
-        await tabGroup.OpenFresh();
-
         lbl_Title.Content = game.gameName;
+        lbl_LastPlayed.Content = $"Last played {game.GetLastPlayedFormatted()}";
+
+        await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
+        await tabs.OpenFresh();
+
 
         (int? currentExecutable, string[] possibleBinaries)? options = game.GetPossibleBinaries();
 
@@ -130,109 +133,101 @@ public partial class Popup_GameView : UserControl
         btn_Launch.Label = to ? "Stop" : "Play";
     }
 
-    private class TabGroup
+
+
+    // Tab groups
+
+    private class GameView_Tabs : UITabGroup
     {
-        private Popup_GameView master;
+        public Popup_GameView master;
 
-        private int activeTab = 0;
-        private TabBase[] tabs;
-
-        private ImmutableSolidColorBrush activeTabColour;
-        private ImmutableSolidColorBrush unselectedTabColour;
-
-        public TabGroup(Popup_GameView master)
+        public GameView_Tabs(Popup_GameView master, params GameView_TabGroup[] tabs) : base()
         {
+            this.groups = tabs;
             this.master = master;
-            activeTabColour = new ImmutableSolidColorBrush(Color.FromRgb(18, 18, 18));
-            unselectedTabColour = new ImmutableSolidColorBrush(Color.FromRgb(25, 25, 25));
 
-            tabs = [
-                CreateTab<Tab_Tags>(0, master.btn_tab_Tags, master.tab_Tags),
-                CreateTab<Tab_LaunchSettings>(1, master.btn_tab_Options, master.tab_Settings),
-                CreateTab<Tab_Logs>(2, master.btn_tab_Logs, master.tab_Logs)
-            ];
-
-            activeTab = 0;
-        }
-
-        internal TabBase CreateTab<T>(int pos, Border btn, Grid container) where T : TabBase
-        {
-            btn.PointerPressed += async (_, __) => await SwitchTab(pos);
-            TabBase tab = Activator.CreateInstance<T>();
-
-            return tab.Setup(btn, container, this);
+            for (int i = 0; i < this.groups.Length; i++)
+                this.groups[i].Setup(this, i);
         }
 
         public async Task OpenFresh()
         {
-            await SwitchTab(activeTab);
+            int temp = selectedGroup ?? 0;
+            selectedGroup = null;
+
+            await ChangeSelection(temp);
         }
 
-        public async Task SwitchTab(int to)
+        public override async Task ChangeSelection(int to)
         {
-            if (activeTab != to)
-                tabs[activeTab].Close();
-
-            activeTab = to;
-            await tabs[activeTab].Open(master.inspectingGame);
+            await base.ChangeSelection(to);
         }
+    }
 
+    // groups
 
+    private abstract class GameView_TabGroup : UITabGroup_Group
+    {
+        protected GameView_Tabs? master;
+        protected Common_ButtonToggle toggleBtn;
 
+        protected int? lastGameId;
+        protected GameDto inspectingGame => master!.master.inspectingGame!;
 
-        internal abstract class TabBase
+        public GameView_TabGroup(Control element, Common_ButtonToggle btn) : base(element, btn)
         {
-            protected GameDto? lastGame;
-            protected TabGroup? groupMaster;
-
-            private Grid? container;
-            private Border? btn;
-
-            public virtual TabBase Setup(Border btn, Grid container, TabGroup groupMaster)
-            {
-                this.groupMaster = groupMaster;
-                this.container = container;
-                this.btn = btn;
-
-                container.IsVisible = false;
-                Close();
-
-                return this;
-            }
-
-            public virtual Task Open(GameDto? game)
-            {
-                container!.IsVisible = true;
-                lastGame = game;
-
-                btn!.Background = groupMaster!.activeTabColour;
-
-                return Task.CompletedTask;
-            }
-
-            public virtual void Close()
-            {
-                container!.IsVisible = false;
-                btn!.Background = groupMaster!.unselectedTabColour;
-            }
+            toggleBtn = btn;
+            btn.autoToggle = false;
         }
 
+        public sealed override void Setup(UITabGroup master, int index)
+        {
+            this.master = (GameView_Tabs)master;
+
+            toggleBtn.Register(async (_) => await master.ChangeSelection(index));
+            element.IsVisible = false;
+
+            InternalSetup(this.master);
+        }
+
+        public sealed override Task Close()
+        {
+            toggleBtn.isSelected = false;
+            return base.Close();
+        }
+
+        public sealed override async Task Open()
+        {
+            toggleBtn.isSelected = true;
+
+            await base.Open();
+            await OpenWithGame(inspectingGame, inspectingGame.gameId != lastGameId);
+            lastGameId = inspectingGame?.gameId;
+        }
+
+        protected abstract void InternalSetup(GameView_Tabs master);
+        protected abstract Task OpenWithGame(GameDto? game, bool isNewGame);
 
 
+        // Tags
 
-        internal class Tab_Tags : TabBase
+        internal class Tab_Tags : GameView_TabGroup
         {
             private Dictionary<int, Library_Tag> allTags = new Dictionary<int, Library_Tag>();
 
-            public override async Task Open(GameDto? game)
+            public Tab_Tags(Control element, Common_ButtonToggle btn) : base(element, btn)
             {
-                if (lastGame != game)
+            }
+
+            protected override void InternalSetup(GameView_Tabs master) { }
+
+            protected override async Task OpenWithGame(GameDto? game, bool isNewGame)
+            {
+                if (isNewGame)
                 {
                     await CheckForNewTags();
                     await RedrawSelectedTags(game!);
                 }
-
-                await base.Open(game);
             }
 
             public async Task CheckForNewTags()
@@ -243,7 +238,7 @@ public partial class Popup_GameView : UserControl
                     return;
 
                 allTags.Clear();
-                groupMaster!.master.cont_AllTags.Children.Clear();
+                master!.master.cont_AllTags.Children.Clear();
 
                 foreach (int tagId in newTags)
                 {
@@ -259,7 +254,7 @@ public partial class Popup_GameView : UserControl
                         Library_Tag tagUI = new Library_Tag();
                         tagUI.Draw(tag, HandleTagToggle);
 
-                        groupMaster!.master.cont_AllTags.Children.Add(tagUI);
+                        master.master.cont_AllTags.Children.Add(tagUI);
                         allTags.Add(tagId, tagUI);
                     }
                 }
@@ -267,8 +262,8 @@ public partial class Popup_GameView : UserControl
 
             private async void HandleTagToggle(int tagId)
             {
-                await groupMaster!.master.inspectingGame!.ToggleTag(tagId);
-                await RedrawSelectedTags(groupMaster!.master.inspectingGame);
+                await inspectingGame!.ToggleTag(tagId);
+                await RedrawSelectedTags(inspectingGame);
             }
 
             private async Task RedrawSelectedTags(GameDto game)
@@ -281,22 +276,25 @@ public partial class Popup_GameView : UserControl
             }
         }
 
+        // Settings
 
-        internal class Tab_LaunchSettings : TabBase
+        internal class Tab_LaunchSettings : GameView_TabGroup
         {
             private List<(int id, string name)>? possibleRunners;
 
-            public override TabBase Setup(Border btn, Grid container, TabGroup groupMaster)
+            public Tab_LaunchSettings(Control element, Common_ButtonToggle btn) : base(element, btn)
             {
-                groupMaster.master.inp_Emulate.RegisterOnChange(HandleEmulateToggle);
-                groupMaster.master.inp_CaptureLogs.RegisterOnChange(HandleCaptureLogs);
-
-                return base.Setup(btn, container, groupMaster);
             }
 
-            public override async Task Open(GameDto? game)
+            protected override void InternalSetup(GameView_Tabs master)
             {
-                if (lastGame != game)
+                master.master.inp_Emulate.RegisterOnChange(HandleEmulateToggle);
+                master.master.inp_CaptureLogs.RegisterOnChange(HandleCaptureLogs);
+            }
+
+            protected override async Task OpenWithGame(GameDto? game, bool isNewGame)
+            {
+                if (isNewGame)
                 {
                     possibleRunners = await RunnerManager.GetRunnerProfiles();// await DatabaseHandler.GetItems<dbo_WineProfile>(QueryBuilder.OrderBy(nameof(dbo_WineProfile.isDefault), true));
                     string firstProfile = possibleRunners.Count > 0 ? possibleRunners[0].name : "INVALID";
@@ -304,44 +302,44 @@ public partial class Popup_GameView : UserControl
                     string[] profileOptions = [$"Default ({firstProfile})", .. possibleRunners!.Select(x => x.name)!.ToArray()];
                     int selectedProfile = possibleRunners.Select(x => x.id).ToList().IndexOf(game?.runnerId ?? -1);
 
-                    groupMaster!.master.inp_WineProfile.IsVisible = true;
-                    groupMaster!.master.inp_WineProfile.SetupAsync(profileOptions, selectedProfile >= 0 ? (selectedProfile + 1) : 0, HandleWineProfileChange);
+                    master!.master.inp_WineProfile.IsVisible = true;
+                    master.master.inp_WineProfile.SetupAsync(profileOptions, selectedProfile >= 0 ? (selectedProfile + 1) : 0, HandleWineProfileChange);
 
                 }
 
-                groupMaster!.master.inp_Emulate.SilentSetValue(game!.useRegionEmulation ?? false);
-                groupMaster!.master.inp_CaptureLogs.SilentSetValue(game!.captureLogs ?? false);
-
-                await base.Open(game);
+                master!.master.inp_Emulate.SilentSetValue(game!.useRegionEmulation ?? false);
+                master.master.inp_CaptureLogs.SilentSetValue(game!.captureLogs ?? false);
             }
 
-            private async Task HandleEmulateToggle(bool to) => await lastGame!.UpdateGameEmulationStatus(to);
-            private async Task HandleCaptureLogs(bool to) => await lastGame!.UpdateCaptureLogsStatus(to);
+            private async Task HandleEmulateToggle(bool to) => await inspectingGame!.UpdateGameEmulationStatus(to);
+            private async Task HandleCaptureLogs(bool to) => await inspectingGame!.UpdateCaptureLogsStatus(to);
 
             private async Task HandleWineProfileChange()
             {
                 int? newProfileId = null;
-                int selectedIndex = groupMaster!.master.inp_WineProfile.selectedIndex;
+                int selectedIndex = master!.master.inp_WineProfile.selectedIndex;
 
                 if (selectedIndex != 0) // default profile
                 {
                     newProfileId = possibleRunners![selectedIndex - 1].id;
                 }
 
-                await lastGame!.ChangeRunnerId(newProfileId);
+                await inspectingGame!.ChangeRunnerId(newProfileId);
             }
         }
 
-        internal class Tab_Logs : TabBase
+        // Logs
+
+        internal class Tab_Logs : GameView_TabGroup
         {
-            public override TabBase Setup(Border btn, Grid container, TabGroup groupMaster)
+            public Tab_Logs(Control element, Common_ButtonToggle btn) : base(element, btn)
             {
-                return base.Setup(btn, container, groupMaster);
             }
 
-            public override async Task Open(GameDto? game)
+            protected override void InternalSetup(GameView_Tabs master) { }
+
+            protected override async Task OpenWithGame(GameDto? game, bool isNewGame)
             {
-                await base.Open(game);
                 await RefreshLogs(game);
             }
 
@@ -349,11 +347,11 @@ public partial class Popup_GameView : UserControl
             {
                 if (game == null)
                 {
-                    groupMaster!.master.lbl_Logs.Text = "";
+                    master!.master.lbl_Logs.Text = "";
                     return;
                 }
 
-                groupMaster!.master.lbl_Logs.Text = await game.ReadLogs();
+                master!.master.lbl_Logs.Text = await game.ReadLogs();
             }
         }
     }

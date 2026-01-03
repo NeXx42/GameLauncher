@@ -20,7 +20,7 @@ public partial class Control_Settings_Toggle : UserControl, ISettingControl
     public Control_Settings_Toggle()
     {
         InitializeComponent();
-        btn.RegisterClick(Toggle, "Saving");
+        btn.Register(Toggle, "Saving");
     }
 
     public ISettingControl Draw(SettingBase setting, SettingsUI_Toggle info)
@@ -40,17 +40,18 @@ public partial class Control_Settings_Toggle : UserControl, ISettingControl
         RedrawButton();
     }
 
-    private async Task Toggle()
+    private async Task Toggle(bool to)
     {
-        if (await setting!.SaveSetting(!selectedOption))
+        if (await setting!.SaveSetting(!to))
         {
-            selectedOption = !selectedOption;
+            selectedOption = to;
             RedrawButton();
         }
     }
 
     private void RedrawButton()
     {
+        btn.isSelected = selectedOption;
         btn.Label = selectedOption ? (posText ?? "Enabled") : (negText ?? "Disabled");
     }
 }

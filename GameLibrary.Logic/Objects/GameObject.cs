@@ -85,6 +85,7 @@ public abstract class GameDto
 
         this.captureLogs = game.captureLogs;
         this.useRegionEmulation = game.useEmulator;
+        this.lastPlayed = game.lastPlayed;
 
         this.runnerId = game.runnerId;
         this.libraryId = game.libraryId;
@@ -114,6 +115,8 @@ public abstract class GameDto
             status = (int)status
 
         }, SQLFilter.Equal(nameof(dbo_Game.id), gameId), columns);
+
+        LibraryHandler.onGameDetailsUpdate?.Invoke(gameId);
     }
 
     // updating properties
@@ -155,6 +158,8 @@ public abstract class GameDto
             tags.Add(tagId);
             await Database_Manager.InsertItem(new dbo_GameTag() { GameId = gameId, TagId = tagId });
         }
+
+        LibraryHandler.onGameDetailsUpdate?.Invoke(gameId);
     }
 
     public void BrowseToGame()
@@ -181,6 +186,25 @@ public abstract class GameDto
     {
         lastPlayed = DateTime.UtcNow;
         await UpdateDatabaseEntry(nameof(dbo_Game.lastPlayed));
+    }
+
+    public string GetLastPlayedFormatted()
+    {
+        if (lastPlayed == null) return "Never";
+
+        TimeSpan time = DateTime.UtcNow - lastPlayed.Value;
+
+        if (time.TotalDays > 0) return Format(time.TotalDays, "day");
+        if (time.TotalHours > 0) return Format(time.TotalHours, "hour");
+        if (time.TotalMinutes > 0) return Format(time.TotalMinutes, "min");
+
+        return Format(time.TotalSeconds, "sec");
+
+        string Format(double time, string interval)
+        {
+            double rounded = Math.Ceiling(time);
+            return $"{rounded} {interval}{(rounded > 1 ? "s" : "")} ago";
+        }
     }
 
     // required behaviour    

@@ -10,6 +10,6 @@
     </Grid.ColumnDefinitions>
 
     <Label x:Name="title" Grid.Column="0" Content="Library Location"/>
-    <Controls:Common_Button x:Name="btn" Grid.Column="1" Label="Enabled" />
+    <Controls:Common_ButtonToggle x:Name="btn" Grid.Column="1" Label="Enabled" />
   </Grid>
 </UserControl>

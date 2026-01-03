@@ -6,9 +6,9 @@ namespace GameLibrary.AvaloniaUI.Helpers;
 
 public class UITabGroup
 {
-    private readonly UITabGroup_Group[] groups;
+    protected UITabGroup_Group[] groups;
 
-    private int? selectedGroup;
+    protected int? selectedGroup;
 
     public UITabGroup(Panel btns, Panel content)
     {
@@ -37,7 +37,7 @@ public class UITabGroup
         }
     }
 
-    public async void ChangeSelection(int to)
+    public virtual async Task ChangeSelection(int to)
     {
         if (selectedGroup == to)
             return;
@@ -53,9 +53,9 @@ public class UITabGroup
 public class UITabGroup_Group
 {
     protected readonly Control element;
-    protected readonly Border btn;
+    protected readonly Control btn;
 
-    public UITabGroup_Group(Control element, Border btn)
+    public UITabGroup_Group(Control element, Control btn)
     {
         this.element = element;
         this.btn = btn;
@@ -63,7 +63,7 @@ public class UITabGroup_Group
 
     public virtual void Setup(UITabGroup master, int index)
     {
-        btn.PointerPressed += (_, __) => master.ChangeSelection(index);
+        btn.PointerPressed += async (_, __) => await master.ChangeSelection(index);
         element.IsVisible = false;
     }
 

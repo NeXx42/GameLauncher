@@ -17,6 +17,7 @@ public partial class Page_Library : UserControl
 
     private bool currentSortAscending = true;
     private GameFilterRequest.OrderType currentSort = GameFilterRequest.OrderType.Id;
+    private Dictionary<GameFilterRequest.OrderType, Common_ButtonToggle> sortBtns = new Dictionary<GameFilterRequest.OrderType, Common_ButtonToggle>();
 
     private LibraryPageBase gameList;
 
@@ -24,6 +25,10 @@ public partial class Page_Library : UserControl
     public Page_Library()
     {
         InitializeComponent();
+
+        if (Design.IsDesignMode)
+            return;
+
         gameList = new LibraryPage_Grid(this);
 
         BindButtons();
@@ -31,17 +36,17 @@ public partial class Page_Library : UserControl
 
         DrawEverything();
 
+        LibraryHandler.onGameDetailsUpdate += async (int gameId) => await gameList.RefreshGame(gameId);
         LibraryHandler.onGameDeletion += async () => await gameList.DrawGames();
     }
 
     private async void DrawEverything()
     {
         ToggleTagCreator(false);
+        RedrawSortNames();
 
         await gameList.DrawGames();
         await DrawTags();
-
-        RedrawSortNames();
     }
 
     private void BindButtons()
@@ -54,8 +59,8 @@ public partial class Page_Library : UserControl
 
         cont_MenuView.PointerPressed += (_, __) => ToggleMenu(false);
 
-        btn_OpenTagCreator.RegisterClick(() => ToggleTagCreator(null));
-        btn_CreateTag.RegisterClick(CreateTag);
+        //btn_OpenTagCreator.RegisterClick(() => ToggleTagCreator(null));
+        //btn_CreateTag.RegisterClick(CreateTag);
 
         btn_FirstPage.RegisterClick(gameList.FirstPage);
         btn_PrevPage.RegisterClick(gameList.PrevPage);
@@ -67,7 +72,20 @@ public partial class Page_Library : UserControl
 
         inp_Search.KeyUp += (_, __) => gameList.DrawGames();
         btn_SortDir.RegisterClick(UpdateSortDirection);
-        inp_SortType.Setup(Enum.GetValues(typeof(GameFilterRequest.OrderType)), 0, UpdateSortType);
+
+        foreach (GameFilterRequest.OrderType type in Enum.GetValues(typeof(GameFilterRequest.OrderType)))
+        {
+            Common_ButtonToggle btn = new Common_ButtonToggle();
+            btn.Label = type.ToString();
+            btn.MinWidth = 40;
+
+            btn.Register(_ => UpdateSortType(type));
+
+            sortBtns.Add(type, btn);
+            inp_SortTypes.Children.Add(btn);
+        }
+
+        UpdateSortType(GameFilterRequest.OrderType.Id);
     }
 
     public async Task DrawTags()
@@ -120,17 +138,17 @@ public partial class Page_Library : UserControl
 
     private async void CreateTag()
     {
-        string newTagName = inp_TagName.Text!;
-
-        if (string.IsNullOrEmpty(newTagName))
-            return;
-
-        inp_TagName.Text = "";
-
-        await LibraryHandler.CreateTag(newTagName);
-
-        LibraryHandler.MarkTagsAsDirty();
-        await DrawTags();
+        //string newTagName = inp_TagName.Text!;
+        //
+        //if (string.IsNullOrEmpty(newTagName))
+        //    return;
+        //
+        //inp_TagName.Text = "";
+        //
+        //await LibraryHandler.CreateTag(newTagName);
+        //
+        //LibraryHandler.MarkTagsAsDirty();
+        //await DrawTags();
     }
 
     public async void ToggleGameView(int? gameId)
@@ -180,13 +198,13 @@ public partial class Page_Library : UserControl
 
     private void ToggleTagCreator(bool? to)
     {
-        if (!to.HasValue)
-        {
-            to = !cont_TagCreator.IsVisible;
-        }
-
-        cont_TagCreator.IsVisible = to.Value;
-        btn_OpenTagCreator.Label = to.Value ? $"Close" : "+ Add Tag";
+        //if (!to.HasValue)
+        //{
+        //    to = !cont_TagCreator.IsVisible;
+        //}
+        //
+        //cont_TagCreator.IsVisible = to.Value;
+        //btn_OpenTagCreator.Label = to.Value ? $"Close" : "+ Add Tag";
     }
 
     // sort
@@ -198,9 +216,13 @@ public partial class Page_Library : UserControl
         await gameList.DrawGames();
     }
 
-    private async void UpdateSortType()
+    private async void UpdateSortType(GameFilterRequest.OrderType to)
     {
-        currentSort = (GameFilterRequest.OrderType)inp_SortType.selectedIndex;
+        currentSort = to;
+
+        foreach (var order in sortBtns)
+            order.Value.isSelected = order.Key == to;
+
         await gameList.DrawGames();
     }
 

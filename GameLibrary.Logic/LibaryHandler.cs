@@ -170,6 +170,8 @@ namespace GameLibrary.Logic
             return tags!.FirstOrDefault(x => x.TagId == id);
         }
 
+        public static string? GetTagName(int id) => tags!.FirstOrDefault(x => x.TagId == id)?.TagName;
+
         public static void MarkTagsAsDirty() => m_AreTagsDirty = true;
 
         public static async Task DeleteGame(GameDto game, bool removeFiles)

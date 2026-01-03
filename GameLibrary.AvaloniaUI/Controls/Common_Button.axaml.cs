@@ -27,21 +27,7 @@ namespace GameLibrary.AvaloniaUI.Controls
             InitializeComponent();
             DataContext = this;
 
-            if (ctrl.Background is ImmutableSolidColorBrush scb)
-            {
-                callback = AnimatePress;
-
-                float mixAmount = .2f;
-
-                originalBrush = scb;
-                selectedBrush = new ImmutableSolidColorBrush(Color.FromArgb(
-                    originalBrush.Color.A,
-                    (byte)(originalBrush.Color.R + (255 - originalBrush.Color.R) * mixAmount),
-                    (byte)(originalBrush.Color.G + (255 - originalBrush.Color.G) * mixAmount),
-                    (byte)(originalBrush.Color.B + (255 - originalBrush.Color.B) * mixAmount)
-                ));
-            }
-
+            callback = AnimatePress;
             ctrl.PointerPressed += (_, __) => callback?.Invoke();
         }
 
@@ -53,8 +39,8 @@ namespace GameLibrary.AvaloniaUI.Controls
             get => GetValue(LabelProperty);
             set
             {
-                defaultMessage = value;
-                SetValue(LabelProperty, value);
+                defaultMessage = value.ToUpper();
+                SetValue(LabelProperty, value.ToUpper());
             }
         }
 
@@ -81,6 +67,16 @@ namespace GameLibrary.AvaloniaUI.Controls
 
         private async void AnimatePress()
         {
+            float mixAmount = .2f;
+
+            originalBrush ??= ctrl.Background as ImmutableSolidColorBrush;
+            selectedBrush ??= new ImmutableSolidColorBrush(Color.FromArgb(
+                originalBrush.Color.A,
+                (byte)(originalBrush.Color.R + (255 - originalBrush.Color.R) * mixAmount),
+                (byte)(originalBrush.Color.G + (255 - originalBrush.Color.G) * mixAmount),
+                (byte)(originalBrush.Color.B + (255 - originalBrush.Color.B) * mixAmount)
+            ));
+
             animationToken?.Cancel();
             animationToken = new CancellationTokenSource();
 

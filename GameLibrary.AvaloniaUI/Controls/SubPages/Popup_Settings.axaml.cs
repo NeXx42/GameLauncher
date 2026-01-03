@@ -13,7 +13,7 @@ namespace GameLibrary.AvaloniaUI.Controls.SubPage;
 
 public partial class Popup_Settings : UserControl
 {
-    private UITabGroup tabGroup;
+    private UITabGroup? tabGroup;
     private List<ISettingControl> activeControls = new List<ISettingControl>();
 
     public Popup_Settings()
@@ -26,41 +26,26 @@ public partial class Popup_Settings : UserControl
         DrawSettings();
     }
 
-    private void DrawSettings()
+    private async void DrawSettings()
     {
         List<UITabGroup_Group> groups = new List<UITabGroup_Group>();
 
-        Application.Current!.TryGetResource("btn_Background", out object? bg);
-        Application.Current!.TryGetResource("btn_Border", out object? border);
-        SolidColorBrush btnColour = (bg as SolidColorBrush)!;
-        SolidColorBrush btnBorderColour = (border as SolidColorBrush)!;
-
         foreach (KeyValuePair<string, SettingBase[]> settings in ConfigHandler.groupedSettings!)
         {
-            Border btn = new Border();
-            btn.CornerRadius = new CornerRadius(2);
-            btn.Background = btnColour;
-            btn.BorderBrush = btnBorderColour;
-            btn.BorderThickness = new Thickness(1);
+            Common_ButtonToggle btn = new Common_ButtonToggle();
+            btn.Label = settings.Key;
             btn.Height = 30;
-
-            Label l = new Label();
-            l.Content = settings.Key;
-            l.Padding = new Thickness(5);
-            l.VerticalAlignment = Avalonia.Layout.VerticalAlignment.Center;
-            l.HorizontalAlignment = Avalonia.Layout.HorizontalAlignment.Center;
-            btn.Child = l;
 
             StackPanel grid = CreateGroup(settings.Value);
 
             tabs.Children.Add(btn);
             content.Children.Add(grid);
 
-            groups.Add(new UITabGroup_Group(grid, btn));
+            groups.Add(new Popup_TabGroup(grid, btn));
         }
 
         tabGroup = new UITabGroup(groups.ToArray());
-        tabGroup.ChangeSelection(0);
+        await tabGroup.ChangeSelection(0);
 
         StackPanel CreateGroup(SettingBase[] settings)
         {
@@ -107,6 +92,36 @@ public partial class Popup_Settings : UserControl
         foreach (ISettingControl setting in activeControls)
         {
             await setting.LoadValue();
+        }
+    }
+
+
+    internal class Popup_TabGroup : UITabGroup_Group
+    {
+        protected Common_ButtonToggle toggle;
+
+        public Popup_TabGroup(Control element, Common_ButtonToggle btn) : base(element, btn)
+        {
+            this.toggle = btn;
+            btn.autoToggle = false;
+        }
+
+        public override void Setup(UITabGroup master, int index)
+        {
+            toggle.Register(async (_) => await master.ChangeSelection(index));
+            element.IsVisible = false;
+        }
+
+        public override Task Open()
+        {
+            toggle.isSelected = true;
+            return base.Open();
+        }
+
+        public override Task Close()
+        {
+            toggle.isSelected = false;
+            return base.Close();
         }
     }
 }

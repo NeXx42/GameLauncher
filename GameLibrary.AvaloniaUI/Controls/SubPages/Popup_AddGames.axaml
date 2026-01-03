@@ -4,7 +4,7 @@
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="1200" x:Class="GameLibrary.AvaloniaUI.Controls.SubPage.Popup_AddGames"
   xmlns:Comps="clr-namespace:GameLibrary.AvaloniaUI.Controls.SubPage.Indexer"
   xmlns:Common="clr-namespace:GameLibrary.AvaloniaUI.Controls">
-  <Border Background="{DynamicResource bg_BarLight}" CornerRadius="10,10,0,0" BorderBrush="{DynamicResource bg_Border}" BorderThickness="1">
+  <Border Background="#0a0e13" CornerRadius="10,10,0,0" BorderBrush="{DynamicResource bg_Border}" BorderThickness="1">
     <Grid>
       <Grid.RowDefinitions>
         <RowDefinition Height="80"/>
