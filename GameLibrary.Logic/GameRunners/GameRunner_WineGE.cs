@@ -10,6 +10,26 @@ public class GameRunner_WineGE : GameRunner_Wine
 {
     private const string GITHUB_NAME = "GloriousEggroll/wine-ge-custom";
 
+    protected readonly string version;
+    protected readonly string binaryFolder;
+    protected readonly string dxvkFolder;
+
+    protected string binaryPath;
+
+    protected string getWineLib => Path.Combine(Directory.GetDirectories(binaryFolder).First(), "lib");
+    protected override string getWineExecutable => Path.Combine(Directory.GetDirectories(binaryFolder).First(), "bin", "wine64");
+
+    public GameRunner_WineGE(dbo_Runner runner) : base(runner)
+    {
+        version = runner.runnerVersion;
+
+        GameRunnerHelperMethods.EnsureDirectoryExists(Path.Combine(rootLoc, "DXVK"));
+
+        dxvkFolder = Path.Combine(rootLoc, "DXVK", "latest"); // add versioning later
+        binaryFolder = Path.Combine(rootLoc, "binaries", version);
+    }
+
+
     public static new async Task<string[]?> GetRunnerVersions()
     {
         return (await GetVersionData()).OrderByDescending(x => x.id).Select(x => x.json.GetProperty("tag_name").GetString()).ToArray()!;
@@ -37,11 +57,20 @@ public class GameRunner_WineGE : GameRunner_Wine
         }
     }
 
-    public GameRunner_WineGE(dbo_Runner data) : base(data)
+    public override async Task SetupRunner(Dictionary<string, string?> configValues)
     {
+        if (!Directory.Exists(binaryFolder))
+        {
+            await InstallWine();
+        }
+
+        //if (!Directory.Exists(dxvkFolder))
+        //{
+        //    await InstallDXVK();
+        //}
     }
 
-    protected override async Task InstallWine()
+    protected async Task InstallWine()
     {
         int? selectedVersion = null;
         (int, JsonElement json)[] releases = await GetVersionData();
@@ -78,9 +107,8 @@ public class GameRunner_WineGE : GameRunner_Wine
         throw new Exception("Failed to find asset to download");
     }
 
-    protected override async Task InstallDXVK()
+    protected async Task InstallDXVK()
     {
-        return;
 
         await DownloadFile("https://github.com/doitsujin/dxvk/releases/download/v2.7.1/dxvk-2.7.1.tar.gz", $"{dxvkFolder}.tar.xz");
         await ExtractFile($"{dxvkFolder}.tar.xz", dxvkFolder);
@@ -141,5 +169,23 @@ public class GameRunner_WineGE : GameRunner_Wine
 
         p.Start();
         await p.WaitForExitAsync();
+    }
+
+
+    public override async Task<RunnerManager.GameLaunchData> InitRunDetails(RunnerManager.GameLaunchRequest game)
+    {
+        var res = await base.InitRunDetails(game);
+        res.whiteListedDirs.Add(binaryFolder);
+
+        return res;
+    }
+
+    protected override Dictionary<string, string> GetWineEnvironmentVariables()
+    {
+        var defaultVars = base.GetWineEnvironmentVariables();
+        defaultVars.Add("DXVK_LOG_LEVEL=info", "info");
+        defaultVars.Add("LD_LIBRARY_PATH", getWineLib);
+
+        return defaultVars;
     }
 }

@@ -116,6 +116,12 @@ public static class RunnerManager
 
     public static async Task RunWineTricks(int runnerId)
     {
+        if (IsBinaryRunning("winecfg"))
+        {
+            await DependencyManager.uiLinker!.OpenYesNoModal("Already running", "Winecfg is already running, close before trying again");
+            return;
+        }
+
         dbo_Runner runnerDto = (await Database_Manager.GetItem<dbo_Runner>(SQLFilter.Equal(nameof(dbo_Runner.runnerId), runnerId)))!;
         IGameRunner runner = (await GetAppropriateRunner(runnerDto))!;
 

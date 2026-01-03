@@ -127,7 +127,7 @@ public partial class Popup_GameView : UserControl
 
     private void UpdateRunningGameStatus(string binary, bool to)
     {
-        if (inspectingGame!.getAbsoluteBinaryLocation != binary)
+        if (inspectingGame?.getAbsoluteBinaryLocation != binary)
             return;
 
         btn_Launch.Label = to ? "Stop" : "Play";
