@@ -47,7 +47,7 @@ public partial class Popup_GameView : UserControl
     public async Task Draw(GameDto game)
     {
         inspectingGame = game;
-        img_bg.Background = null;
+        img_bg.Source = null;
 
         UpdateRunningGameStatus(game.getAbsoluteBinaryLocation, RunnerManager.IsBinaryRunning(game.getAbsoluteBinaryLocation));
 
@@ -76,7 +76,7 @@ public partial class Popup_GameView : UserControl
         if (inspectingGame?.gameId != gameId)
             return;
 
-        img_bg.Background = img;
+        img_bg.Source = img == null ? null : (IImage)img.Source!;
     }
 
     private async Task LaunchGame()

@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia.Controls;
+using Avalonia.Input;
 using Avalonia.Media;
 using GameLibrary.AvaloniaUI.Controls.Pages.Library;
 using GameLibrary.DB.Tables;
@@ -35,6 +36,14 @@ public partial class Page_Library : UserControl
         ToggleMenu(false);
 
         DrawEverything();
+
+        scroll_Tags.PointerWheelChanged += (object? send, PointerWheelEventArgs args) =>
+        {
+            var change = scroll_Tags.Offset.WithX(scroll_Tags.Offset.X - (args.Delta.Y * 100));
+
+            scroll_Tags.Offset = change;
+            args.Handled = true;
+        };
 
         LibraryHandler.onGameDetailsUpdate += async (int gameId) => await gameList.RefreshGame(gameId);
         LibraryHandler.onGameDeletion += async () => await gameList.DrawGames();
