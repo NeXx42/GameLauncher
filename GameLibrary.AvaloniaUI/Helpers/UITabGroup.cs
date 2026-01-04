@@ -65,6 +65,11 @@ public class UITabGroup
         selectedGroup = to;
         await groups[selectedGroup.Value].Open();
     }
+
+    public virtual void ToggleGroupVisibility(int pos, bool to)
+    {
+        groups[pos].SetVisibility(to);
+    }
 }
 
 public class UITabGroup_Group
@@ -82,6 +87,12 @@ public class UITabGroup_Group
     {
         btn.PointerPressed += async (_, __) => await master.ChangeSelection(index);
         element.IsVisible = false;
+    }
+
+    public virtual void SetVisibility(bool to)
+    {
+        btn.IsVisible = to;
+        element.IsVisible = false; // might as well alway hide the content, it should be shown by the code handling hiding anyways
     }
 
     public virtual Task Close()

@@ -7,6 +7,7 @@ using Avalonia.Platform.Storage;
 using GameLibrary.AvaloniaUI.Helpers;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.AvaloniaUI.Controls.Modals;
 
@@ -14,60 +15,73 @@ public partial class Modal_Settings_Runner : UserControl
 {
     private TaskCompletionSource? modalRes;
 
-    private int? selectedId;
+    private RunnerDto? selectedRunner;
     private string? selectedRoot;
 
     private string[]? versionOptions;
 
     private UITabGroup tabGroup;
 
+    private RunnerDto.RunnerType getCurrentRunnerType => selectedRunner?.runnerType ?? (RunnerDto.RunnerType)inp_Type.selectedIndex;
+
+
     public Modal_Settings_Runner()
     {
         InitializeComponent();
 
-        inp_Type.SetupAsync(System.Enum.GetNames(typeof(RunnerManager.RunnerType)), 0, UpdateVersionInput);
-
         btn_Close.RegisterClick(Close);
-        btn_Save.RegisterClick(Save);
+        btn_Save.RegisterClick(Save, "Saving");
 
         btn_Dir.RegisterClick(SelectDirectory);
-        btn_WineTricks.RegisterClick(OpenWineTricks, "Loading");
+
+        btn_Wine_WineCfg.RegisterClick(OpenWineTricks, "Loading");
+        btn_Wine_SharedDocuments.Register(ShareDocuments, "Updating");
 
         tabGroup = new UITabGroup(TabGroup_Buttons, TabGroup_Content, true);
     }
 
     public Task HandleOpen(int? runnerId)
     {
-        selectedId = runnerId;
+        selectedRunner = null;
         modalRes = new TaskCompletionSource();
 
         Draw(runnerId);
-
         return modalRes.Task;
     }
 
     private async void Draw(int? runnerId)
     {
-        tabGroup.ChangeSelection(0);
+        selectedRunner = runnerId.HasValue ? RunnerManager.GetRunnerProfile(runnerId.Value) : null;
 
-        if (!runnerId.HasValue)
-        {
-            await UpdateVersionInput();
-            return;
-        }
+        string[] types = selectedRunner != null ? [selectedRunner.runnerType.ToString()] : System.Enum.GetNames(typeof(RunnerDto.RunnerType));
+        inp_Type.SetupAsync(types, 0, ChangeRunnerType);
 
-        dbo_Runner? existing = await RunnerManager.GetRunnerProfile(runnerId.Value);
-        dbo_RunnerConfig[] configValues = await RunnerManager.GetRunnerConfigValues(runnerId.Value);
+        await UpdateDefaultDetails();
+        await UpdateWineDetails();
 
-        if (existing != null)
-        {
-            inp_Name.Text = existing.runnerName;
-            inp_Type.ChangeValue(existing.runnerType);
-
-            selectedRoot = existing.runnerRoot;
-            btn_Dir.Label = selectedRoot;
-        }
+        await ChangeRunnerType();
+        await tabGroup.ChangeSelection(0);
     }
+
+    private async Task UpdateDefaultDetails()
+    {
+        inp_Name.Text = selectedRunner?.runnerName ?? string.Empty;
+
+        selectedRoot = selectedRunner?.runnerRoot ?? string.Empty;
+        btn_Dir.Label = selectedRoot ?? "Select directory";
+    }
+
+    private async Task UpdateWineDetails()
+    {
+        string? sharedDocuments = string.Empty;
+        selectedRunner?.globalRunnerValues.TryGetValue(RunnerDto.RunnerConfigValues.Wine_SharedDocuments, out sharedDocuments);
+
+        btn_Wine_SharedDocuments.Label = sharedDocuments ?? "Disabled";
+        btn_Wine_SharedDocuments.isSelected = !string.IsNullOrEmpty(sharedDocuments);
+    }
+
+
+
 
     private void Close()
     {
@@ -80,7 +94,20 @@ public partial class Modal_Settings_Runner : UserControl
             return;
 
         string version = versionOptions != null ? versionOptions[inp_Version.selectedIndex] : string.Empty;
-        await RunnerManager.CreateProfile(selectedId, inp_Name.Text!, selectedRoot!, inp_Type.selectedIndex, version);
+
+        if (selectedRunner == null)
+        {
+            await RunnerManager.CreateProfile(inp_Name.Text!, selectedRoot!, inp_Type.selectedIndex, version);
+        }
+        else
+        {
+            selectedRunner.runnerName = inp_Name.Text!;
+            selectedRunner.runnerRoot = selectedRoot!;
+            selectedRunner.runnerVersion = version;
+
+            await selectedRunner.UpdateDatabaseEntry();
+        }
+
         modalRes?.SetResult();
     }
 
@@ -107,9 +134,27 @@ public partial class Modal_Settings_Runner : UserControl
         }
     }
 
+    private async Task ChangeRunnerType()
+    {
+        switch (getCurrentRunnerType)
+        {
+            case RunnerDto.RunnerType.Wine:
+            case RunnerDto.RunnerType.Wine_GE:
+            case RunnerDto.RunnerType.umu_Launcher:
+                tabGroup.ToggleGroupVisibility(1, true);
+                break;
+
+            default:
+                tabGroup.ToggleGroupVisibility(1, false);
+                break;
+        }
+
+        await UpdateVersionInput();
+    }
+
     private async Task UpdateVersionInput()
     {
-        versionOptions = await RunnerManager.GetVersionsForRunnerTypes(inp_Type.selectedIndex);
+        versionOptions = await RunnerDto.GetVersionsForRunnerTypes((int)getCurrentRunnerType);
 
         if (versionOptions != null)
         {
@@ -122,8 +167,39 @@ public partial class Modal_Settings_Runner : UserControl
         }
     }
 
+    private async Task<bool> EnsureExistingProfile()
+    {
+        if (selectedRunner == null)
+        {
+            await DependencyManager.OpenYesNoModal("Failed!", "Cannot complete operation on an uncreated profile.\nSave before attempting again.");
+            return false;
+        }
+
+        return true;
+    }
+
     private async Task OpenWineTricks()
     {
-        await RunnerManager.RunWineTricks(selectedId.Value);
+        if (!await EnsureExistingProfile())
+            return;
+
+        await RunnerManager.RunWineTricks(selectedRunner!.runnerId);
+    }
+
+    private async Task ShareDocuments(bool val)
+    {
+        if (!await EnsureExistingProfile())
+            return;
+
+        int result = await DependencyManager.OpenConfirmationAsync(
+            "Share prefix documents?",
+            "This is a destructive action,\nProceeding will delete the AppData, and Documents folder of the prefix and link to a shared directory.\nthis CAN NOT be undone!",
+            ("Link", selectedRunner!.SharePrefixDocuments, "working")
+        );
+
+        if (result != -1)
+        {
+            await UpdateWineDetails();
+        }
     }
 }

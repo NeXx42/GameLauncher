@@ -13,7 +13,7 @@ public class GameDto_Custom : GameDto
 
     public override async Task Launch()
     {
-        await RunnerManager.RunGame(new RunnerManager.GameLaunchRequest()
+        await RunnerManager.RunGame(new RunnerManager.LaunchRequest()
         {
             gameId = gameId,
             path = getAbsoluteBinaryLocation,

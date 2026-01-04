@@ -22,7 +22,7 @@ public partial class Modal_YesNo : UserControl
     public Task<int> RequestModal(string title, string paragraph)
     {
         completeResponse = new TaskCompletionSource<int>();
-        DrawGenericDetails(title, paragraph, ("Yes", () => Task.CompletedTask, null));
+        DrawGenericDetails(title, paragraph, ("Yes", () => Task.CompletedTask, "Loading"));
 
         return completeResponse.Task;
     }
@@ -30,8 +30,6 @@ public partial class Modal_YesNo : UserControl
     public Task<int> RequestGeneric(string title, string paragraph, params (string btnText, Func<Task> callback, string? loadingMessage)[] btns)
     {
         completeResponse = new TaskCompletionSource<int>();
-
-        extraBtns.IsVisible = true;
         DrawGenericDetails(title, paragraph, btns);
 
         return completeResponse.Task;
@@ -42,10 +40,10 @@ public partial class Modal_YesNo : UserControl
         lbl_Title.Content = title;
         lbl_Paragraph.Text = paragraph;
 
+        extraBtns.Children.Clear();
+
         if (btns != null)
         {
-            extraBtns.Children.Clear();
-
             for (int i = 0; i < btns.Length; i++)
             {
                 int callbackId = i;

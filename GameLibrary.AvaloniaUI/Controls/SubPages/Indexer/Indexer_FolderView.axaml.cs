@@ -158,7 +158,7 @@ public partial class Indexer_FolderView : UserControl
 
     private async Task LaunchSelectedBinary(string dir)
     {
-        await RunnerManager.RunGame(new RunnerManager.GameLaunchRequest()
+        await RunnerManager.RunGame(new RunnerManager.LaunchRequest()
         {
             path = dir
         });

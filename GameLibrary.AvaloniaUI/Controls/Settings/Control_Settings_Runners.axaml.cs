@@ -1,12 +1,15 @@
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
+using Avalonia.Controls.Documents;
 using Avalonia.Layout;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using GameLibrary.AvaloniaUI.Controls.Modals;
+using GameLibrary.Logic;
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.Objects;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
 
@@ -17,7 +20,7 @@ public partial class Control_Settings_Runners : UserControl, ISettingControl
     private SettingBase? setting;
 
     private Border[]? profileUIS;
-    private dbo_Runner[]? existingProfiles;
+    private RunnerDto[]? existingProfiles;
 
     private ImmutableSolidColorBrush selectedBrush;
     private ImmutableSolidColorBrush unselectedBrush;
@@ -54,6 +57,8 @@ public partial class Control_Settings_Runners : UserControl, ISettingControl
 
         selectedProfile = null;
         btn_Add.RegisterClick(OpenEditMenu);
+        btn_Remove.RegisterClick(DeleteSelectedProfile, "Deleting");
+
         btn_Default.RegisterClick(MakeDefaultProfile);
 
         btn_Default.IsVisible = false;
@@ -67,7 +72,9 @@ public partial class Control_Settings_Runners : UserControl, ISettingControl
 
     public async Task LoadValue()
     {
-        existingProfiles = await setting!.LoadSetting<dbo_Runner[]>();
+        selectedProfile = null;
+
+        existingProfiles = await setting!.LoadSetting<RunnerDto[]>();
         profileUIS = new Border[existingProfiles?.Length ?? 0];
 
         container.Children.Clear();
@@ -129,5 +136,24 @@ public partial class Control_Settings_Runners : UserControl, ISettingControl
             return;
 
         //await LibraryHandler.UpdateDefaultWineProfile(existingProfiles![selectedProfile.Value].id);
+    }
+
+    private async Task DeleteSelectedProfile()
+    {
+        if (!selectedProfile.HasValue)
+            return;
+
+        RunnerDto runner = existingProfiles![selectedProfile.Value];
+        int gamesAffected = await RunnerManager.GetGameCountForRunner(runner.runnerId);
+
+        await DependencyManager.OpenConfirmationAsync($"Delete the runner {runner.runnerName}?",
+            $"{gamesAffected} games use the profile.\nWill delete the following directory\n\n{runner.GetRoot()}?",
+            ("Delete", HandleDeletion, "Deleting"));
+
+        async Task HandleDeletion()
+        {
+            if (await RunnerManager.DeleteRunnerProfile(runner.runnerId))
+                await LoadValue(); // causes duplicate recache on the runner profiles, but whatever. should be fast (makes sense the deletion logic actually does the recache not the settings ui)
+        }
     }
 }

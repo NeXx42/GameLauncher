@@ -1,8 +1,9 @@
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.GameRunners;
 
-namespace GameLibrary.Logic.GameRunners;
+namespace GameLibrary.Logic.Objects;
 
-public class GameRunner_umu : IGameRunner
+public class RunnerDto_umu : RunnerDto_Wine
 {
     private readonly string rootLoc;
     private readonly string prefixLoc;
@@ -13,10 +14,11 @@ public class GameRunner_umu : IGameRunner
 
     public string[] getAcceptableExtensions => ["exe"];
 
-    public GameRunner_umu(dbo_Runner data)
+
+    public RunnerDto_umu(dbo_Runner runner, dbo_RunnerConfig[] configValues) : base(runner, configValues)
     {
-        version = data.runnerVersion;
-        rootLoc = data.GetRoot();
+        version = runnerVersion;
+        rootLoc = GetRoot();
 
         GameRunnerHelperMethods.EnsureDirectoryExists(rootLoc);
 
@@ -25,15 +27,11 @@ public class GameRunner_umu : IGameRunner
         GameRunnerHelperMethods.EnsureDirectoryExists(prefixLoc);
     }
 
-    public Task SetupRunner(Dictionary<string, string?> configValues)
-    {
-        // getRuntimeLocationRoot / version / proton run wineboot
-        return Task.CompletedTask;
-    }
+    public override Task SetupRunner() => Task.CompletedTask;
 
-    public Task<RunnerManager.GameLaunchData> InitRunDetails(RunnerManager.GameLaunchRequest game)
+    public override Task<RunnerManager.LaunchArguments> InitRunDetails(RunnerManager.LaunchRequest game)
     {
-        RunnerManager.GameLaunchData res = new RunnerManager.GameLaunchData() { command = "umu-run" };
+        RunnerManager.LaunchArguments res = new RunnerManager.LaunchArguments() { command = "umu-run" };
 
         res.arguments.AddLast(game.path);
         res.arguments.AddLast("-windowed");

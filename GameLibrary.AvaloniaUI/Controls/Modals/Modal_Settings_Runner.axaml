@@ -42,11 +42,16 @@
 
           </StackPanel>
 
-          <!--  GENERAL  -->
+          <!--  Wine  -->
           <StackPanel Spacing="5">
             <Grid ColumnDefinitions="100, *" Height="30">
-              <Label Content="Wine Tricks" />
-              <Controls:Common_Button Grid.Column="1" x:Name="btn_WineTricks" HorizontalAlignment="Stretch" Label="Wine Tricks"/>
+              <Label Content="Wine CFG" />
+              <Controls:Common_Button Grid.Column="1" x:Name="btn_Wine_WineCfg" HorizontalAlignment="Stretch" Label="Launch"/>
+            </Grid>
+
+            <Grid ColumnDefinitions="100, *" Height="30">
+              <Label Content="Shared Data" />
+              <Controls:Common_ButtonToggle Grid.Column="1" x:Name="btn_Wine_SharedDocuments" HorizontalAlignment="Stretch" Label="Wine Tricks"/>
             </Grid>
           </StackPanel>
 

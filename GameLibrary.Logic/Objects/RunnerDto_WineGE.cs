@@ -1,12 +1,11 @@
 using System.Diagnostics;
-using System.Net;
 using System.Text.Json;
 using GameLibrary.Logic.Database.Tables;
-using ZstdSharp.Unsafe;
+using GameLibrary.Logic.GameRunners;
 
-namespace GameLibrary.Logic.GameRunners;
+namespace GameLibrary.Logic.Objects;
 
-public class GameRunner_WineGE : GameRunner_Wine
+public class RunnerDto_WineGE : RunnerDto_Wine
 {
     private const string GITHUB_NAME = "GloriousEggroll/wine-ge-custom";
 
@@ -19,7 +18,8 @@ public class GameRunner_WineGE : GameRunner_Wine
     protected string getWineLib => Path.Combine(Directory.GetDirectories(binaryFolder).First(), "lib");
     protected override string getWineExecutable => Path.Combine(Directory.GetDirectories(binaryFolder).First(), "bin", "wine64");
 
-    public GameRunner_WineGE(dbo_Runner runner) : base(runner)
+
+    public RunnerDto_WineGE(dbo_Runner runner, dbo_RunnerConfig[] configValues) : base(runner, configValues)
     {
         version = runner.runnerVersion;
 
@@ -57,7 +57,7 @@ public class GameRunner_WineGE : GameRunner_Wine
         }
     }
 
-    public override async Task SetupRunner(Dictionary<string, string?> configValues)
+    public override async Task SetupRunner()
     {
         if (!Directory.Exists(binaryFolder))
         {
@@ -98,7 +98,7 @@ public class GameRunner_WineGE : GameRunner_Wine
 
                 File.Delete($"{binaryFolder}.tar.xz");
 
-                await RunWine("wineboot");
+                //await RunWine("wineboot");
 
                 return;
             }
@@ -172,7 +172,7 @@ public class GameRunner_WineGE : GameRunner_Wine
     }
 
 
-    public override async Task<RunnerManager.GameLaunchData> InitRunDetails(RunnerManager.GameLaunchRequest game)
+    public override async Task<RunnerManager.LaunchArguments> InitRunDetails(RunnerManager.LaunchRequest game)
     {
         var res = await base.InitRunDetails(game);
         res.whiteListedDirs.Add(binaryFolder);

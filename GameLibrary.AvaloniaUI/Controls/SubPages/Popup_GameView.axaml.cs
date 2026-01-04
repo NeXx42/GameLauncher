@@ -278,7 +278,7 @@ public partial class Popup_GameView : UserControl
 
         internal class Tab_LaunchSettings : GameView_TabGroup
         {
-            private List<(int id, string name)>? possibleRunners;
+            private List<RunnerDto>? possibleRunners;
 
             public Tab_LaunchSettings(Control element, Common_ButtonToggle btn) : base(element, btn)
             {
@@ -294,11 +294,11 @@ public partial class Popup_GameView : UserControl
             {
                 if (isNewGame)
                 {
-                    possibleRunners = await RunnerManager.GetRunnerProfiles();// await DatabaseHandler.GetItems<dbo_WineProfile>(QueryBuilder.OrderBy(nameof(dbo_WineProfile.isDefault), true));
-                    string firstProfile = possibleRunners.Count > 0 ? possibleRunners[0].name : "INVALID";
+                    possibleRunners = RunnerManager.GetRunnerProfiles().ToList();// await DatabaseHandler.GetItems<dbo_WineProfile>(QueryBuilder.OrderBy(nameof(dbo_WineProfile.isDefault), true));
+                    string firstProfile = possibleRunners.Count > 0 ? possibleRunners[0].runnerName : "INVALID";
 
-                    string[] profileOptions = [$"Default ({firstProfile})", .. possibleRunners!.Select(x => x.name)!.ToArray()];
-                    int selectedProfile = possibleRunners.Select(x => x.id).ToList().IndexOf(game?.runnerId ?? -1);
+                    string[] profileOptions = [$"Default ({firstProfile})", .. possibleRunners!.Select(x => x.runnerName)!.ToArray()];
+                    int selectedProfile = possibleRunners.Select(x => x.runnerId).ToList().IndexOf(game?.runnerId ?? -1);
 
                     master!.master.inp_WineProfile.IsVisible = true;
                     master.master.inp_WineProfile.SetupAsync(profileOptions, selectedProfile >= 0 ? (selectedProfile + 1) : 0, HandleWineProfileChange);
@@ -319,7 +319,7 @@ public partial class Popup_GameView : UserControl
 
                 if (selectedIndex != 0) // default profile
                 {
-                    newProfileId = possibleRunners![selectedIndex - 1].id;
+                    newProfileId = possibleRunners![selectedIndex - 1].runnerId;
                 }
 
                 await inspectingGame!.ChangeRunnerId(newProfileId);

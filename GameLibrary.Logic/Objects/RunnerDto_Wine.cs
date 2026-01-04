@@ -1,26 +1,23 @@
 using System.Diagnostics;
 using GameLibrary.Logic.Database.Tables;
-using GameLibrary.Logic.Objects;
+using GameLibrary.Logic.GameRunners;
 
-namespace GameLibrary.Logic.GameRunners;
+namespace GameLibrary.Logic.Objects;
 
-public class GameRunner_Wine : IGameRunner
+public class RunnerDto_Wine : RunnerDto
 {
-
     protected readonly string rootLoc;
-
     protected string prefixFolder;
-
     protected virtual string getWineExecutable => "wine";
-
-    public virtual string[] getAcceptableExtensions => ["exe"];
 
     public static Task<string[]?> GetRunnerVersions() => Task.FromResult<string[]?>(null);
 
 
-    public GameRunner_Wine(dbo_Runner data)
+    protected override string[] GetAcceptableExtensions() => ["exe"];
+
+    public RunnerDto_Wine(dbo_Runner runner, dbo_RunnerConfig[] configValues) : base(runner, configValues)
     {
-        rootLoc = Path.Combine(data.runnerRoot, data.runnerName.Replace(" ", string.Empty));
+        rootLoc = Path.Combine(runnerRoot, runnerName.Replace(" ", string.Empty));
 
         GameRunnerHelperMethods.EnsureDirectoryExists(rootLoc);
         GameRunnerHelperMethods.EnsureDirectoryExists(Path.Combine(rootLoc, "binaries"));
@@ -31,12 +28,9 @@ public class GameRunner_Wine : IGameRunner
         GameRunnerHelperMethods.EnsureDirectoryExists(prefixFolder);
     }
 
-
-    public async virtual Task SetupRunner(Dictionary<string, string?> configValues) { }
-
-    public async virtual Task<RunnerManager.GameLaunchData> InitRunDetails(RunnerManager.GameLaunchRequest game)
+    public override async Task<RunnerManager.LaunchArguments> InitRunDetails(RunnerManager.LaunchRequest game)
     {
-        RunnerManager.GameLaunchData res = new RunnerManager.GameLaunchData() { command = getWineExecutable };
+        RunnerManager.LaunchArguments res = new RunnerManager.LaunchArguments() { command = getWineExecutable };
         res.command = getWineExecutable;
         res.arguments.AddLast(game.path);
 

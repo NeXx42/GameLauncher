@@ -1,13 +1,11 @@
 using System.Diagnostics;
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic.GameRunners;
 
 public static class GameRunnerHelperMethods
 {
-    public static string GetRoot(this dbo_Runner runner)
-        => Path.Combine(runner.runnerRoot, runner.runnerName.Replace(" ", string.Empty));
-
     public static void EnsureDirectoryExists(string where)
     {
         if (!Directory.Exists(where))
@@ -30,20 +28,9 @@ public static class GameRunnerHelperMethods
         await p.WaitForExitAsync();
     }
 
-    public static bool IsValidExtension(string path, IGameRunner runner)
+    public static bool TryGetConfig(this Dictionary<RunnerDto.RunnerConfigValues, string?> inp, RunnerDto.RunnerConfigValues config, out string res)
     {
-        string[] allowed = runner.getAcceptableExtensions;
-
-        foreach (string extension in allowed)
-            if (!path.EndsWith($".{extension}"))
-                return false;
-
-        return true;
-    }
-
-    public static bool TryGetConfig(this Dictionary<string, string?> inp, RunnerManager.RunnerConfigValues config, out string res)
-    {
-        if (inp.TryGetValue(config.ToString(), out string? _res) && !string.IsNullOrEmpty(_res))
+        if (inp.TryGetValue(config, out string? _res) && !string.IsNullOrEmpty(_res))
         {
             res = _res;
             return true;
@@ -53,10 +40,10 @@ public static class GameRunnerHelperMethods
         return false;
     }
 
-    public static bool HasConfigValueOf(this Dictionary<string, string?> inp, RunnerManager.RunnerConfigValues config, bool trueValue)
+    public static bool HasConfigValueOf(this Dictionary<RunnerDto.RunnerConfigValues, string?> inp, RunnerDto.RunnerConfigValues config, bool trueValue)
         => inp.HasConfigValueOf(config, trueValue ? "1" : "0");
 
-    public static bool HasConfigValueOf(this Dictionary<string, string?> inp, RunnerManager.RunnerConfigValues config, string trueValue)
+    public static bool HasConfigValueOf(this Dictionary<RunnerDto.RunnerConfigValues, string?> inp, RunnerDto.RunnerConfigValues config, string trueValue)
     {
         if (inp.TryGetConfig(config, out string res))
             return res.Equals(trueValue);
@@ -64,11 +51,11 @@ public static class GameRunnerHelperMethods
         return false;
     }
 
-    public static void AddOrOverride(this Dictionary<string, string?> inp, RunnerManager.RunnerConfigValues config, bool to)
+    public static void AddOrOverride(this Dictionary<RunnerDto.RunnerConfigValues, string?> inp, RunnerDto.RunnerConfigValues config, bool to)
         => inp.AddOrOverride(config, to ? "1" : "0");
 
-    public static void AddOrOverride(this Dictionary<string, string?> inp, RunnerManager.RunnerConfigValues config, string to)
+    public static void AddOrOverride(this Dictionary<RunnerDto.RunnerConfigValues, string?> inp, RunnerDto.RunnerConfigValues config, string to)
     {
-        inp[config.ToString()] = to;
+        inp[config] = to;
     }
 }

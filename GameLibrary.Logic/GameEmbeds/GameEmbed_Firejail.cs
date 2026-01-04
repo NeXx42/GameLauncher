@@ -1,4 +1,5 @@
 using GameLibrary.Logic.GameRunners;
+using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic.GameEmbeds;
 
@@ -6,20 +7,20 @@ public class GameEmbed_Firejail : IGameEmbed
 {
     public int getPriority => 1000;
 
-    public void Embed(RunnerManager.GameLaunchData inp, Dictionary<string, string?> args)
+    public void Embed(RunnerManager.LaunchArguments inp, Dictionary<RunnerDto.RunnerConfigValues, string?> args)
     {
         string actualCommand = inp.command;
         inp.command = "firejail";
 
         LinkedListNode<string> argumentsEnd = inp.arguments.AddFirst("--noprofile");
 
-        if (args.HasConfigValueOf(RunnerManager.RunnerConfigValues.Generic_Sandbox_BlockNetwork, true))
+        if (args.HasConfigValueOf(RunnerDto.RunnerConfigValues.Generic_Sandbox_BlockNetwork, true))
         {
             argumentsEnd = inp.arguments.AddAfter(argumentsEnd, "--net=none");
             //inp.environmentArguments.Add("WINEDLLOVERRIDES", "wininet=n;dnsapi=n;ws2_32=n");
         }
 
-        if (args.HasConfigValueOf(RunnerManager.RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true))
+        if (args.HasConfigValueOf(RunnerDto.RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true))
         {
             // hide user folder by default
             argumentsEnd = inp.arguments.AddAfter(argumentsEnd, $"--whitelist={DatabaseManager.GetUserStorageFolder()}");

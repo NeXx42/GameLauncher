@@ -12,23 +12,9 @@ namespace GameLibrary.Logic;
 
 public static class RunnerManager
 {
-    public enum RunnerType
-    {
-        AppImage = 0,
-        Wine = 1,
-        Wine_GE = 2,
-        umu_Launcher = 3,
-    }
-
-    public enum RunnerConfigValues
-    {
-        Wine_Prefix,
-
-        Generic_Sandbox_BlockNetwork,
-        Generic_Sandbox_IsolateFilesystem,
-    }
-
     private static SemaphoreSlim _mutex = new SemaphoreSlim(1, 1);
+
+    private static Dictionary<int, RunnerDto> cachedRunners = new Dictionary<int, RunnerDto>();
     private static Dictionary<string, ActiveProcess> activeGames = new Dictionary<string, ActiveProcess>();
 
     public static Action<string, bool>? onGameStatusChange;
@@ -42,57 +28,52 @@ public static class RunnerManager
             path.EndsWith(".AppImage", StringComparison.CurrentCultureIgnoreCase);
     }
 
-
-    public static async Task RunGame(GameLaunchRequest game)
+    public static async Task Init()
     {
-        if (activeGames.TryGetValue(game.path, out ActiveProcess? process))
+        await RecacheRunners();
+    }
+
+
+    public static async Task RunGame(LaunchRequest launchRequest)
+    {
+        if (activeGames.TryGetValue(launchRequest.path, out ActiveProcess? process))
         {
             if (process?.IsActive ?? false)
             {
                 throw new Exception("Game is already running");
             }
 
-            activeGames.Remove(game.path);
+            activeGames.Remove(launchRequest.path);
         }
 
         await _mutex.WaitAsync();
 
         try
         {
-            dbo_Runner? selectedRunner = await Database_Manager.GetItem<dbo_Runner>(game.runnerId.HasValue ?
-                SQLFilter.Equal(nameof(dbo_Runner.runnerId), game.runnerId.Value) :
-                SQLFilter.OrderAsc(nameof(dbo_Runner.runnerId)));
+            RunnerDto? selectedRunner = await GetRunnerProfile(launchRequest.runnerId);
 
             if (selectedRunner == null)
             {
-                throw new Exception($"Couldn't find runner in the database. used id {game.runnerId ?? -1}");
+                throw new Exception($"Couldn't find runner in the database. used id {launchRequest.runnerId ?? -1}");
             }
 
-            IGameRunner? runner = await GetAppropriateRunner(selectedRunner);
-
-            if (runner == null)
+            if (launchRequest.gameId.HasValue && !File.Exists(launchRequest.path))
             {
-                throw new Exception($"Invalid runner type - {selectedRunner.runnerId}");
+                throw new Exception($"File doesn't exist - {launchRequest.path}");
             }
 
-            if (game.gameId.HasValue && !File.Exists(game.path))
+            if (!selectedRunner.IsValidExtension(launchRequest.path))
             {
-                throw new Exception($"File doesn't exist - {game.path}");
+                throw new Exception($"Invalid file for the runner - {launchRequest.path}");
             }
 
-            if (!GameRunnerHelperMethods.IsValidExtension(game.path, runner))
-            {
-                throw new Exception($"Invalid file for the runner - {game.path}");
-            }
+            LibraryHandler.TryGetCachedGame(launchRequest.gameId, out GameDto? gameDto);
 
-            LibraryHandler.TryGetCachedGame(game.gameId, out GameDto? gameDto);
-            Dictionary<string, string?> args = await GetRunnerArguments(game.gameId, selectedRunner.runnerId);
+            await selectedRunner.SetupRunner();
+            LaunchArguments launchArguments = await selectedRunner.InitRunDetails(launchRequest);
 
-            await runner.SetupRunner(args);
-            GameLaunchData req = await runner.InitRunDetails(game);
-
-            await HandleEmbeds(game, req, args);
-            ExecuteRunRequest(req, game.path, gameDto?.getAbsoluteLogFile);
+            await HandleEmbeds(launchRequest.gameId, launchArguments, selectedRunner);
+            ExecuteRunRequest(launchArguments, launchRequest.path, gameDto?.getAbsoluteLogFile);
 
             if (gameDto != null)
             {
@@ -122,13 +103,10 @@ public static class RunnerManager
             return;
         }
 
-        dbo_Runner runnerDto = (await Database_Manager.GetItem<dbo_Runner>(SQLFilter.Equal(nameof(dbo_Runner.runnerId), runnerId)))!;
-        IGameRunner runner = (await GetAppropriateRunner(runnerDto))!;
+        RunnerDto runnerDto = GetRunnerProfile(runnerId);
 
-        Dictionary<string, string?> args = await GetRunnerArguments(null, runnerId);
-
-        await runner.SetupRunner(args);
-        GameLaunchData req = await runner.InitRunDetails(new GameLaunchRequest() { runnerId = runnerId });
+        await runnerDto.SetupRunner();
+        LaunchArguments req = await runnerDto.InitRunDetails(new LaunchRequest() { runnerId = runnerId });
 
         req.command = "wine";
         req.arguments.AddFirst("winecfg");
@@ -136,46 +114,14 @@ public static class RunnerManager
         ExecuteRunRequest(req, "winecfg", null);
     }
 
-
-    private static async Task<Dictionary<string, string?>> GetRunnerArguments(int? gameId, int runnerId)
+    private static async Task HandleEmbeds(int? gameId, LaunchArguments args, RunnerDto runnerDto)
     {
-        Dictionary<string, string?> args = new Dictionary<string, string?>();
-
-        dbo_RunnerConfig[] configValues = await Database_Manager.GetItems<dbo_RunnerConfig>(
-            SQLFilter.Equal(nameof(dbo_RunnerConfig.runnerId), runnerId).
-            IsNull(nameof(dbo_RunnerConfig.gameId)));
-
-        args = configValues.ToDictionary(x => x.settingKey, x => x.settingValue);
+        Dictionary<RunnerDto.RunnerConfigValues, string?> globalConfigValues = new Dictionary<RunnerDto.RunnerConfigValues, string?>(runnerDto.globalRunnerValues);
+        List<IGameEmbed> embeds = new List<IGameEmbed>();
 
         if (gameId.HasValue)
         {
-            dbo_RunnerConfig[] gameConfigValues = await Database_Manager.GetItems<dbo_RunnerConfig>(
-                SQLFilter.Equal(nameof(dbo_RunnerConfig.runnerId), runnerId).
-                Equal(nameof(dbo_RunnerConfig.gameId), gameId));
-
-            foreach (dbo_RunnerConfig configVal in gameConfigValues)
-            {
-                if (args.ContainsKey(configVal.settingKey))
-                {
-                    args[configVal.settingKey] = configVal.settingValue;
-                }
-                else
-                {
-                    args.Add(configVal.settingKey, configVal.settingValue);
-                }
-            }
-        }
-
-        return args;
-    }
-
-    private static async Task HandleEmbeds(GameLaunchRequest req, GameLaunchData dat, Dictionary<string, string?> args)
-    {
-        List<IGameEmbed> embeds = new List<IGameEmbed>();
-
-        if (req.gameId.HasValue)
-        {
-            GameDto? game = LibraryHandler.TryGetCachedGame(req.gameId.Value);
+            GameDto? game = LibraryHandler.TryGetCachedGame(gameId.Value);
 
             if (game != null)
             {
@@ -193,28 +139,24 @@ public static class RunnerManager
 
                 if (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Networking, false))
                 {
-                    args.AddOrOverride(RunnerConfigValues.Generic_Sandbox_BlockNetwork, true);
+                    globalConfigValues.AddOrOverride(RunnerDto.RunnerConfigValues.Generic_Sandbox_BlockNetwork, true);
                 }
 
                 if (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, false))
                 {
-                    args.AddOrOverride(RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true);
+                    globalConfigValues.AddOrOverride(RunnerDto.RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true);
                 }
             }
-        }
-        else
-        {
-
         }
 
 
         embeds = embeds.OrderBy(x => x.getPriority).ToList();
 
         foreach (IGameEmbed embed in embeds)
-            embed.Embed(dat, args);
+            embed.Embed(args, globalConfigValues);
     }
 
-    private static void ExecuteRunRequest(GameLaunchData req, string identifier, string? logFile)
+    private static void ExecuteRunRequest(LaunchArguments req, string identifier, string? logFile)
     {
         ProcessStartInfo info = new ProcessStartInfo();
         info.FileName = req.command;
@@ -246,18 +188,7 @@ public static class RunnerManager
     }
 
 
-    private static async Task<IGameRunner?> GetAppropriateRunner(dbo_Runner runner)
-    {
-        switch ((RunnerType)runner.runnerType)
-        {
-            case RunnerType.AppImage: return new GameRunner_AppImage();
-            case RunnerType.Wine: return new GameRunner_Wine(runner);
-            case RunnerType.Wine_GE: return new GameRunner_WineGE(runner);
-            case RunnerType.umu_Launcher: return new GameRunner_umu(runner);
-        }
 
-        return null;
-    }
 
     public static void KillProcess(string identifier)
     {
@@ -274,7 +205,7 @@ public static class RunnerManager
 
     public static async Task RunSteamGame(long appId)
     {
-        GameLaunchData dat = new GameLaunchData() { command = "steam" };
+        LaunchArguments dat = new LaunchArguments() { command = "steam" };
         dat.arguments.AddLast($"steam://rungameid/{appId}");
 
         ExecuteRunRequest(dat, appId.ToString(), null);
@@ -284,54 +215,109 @@ public static class RunnerManager
 
     // db stuff
 
-
-    public static async Task<List<(int id, string name)>> GetRunnerProfiles()
-        => (await Database_Manager.GetItems<dbo_Runner>(SQLFilter.OrderAsc(nameof(dbo_Runner.runnerId)))).Select(x => (x.runnerId, x.runnerName)).ToList();
-
-    public static async Task<dbo_Runner?> GetRunnerProfile(int runnerId)
-        => await Database_Manager.GetItem<dbo_Runner>(SQLFilter.Equal(nameof(dbo_Runner.runnerId), runnerId));
-
-    public static async Task<dbo_RunnerConfig[]> GetRunnerConfigValues(int runnerId)
-        => await Database_Manager.GetItems<dbo_RunnerConfig>(SQLFilter.Equal(nameof(dbo_RunnerConfig.runnerId), runnerId));
-
-
-    public static async Task CreateProfile(int? runnerId, string title, string path, int typeId, string version)
+    public static async Task CreateProfile(string title, string path, int typeId, string version)
     {
         dbo_Runner profile = new dbo_Runner()
         {
-            runnerId = runnerId ?? -1,
+            runnerId = -1,
             runnerName = title,
             runnerRoot = path,
             runnerType = typeId,
             runnerVersion = version
         };
 
-        if (runnerId.HasValue)
-        {
-            await Database_Manager.AddOrUpdate(profile, SQLFilter.Equal(nameof(dbo_Runner.runnerId), runnerId));
-        }
-        else
-        {
-            await Database_Manager.InsertItem(profile);
-        }
+        await Database_Manager.InsertItem(profile);
+
     }
 
-    public static async Task<string[]?> GetVersionsForRunnerTypes(int typeId)
+    public static async Task RecacheRunners()
     {
-        switch ((RunnerType)typeId)
+        HashSet<int> existingRunners = cachedRunners.Keys.ToHashSet();
+        dbo_Runner[] runnerDbs = await Database_Manager.GetItems<dbo_Runner>(SQLFilter.OrderAsc(nameof(dbo_Runner.runnerId)));
+
+        foreach (dbo_Runner runner in runnerDbs)
         {
-            case RunnerType.Wine: return await GameRunner_Wine.GetRunnerVersions();
-            case RunnerType.Wine_GE: return await GameRunner_WineGE.GetRunnerVersions();
-            case RunnerType.umu_Launcher: return await GameRunner_umu.GetRunnerVersions();
+            if (cachedRunners.ContainsKey(runner.runnerId))
+            {
+                existingRunners.Remove(runner.runnerId);
+                continue;
+            }
+
+            cachedRunners.Add(runner.runnerId, await GetRunnerProfile(runner));
         }
 
-        return null;
+        foreach (int existing in existingRunners)
+        {
+            cachedRunners.Remove(existing);
+        }
+    }
+
+    // use cached options once i add the default option
+    public static async Task<RunnerDto> GetRunnerProfile(int? id)
+    {
+        dbo_Runner? runnerDb = id.HasValue
+            ? await Database_Manager.GetItem<dbo_Runner>(SQLFilter.Equal(nameof(dbo_Runner.runnerId), id))
+            : await Database_Manager.GetItem<dbo_Runner>(SQLFilter.OrderAsc(nameof(dbo_Runner.runnerId)));
+
+        return await GetRunnerProfile(runnerDb);
+    }
+
+    public static async Task<RunnerDto> GetRunnerProfile(dbo_Runner? runnerDb)
+    {
+        if (runnerDb == null)
+        {
+            throw new Exception("Runner not found");
+        }
+
+        dbo_RunnerConfig[] globalConfig = await Database_Manager.GetItems<dbo_RunnerConfig>(SQLFilter.Equal(nameof(dbo_RunnerConfig.runnerId), runnerDb.runnerId));
+        return RunnerDto.Create(runnerDb, globalConfig);
+    }
+
+    public static RunnerDto GetRunnerProfile(int id) => cachedRunners[id];
+    public static RunnerDto[] GetRunnerProfiles() => cachedRunners.Values.ToArray();
+
+    public static async Task<int> GetGameCountForRunner(int runnerId)
+        => await Database_Manager.GetCount<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.runnerId), runnerId));
+
+    public static async Task<bool> DeleteRunnerProfile(int id)
+    {
+        RunnerDto runner = cachedRunners[id];
+
+        try
+        {
+            Directory.Delete(runner.GetRoot(), true);
+        }
+        catch
+        {
+            if (!await DependencyManager.OpenYesNoModal("Failed deletion", "do you want to proceed with the record deletion?"))
+                return false;
+        }
+
+        await Database_Manager.Delete<dbo_RunnerConfig>(SQLFilter.Equal(nameof(dbo_RunnerConfig.runnerId), id));
+        await Database_Manager.Delete<dbo_Runner>(SQLFilter.Equal(nameof(dbo_Runner.runnerId), id));
+
+        dbo_Game temp = new dbo_Game()
+        {
+            gameFolder = "",
+            gameName = "",
+            status = 0,
+
+            runnerId = null
+        };
+
+        await Database_Manager.Update(temp, SQLFilter.Equal(nameof(dbo_Game.runnerId), id), nameof(dbo_Game.runnerId));
+        await RecacheRunners();
+
+        return true;
     }
 
 
 
+    // data
 
-    public struct GameLaunchRequest
+
+
+    public struct LaunchRequest
     {
         public int? gameId;
         public int? runnerId;
@@ -339,7 +325,7 @@ public static class RunnerManager
     }
 
 
-    public class GameLaunchData
+    public class LaunchArguments
     {
         public List<string> whiteListedDirs = new List<string>();
 

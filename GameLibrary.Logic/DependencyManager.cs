@@ -33,6 +33,7 @@ public static class DependencyManager
 
     public static async Task PostSetup(IImageFetcher imageFetcher)
     {
+        await RunnerManager.Init();
         await LibraryHandler.Setup();
         await ConfigHandler.Init();
 

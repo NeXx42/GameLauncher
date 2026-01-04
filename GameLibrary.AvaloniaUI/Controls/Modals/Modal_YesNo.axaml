@@ -11,7 +11,7 @@
       <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
         <Controls:Common_Button x:Name="btn_Negative" Width="100" Label="No"/>
 
-        <StackPanel x:Name="extraBtns" Orientation="Horizontal" Spacing="5" IsVisible="False">
+        <StackPanel x:Name="extraBtns" Orientation="Horizontal" Spacing="5">
         </StackPanel>
       </StackPanel>
 
