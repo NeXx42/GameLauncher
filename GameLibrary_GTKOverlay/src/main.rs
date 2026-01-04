@@ -1,8 +1,8 @@
-use futures_util::stream::StreamExt;
-use gio::prelude::*;
-use gtk::{gdk_pixbuf::Pixbuf, prelude::*};
 use std::collections::HashMap;
-use zbus::Connection;
+
+use gtk::{gdk_pixbuf::Pixbuf, prelude::*};
+use zbus::zvariant::{OwnedValue, OwnedObjectPath};
+use zbus::blocking::{Connection, Proxy};
 
 fn app_startup(application: &gtk::Application) {
     let window = gtk::ApplicationWindow::new(application);
@@ -10,7 +10,7 @@ fn app_startup(application: &gtk::Application) {
 
     let is_gnome: bool = get_is_gnome();
 
-    if (is_gnome) {
+    if is_gnome {
         init_ubuntu(&window);
     } else {
         init_wayland(&window);
@@ -32,12 +32,12 @@ fn app_startup(application: &gtk::Application) {
 
     screenshot_button.connect_clicked(move |_| {
         let window = window_screenshot_clone.clone();
-
-        glib::MainContext::default().spawn_local(async move {
-            if let Err(e) = screenshot_process(&window, is_gnome).await {
-                eprintln!("Screenshot failed: {}", e);
-                window.close();
-            }
+        window.hide();
+        
+        let window_clone = window.clone();
+        glib::idle_add_local_once(move || {
+            screenshot_process(&window_clone, is_gnome);    
+            window_clone.close();
         });
     });
 
@@ -80,27 +80,26 @@ fn get_screenshot_from_clipboard() -> Option<Pixbuf> {
     clipboard.wait_for_image()
 }
 
-async fn screenshot_process(window: &gtk::ApplicationWindow, is_gnome: bool) -> zbus::Result<()> {
-    let connection = Connection::session().await?;
+fn screenshot_process(_window: &gtk::ApplicationWindow, is_gnome: bool) {
+    let connection = Connection::session().unwrap();
 
-    let proxy = zbus::Proxy::new(
+    let proxy = Proxy::new(
         &connection,
         "org.freedesktop.portal.Desktop",
         "/org/freedesktop/portal/desktop",
         "org.freedesktop.portal.Screenshot",
-    )
-    .await?;
+    ).unwrap();
 
-    let mut options: HashMap<&str, zvariant::OwnedValue> = HashMap::new();
+    let mut options: HashMap<&str, OwnedValue> = HashMap::new();
 
-    options.insert("modal", zvariant::OwnedValue::from(true));
-    options.insert("interactive", zvariant::OwnedValue::from(true));
+    options.insert("modal", OwnedValue::from(true));
+    options.insert("interactive", OwnedValue::from(true));
+    
+    let (_handle_path,): (OwnedObjectPath,) =
+        proxy.call("Screenshot", &("", options)).unwrap();
 
-    if (is_gnome) {
-        let (_handle_path,): (zvariant::OwnedObjectPath,) =
-            proxy.call("Screenshot", &("", options)).await?;
-
-        glib::timeout_future_seconds(5).await;
+    if is_gnome {
+        std::thread::sleep(std::time::Duration::from_secs(2));
 
         if let Some(pixbuf) = get_screenshot_from_clipboard() {
             let path = "/tmp/screenshot.png";
@@ -110,52 +109,37 @@ async fn screenshot_process(window: &gtk::ApplicationWindow, is_gnome: bool) -> 
             eprintln!("No image in clipboard");
         }
     } else {
-        let (_handle_path,): (zvariant::OwnedObjectPath,) =
-            proxy.call("Screenshot", &("", options)).await?;
-
         let handle_path = _handle_path.to_string();
-        let request_proxy = zbus::Proxy::new(
+        
+        let request_proxy = Proxy::new(
             &connection,
             "org.freedesktop.portal.Desktop",
             handle_path,
             "org.freedesktop.portal.Request",
-        )
-        .await?;
-
-        glib::MainContext::default().spawn_local(async move {
-            let mut __stream__ = match request_proxy.receive_signal("Response").await {
-                Ok(s) => s,
-                Err(e) => {
-                    eprintln!("Failed to receive signal: {}", e);
-                    gtk::main_quit();
-                    return;
-                }
-            };
-
-            if let Some(msg) = __stream__.next().await {
-                let body = msg.body();
-
-                match body.deserialize::<(u32, HashMap<String, zvariant::OwnedValue>)>() {
-                    Ok((_, _results)) => {
-                        if let Some(uri_value) = _results.get("uri") {
-                            if let Ok(uri) = <&str>::try_from(uri_value) {
-                                println!("GTKOVERLAY_RETURNPATH:{}", uri);
-                            }
+        ).unwrap();
+        
+        let mut signal_stream = request_proxy.receive_signal("Response").unwrap();
+        
+        if let Some(msg) = signal_stream.next() {
+            let body = msg.body();
+            
+            match body.deserialize::<(u32, HashMap<String, OwnedValue>)>() {
+                Ok((_, _results)) => {
+                    if let Some(uri_value) = _results.get("uri") {
+                        if let Ok(uri) = <&str>::try_from(uri_value) {
+                            println!("GTKOVERLAY_RETURNPATH:{}", uri);
                         }
                     }
-                    Err(e) => {
-                        eprintln!("Failed to deserialize portal response: {}", e);
-                    }
+                }
+                Err(e) => {
+                    eprintln!("Failed to deserialize portal response: {}", e);
                 }
             }
-        });
+        }
     }
-
-    Ok(())
 }
 
-#[tokio::main]
-async fn main() {
+fn main() {
     let application =
         gtk::Application::new(Some("com.Nexx.GameLibrary.Overlay"), Default::default());
 
