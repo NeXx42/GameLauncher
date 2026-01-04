@@ -99,7 +99,7 @@ public partial class Indexer_ImportView : UserControl
         LibraryDto? selectedLibrary = inp_Library.selectedIndex == 0 ? null : availableLibraries![inp_Library.selectedIndex - 1];
         string paragraph = selectedLibrary == null ? "Import without moving" : $"Import and move files into the following directory? \n\n{selectedLibrary!.root}";
 
-        if (await DependencyManager.uiLinker!.OpenYesNoModalAsync("Import?", paragraph, Import, "Importing"))
+        if (await DependencyManager.OpenYesNoModalAsync("Import?", paragraph, Import, "Importing"))
         {
             cont_FoundGames.Children.Clear();
             availableImports.Clear();

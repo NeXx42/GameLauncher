@@ -38,9 +38,7 @@ public partial class Popup_GameView : UserControl
 
         lbl_Title.PointerPressed += async (_, __) => await StartNameChange();
 
-        ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateGameIcon);
         LibraryHandler.onGameDetailsUpdate += async (int id) => await RefreshSelectedGame(id);
-
         RunnerManager.onGameStatusChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b));
     }
 
@@ -99,7 +97,7 @@ public partial class Popup_GameView : UserControl
             return;
 
         string paragraph = $"Files are located:\n\n{inspectingGame!.getAbsoluteFolderLocation}";
-        await DependencyManager.uiLinker!.OpenConfirmationAsync("Delete Game?", paragraph,
+        await DependencyManager.OpenConfirmationAsync("Delete Game?", paragraph,
         [
             ("Remove", async () => await LibraryHandler.DeleteGame(inspectingGame, false), "Removing"),
             ("Delete Files", async () => await LibraryHandler.DeleteGame(inspectingGame, true), "Deleting"),
@@ -111,7 +109,7 @@ public partial class Popup_GameView : UserControl
 
     private async Task StartNameChange()
     {
-        string? res = await DependencyManager.uiLinker!.OpenStringInputModal("Game Name", inspectingGame!.gameName);
+        string? res = await DependencyManager.OpenStringInputModal("Game Name", inspectingGame!.gameName);
 
         if (!string.IsNullOrEmpty(res))
             await inspectingGame!.UpdateGameName(res);

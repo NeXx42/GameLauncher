@@ -14,7 +14,6 @@ namespace GameLibrary.AvaloniaUI.Utils;
 
 public class AvaloniaImageBrushFetcher : IImageFetcher
 {
-
     public async Task<object?> GetIcon(string absolutePath)
     {
         var bitmap = new Bitmap(absolutePath);
@@ -29,10 +28,5 @@ public class AvaloniaImageBrushFetcher : IImageFetcher
         });
 
         return brush;
-    }
-
-    public void InvokeOnUIThread(Action toRun)
-    {
-        Dispatcher.UIThread.Post(toRun);
     }
 }

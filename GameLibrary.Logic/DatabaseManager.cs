@@ -52,6 +52,6 @@ public static class DatabaseManager
 
     private static async void HandleException(Exception e)
     {
-        await DependencyManager.uiLinker!.OpenYesNoModal("SQL exception", e.Message);
+        await DependencyManager.OpenYesNoModal("SQL exception", e.Message);
     }
 }

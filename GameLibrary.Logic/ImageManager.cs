@@ -15,7 +15,6 @@ public static class ImageManager
     private static ConcurrentDictionary<int, ImageFetchRequest> queuedImageFetch = new ConcurrentDictionary<int, ImageFetchRequest>();
     private static ConcurrentDictionary<int, object?> cachedImages = new ConcurrentDictionary<int, object?>();
 
-    private static FetchImageEvent? onGlobalImageChange;
     private static Thread? imageFetchThread;
 
 
@@ -28,11 +27,6 @@ public static class ImageManager
         imageFetchThread.Start();
     }
 
-    public static void RegisterOnGlobalImageChange<T>(Action<int, T?> callback)
-    {
-        onGlobalImageChange += (id, img) => callback?.Invoke(id, (T?)img);
-    }
-
     public static async Task GetGameImage<T>(GameDto game, Action<int, T?> onFetch)
     {
         if (cachedImages.TryGetValue(game.gameId, out object? res))
@@ -41,18 +35,16 @@ public static class ImageManager
             return;
         }
 
-        if (queuedImageFetch.TryGetValue(game.gameId, out ImageFetchRequest existingFetchRequest))
+        queuedImageFetch.AddOrUpdate(game.gameId, new ImageFetchRequest()
         {
-            existingFetchRequest.callback += MediateReturn;
-        }
-        else
+            game = game,
+            callback = MediateReturn
+        },
+        (_, existing) =>
         {
-            queuedImageFetch.TryAdd(game.gameId, new ImageFetchRequest()
-            {
-                game = game,
-                callback = MediateReturn
-            });
-        }
+            existing.callback += MediateReturn;
+            return existing;
+        });
 
         void MediateReturn(int id, object? img)
         {
@@ -86,17 +78,22 @@ public static class ImageManager
 
                 object? response = await fetcher!.GetIcon(path);
 
-                fetcher?.InvokeOnUIThread(() =>
+                DependencyManager.InvokeOnUIThread(() =>
                 {
                     req.callback?.Invoke(id, response);
-                    onGlobalImageChange?.Invoke(id, response);
                 });
 
                 cachedImages.TryAdd(id, response);
             });
 
             foreach (int i in toClear)
-                queuedImageFetch.TryRemove(i, out _);
+            {
+                if (!queuedImageFetch.TryRemove(i, out _))
+                {
+
+                }
+
+            }
         }
     }
 
@@ -104,7 +101,7 @@ public static class ImageManager
     {
         if (cachedImages.TryRemove(gameId, out _))
         {
-            fetcher?.InvokeOnUIThread(() => onGlobalImageChange?.Invoke(gameId, null));
+
         }
     }
 

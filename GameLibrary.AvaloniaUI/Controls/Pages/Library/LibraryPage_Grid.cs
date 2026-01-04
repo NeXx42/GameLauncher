@@ -62,8 +62,6 @@ public class LibraryPage_Grid : LibraryPageBase
             int temp = i;
             ui.pointerStatusChange += (enter) => hoveredGame = (enter ? temp : null);
         }
-
-        ImageManager.RegisterOnGlobalImageChange<ImageBrush>(UpdateImage);
     }
 
     public override async Task DrawGames()

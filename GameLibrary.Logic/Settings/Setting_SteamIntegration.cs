@@ -20,7 +20,7 @@ public class Setting_SteamIntegration : SettingBase
 
     public override async Task<bool> SaveSetting(object val)
     {
-        await DependencyManager.uiLinker!.OpenConfirmationAsync("Resync?", "Update db with latest steam games",
+        await DependencyManager.OpenConfirmationAsync("Resync?", "Update db with latest steam games",
             ("Sync", Integration_Steam.SyncLibrary, "Syncing"));
 
         // ui flips this if a success

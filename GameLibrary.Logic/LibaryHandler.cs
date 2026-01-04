@@ -186,7 +186,7 @@ namespace GameLibrary.Logic
                 {
                     string paragraph = $"Failed to delete games files!\n\n{e.Message}\n\nDo you want to delete the record anyway?";
 
-                    if (!await DependencyManager.uiLinker!.OpenYesNoModal("Delete record?", paragraph))
+                    if (!await DependencyManager.OpenYesNoModal("Delete record?", paragraph))
                         return;
                 }
             }
@@ -225,5 +225,10 @@ namespace GameLibrary.Logic
         }
 
         public static LibraryDto[] GetLibraries() => cachedLibraries.Values.ToArray();
+
+        public static void InvokeGameDetailsUpdate(int gameId)
+        {
+            DependencyManager.InvokeOnUIThread(() => onGameDetailsUpdate?.Invoke(gameId));
+        }
     }
 }

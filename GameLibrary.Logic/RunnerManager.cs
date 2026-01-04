@@ -106,7 +106,7 @@ public static class RunnerManager
         }
         catch (Exception e)
         {
-            await DependencyManager.uiLinker!.OpenYesNoModal("Failed to launch game!", e.Message);
+            await DependencyManager.OpenYesNoModal("Failed to launch game!", e.Message);
         }
         finally
         {
@@ -118,7 +118,7 @@ public static class RunnerManager
     {
         if (IsBinaryRunning("winecfg"))
         {
-            await DependencyManager.uiLinker!.OpenYesNoModal("Already running", "Winecfg is already running, close before trying again");
+            await DependencyManager.OpenYesNoModal("Already running", "Winecfg is already running, close before trying again");
             return;
         }
 

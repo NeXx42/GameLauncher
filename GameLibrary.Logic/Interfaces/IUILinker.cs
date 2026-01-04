@@ -2,6 +2,8 @@ namespace GameLibrary.Logic.Interfaces;
 
 public interface IUILinker
 {
+    public void InvokeOnUIThread(Action a);
+
     public Task OpenLoadingModal(bool progressiveLoad, params Func<Task>[] tasks);
 
     public Task<string?> OpenStringInputModal(string title, string? existingText = "");

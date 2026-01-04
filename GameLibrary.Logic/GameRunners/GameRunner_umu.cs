@@ -64,7 +64,7 @@ public class GameRunner_umu : IGameRunner
     {
         if (!Directory.Exists(getRuntimeLocationRoot))
         {
-            await DependencyManager.uiLinker!.OpenYesNoModal("UMU failure", "No runtimes found");
+            await DependencyManager.OpenYesNoModal("UMU failure", "No runtimes found");
             return ["INVALID"];
         }
 

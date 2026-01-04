@@ -14,7 +14,7 @@
 
       <!-- img -->
 
-      <Border VerticalAlignment="Top" Grid.Row="0" IsHitTestVisible="True" ClipToBounds="True" MinHeight="400">
+      <Border VerticalAlignment="Top" Grid.Row="0" IsHitTestVisible="True" ClipToBounds="True" MinHeight="400" MaxHeight="700">
         <Grid>
           <Image x:Name="img_bg" Stretch="Uniform"/>
 

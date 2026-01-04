@@ -1,5 +1,6 @@
 using System;
 using System.Threading.Tasks;
+using Avalonia.Threading;
 using GameLibrary.AvaloniaUI.Controls.Modals;
 using GameLibrary.Logic.Interfaces;
 
@@ -69,4 +70,5 @@ public class UILinker : IUILinker
         }
     }
 
+    public void InvokeOnUIThread(Action a) => Dispatcher.UIThread.Post(a);
 }

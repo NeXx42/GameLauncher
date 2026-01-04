@@ -116,7 +116,7 @@ public abstract class GameDto
 
         }, SQLFilter.Equal(nameof(dbo_Game.id), gameId), columns);
 
-        LibraryHandler.onGameDetailsUpdate?.Invoke(gameId);
+        LibraryHandler.InvokeGameDetailsUpdate(gameId);
     }
 
     // updating properties
@@ -140,8 +140,8 @@ public abstract class GameDto
 
         iconPath = path;
 
-        await UpdateDatabaseEntry(nameof(dbo_Game.iconPath));
         ImageManager.ClearCache(gameId);
+        await UpdateDatabaseEntry(nameof(dbo_Game.iconPath));
     }
 
     // default behaviour 
