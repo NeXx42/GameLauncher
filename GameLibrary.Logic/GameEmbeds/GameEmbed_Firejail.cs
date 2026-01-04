@@ -22,6 +22,11 @@ public class GameEmbed_Firejail : IGameEmbed
 
         if (args.HasConfigValueOf(RunnerDto.RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true))
         {
+            if (args.TryGetValue(RunnerDto.RunnerConfigValues.Wine_SharedDocuments, out string? documentsStorage) && !string.IsNullOrEmpty(documentsStorage))
+            {
+                argumentsEnd = inp.arguments.AddAfter(argumentsEnd, $"--whitelist={documentsStorage}");
+            }
+
             // hide user folder by default
             argumentsEnd = inp.arguments.AddAfter(argumentsEnd, $"--whitelist={DatabaseManager.GetUserStorageFolder()}");
             //argumentsEnd = inp.arguments.AddAfter(argumentsEnd, "--read-only=~");

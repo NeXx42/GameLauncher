@@ -107,14 +107,10 @@ public class RunnerDto
         return null;
     }
 
-    // default logic
+    // logic
 
     public string GetRoot() => Path.Combine(runnerRoot, runnerName.Replace(" ", string.Empty));
-
-    public virtual async Task SharePrefixDocuments()
-    {
-        throw new Exception("Invalid profile");
-    }
+    public virtual async Task SharePrefixDocuments(string path) => throw new Exception("Invalid profile");
 
     public bool IsValidExtension(string path)
     {

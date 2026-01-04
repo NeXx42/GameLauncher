@@ -76,7 +76,7 @@ public partial class Modal_Settings_Runner : UserControl
         string? sharedDocuments = string.Empty;
         selectedRunner?.globalRunnerValues.TryGetValue(RunnerDto.RunnerConfigValues.Wine_SharedDocuments, out sharedDocuments);
 
-        btn_Wine_SharedDocuments.Label = sharedDocuments ?? "Disabled";
+        btn_Wine_SharedDocuments.Label = sharedDocuments ?? "Select folder";
         btn_Wine_SharedDocuments.isSelected = !string.IsNullOrEmpty(sharedDocuments);
     }
 
@@ -191,10 +191,13 @@ public partial class Modal_Settings_Runner : UserControl
         if (!await EnsureExistingProfile())
             return;
 
+        var folders = await DialogHelper.OpenFolderAsync("Select shared folder", false);
+        string selectedPath = folders[0].Path.AbsolutePath;
+
         int result = await DependencyManager.OpenConfirmationAsync(
             "Share prefix documents?",
             "This is a destructive action,\nProceeding will delete the AppData, and Documents folder of the prefix and link to a shared directory.\nthis CAN NOT be undone!",
-            ("Link", selectedRunner!.SharePrefixDocuments, "working")
+            ("Link", async () => await selectedRunner!.SharePrefixDocuments(selectedPath), "working")
         );
 
         if (result != -1)

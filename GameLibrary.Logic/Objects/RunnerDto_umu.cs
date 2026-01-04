@@ -5,7 +5,6 @@ namespace GameLibrary.Logic.Objects;
 
 public class RunnerDto_umu : RunnerDto_Wine
 {
-    private readonly string rootLoc;
     private readonly string prefixLoc;
 
     private readonly string version;
@@ -18,7 +17,6 @@ public class RunnerDto_umu : RunnerDto_Wine
     public RunnerDto_umu(dbo_Runner runner, dbo_RunnerConfig[] configValues) : base(runner, configValues)
     {
         version = runnerVersion;
-        rootLoc = GetRoot();
 
         GameRunnerHelperMethods.EnsureDirectoryExists(rootLoc);
 

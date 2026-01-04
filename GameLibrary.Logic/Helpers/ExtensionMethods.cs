@@ -36,4 +36,12 @@ public static class ExtensionMethods
     {
         return isAsc ? inp : inp.Reverse();
     }
+
+    public static string CreateDirectoryIfNotExists(this string path)
+    {
+        if (!Directory.Exists(path))
+            Directory.CreateDirectory(path);
+
+        return path;
+    }
 }
