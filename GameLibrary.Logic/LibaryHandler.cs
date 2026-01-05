@@ -174,14 +174,7 @@ namespace GameLibrary.Logic
             });
         }
 
-        public static string RouteLibrary(GameDto game)
-        {
-            if (!game.libraryId.HasValue)
-                return game.folderPath;
-
-            // want it to error if this doesn't exist
-            return Path.Combine(cachedLibraries[game.libraryId.Value].root, game.folderPath);
-        }
+        public static string GetLibraryRoute(GameDto game) => game.libraryId == null ? string.Empty : cachedLibraries[game.libraryId.Value].root;
 
         public static LibraryDto[] GetLibraries() => cachedLibraries.Values.ToArray();
 

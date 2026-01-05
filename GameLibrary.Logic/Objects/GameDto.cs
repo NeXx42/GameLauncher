@@ -41,17 +41,7 @@ public abstract class GameDto
     public Dictionary<GameConfigTypes, string?> config { protected set; get; }
 
 
-    public virtual string getAbsoluteFolderLocation
-    {
-        get
-        {
-            if (libraryId == null)
-                return folderPath;
-
-            return LibraryHandler.RouteLibrary(this);
-        }
-    }
-
+    public virtual string getAbsoluteFolderLocation => Path.Combine(LibraryHandler.GetLibraryRoute(this), folderPath);
     public virtual string? getAbsoluteLogFile
     {
         get
@@ -266,6 +256,41 @@ public abstract class GameDto
             return $"{rounded} {interval}{(rounded > 1 ? "s" : "")} ago";
         }
     }
+
+    public (string msg, Func<Task> resolution)[] GetWarnings()
+    {
+        List<(string, Func<Task>)> warnings = new List<(string, Func<Task>)>();
+
+        if (folderPath.Contains(","))
+        {
+            CreateFixer("Illegal Folder", "This will rename the folder to remove the illegal characters", ResolveFolderPath);
+        }
+
+        return warnings.ToArray();
+
+        void CreateFixer(string title, string desc, Func<Task> body)
+        {
+            warnings.Add((
+                title,
+                async () => await DependencyManager.OpenYesNoModalAsync(title, desc, body, "Fixing")
+            ));
+        }
+    }
+
+    private async Task ResolveFolderPath()
+    {
+        if (!Directory.Exists(getAbsoluteFolderLocation))
+            return;
+
+        string existing = getAbsoluteFolderLocation;
+
+        folderPath = folderPath.Replace(",", string.Empty);
+        Directory.Move(existing, getAbsoluteFolderLocation);
+
+        await UpdateDatabaseEntry(nameof(dbo_Game.gameFolder));
+    }
+
+
 
     // required behaviour    
 

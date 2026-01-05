@@ -18,6 +18,8 @@
         <Grid>
           <Image x:Name="img_bg" Stretch="Uniform"/>
 
+          <StackPanel VerticalAlignment="Top" HorizontalAlignment="Right" Width="150" Margin="15" x:Name="cont_Warnings" Orientation="Vertical" Spacing="5"/>
+
           <Border VerticalAlignment="Bottom" Height="120">
             <Border.Background>
               <LinearGradientBrush EndPoint="0%,0%" StartPoint="0%,100%">

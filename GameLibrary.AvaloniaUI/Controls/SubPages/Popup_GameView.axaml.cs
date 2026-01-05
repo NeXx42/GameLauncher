@@ -53,6 +53,8 @@ public partial class Popup_GameView : UserControl
         lbl_Title.Content = game.gameName;
         lbl_LastPlayed.Content = $"Last played {game.GetLastPlayedFormatted()}";
 
+        DrawWarnings();
+
         await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
         await tabs.OpenFresh();
 
@@ -67,6 +69,32 @@ public partial class Popup_GameView : UserControl
         else
         {
             inp_binary.IsVisible = false;
+        }
+    }
+
+    private void DrawWarnings()
+    {
+        cont_Warnings.Children.Clear();
+        (string, Func<Task>)[] warnings = inspectingGame!.GetWarnings();
+
+        if (warnings.Length > 0)
+        {
+            foreach (var warning in warnings)
+            {
+                Common_Button btn = new Common_Button();
+                btn.Classes.Add("negative");
+                btn.Label = warning.Item1;
+                btn.Height = 30;
+
+                btn.RegisterClick(async () => await HandleWarningFix(warning.Item2));
+                cont_Warnings.Children.Add(btn);
+            }
+        }
+
+        async Task HandleWarningFix(Func<Task> body)
+        {
+            await body();
+            await Draw(inspectingGame!);
         }
     }
 
