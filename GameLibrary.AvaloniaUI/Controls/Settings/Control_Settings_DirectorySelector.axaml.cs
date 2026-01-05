@@ -12,7 +12,7 @@ namespace GameLibrary.AvaloniaUI.Controls.Settings;
 
 public partial class Control_Settings_DirectorySelector : UserControl, ISettingControl
 {
-    private SettingBase setting;
+    private SettingBase? setting;
 
     public Control_Settings_DirectorySelector()
     {
@@ -39,7 +39,7 @@ public partial class Control_Settings_DirectorySelector : UserControl, ISettingC
 
     private async Task SelectDirectory()
     {
-        SettingsUI_DirectorySelector constraints = (SettingsUI_DirectorySelector)setting.GetUI();
+        SettingsUI_DirectorySelector constraints = (SettingsUI_DirectorySelector)setting!.GetUI();
 
         if (constraints.folder)
         {

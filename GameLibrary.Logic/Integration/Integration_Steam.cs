@@ -69,7 +69,7 @@ public static class Integration_Steam
             existingLib = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), (int)LibraryDto.ExternalTypes.Steam)); // need to refetch for auto id
         }
 
-        return existingLib.libaryId;
+        return existingLib!.libaryId;
     }
 
     private static async Task<(string, long)[]?> FindMounts()

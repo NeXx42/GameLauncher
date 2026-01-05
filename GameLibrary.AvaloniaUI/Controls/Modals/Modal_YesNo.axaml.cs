@@ -9,8 +9,6 @@ namespace GameLibrary.AvaloniaUI.Controls.Modals;
 public partial class Modal_YesNo : UserControl
 {
     private TaskCompletionSource<int>? completeResponse;
-    private (Func<Task>, string?)? asyncModalOptions;
-
 
     public Modal_YesNo()
     {

@@ -13,7 +13,7 @@ public class RunnerDto_WineGE : RunnerDto_Wine
     protected readonly string binaryFolder;
     protected readonly string dxvkFolder;
 
-    protected string binaryPath;
+    protected string? binaryPath;
 
     protected string getWineLib => Path.Combine(Directory.GetDirectories(binaryFolder).First(), "lib");
     protected override string getWineExecutable => Path.Combine(Directory.GetDirectories(binaryFolder).First(), "bin", "wine64");

@@ -11,7 +11,7 @@ public partial class Common_Toggle : UserControl
     private bool activeValue;
 
     private bool ignoreEvents;
-    private Action<bool> listeningEvent;
+    private Action<bool>? listeningEvent;
 
     public Common_Toggle()
     {

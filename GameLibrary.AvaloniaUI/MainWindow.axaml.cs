@@ -13,7 +13,7 @@ namespace GameLibrary.AvaloniaUI;
 public partial class MainWindow : Window
 {
     public static MainWindow? instance { private set; get; }
-    private UserControl activePage;
+    private UserControl? activePage;
 
     public MainWindow()
     {

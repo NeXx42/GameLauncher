@@ -5,19 +5,19 @@ namespace GameLibrary.AvaloniaUI.Utils;
 
 public static class ControllerInput
 {
-    private static ControllerPosition currentPos;
+    //private static ControllerPosition currentPos;
 
-    public static void Init()
-    {
-        Thread thread = new Thread(ListenForControllerInput);
-        thread.Start();
-    }
+    //public static void Init()
+    //{
+    //    Thread thread = new Thread(ListenForControllerInput);
+    //    thread.Start();
+    //}
 
-    private static void ListenForControllerInput()
-    {
-        //SDL.SDL_Init(SDL.SDL_INIT_GAMECONTROLLER);
-        //sdl
-    }
+    //private static void ListenForControllerInput()
+    //{
+    //    //SDL.SDL_Init(SDL.SDL_INIT_GAMECONTROLLER);
+    //    //sdl
+    //}
 }
 
 public struct ControllerPosition

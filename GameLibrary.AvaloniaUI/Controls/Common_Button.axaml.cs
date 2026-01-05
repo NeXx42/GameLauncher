@@ -14,8 +14,8 @@ namespace GameLibrary.AvaloniaUI.Controls
 {
     public partial class Common_Button : UserControl
     {
-        private Action callback;
-        private string defaultMessage;
+        private Action? callback;
+        private string? defaultMessage;
 
         public Common_Button()
         {
@@ -45,12 +45,12 @@ namespace GameLibrary.AvaloniaUI.Controls
             async Task HandleUpdate()
             {
                 if (!string.IsNullOrEmpty(asyncMessage))
-                    Dispatcher.UIThread.Post(() => SetValue(LabelProperty, asyncMessage));
+                    Dispatcher.UIThread.Post(() => SetValue(LabelProperty!, asyncMessage));
 
                 await callback();
 
                 if (!string.IsNullOrEmpty(asyncMessage))
-                    Dispatcher.UIThread.Post(() => SetValue(LabelProperty, defaultMessage));
+                    Dispatcher.UIThread.Post(() => SetValue(LabelProperty!, defaultMessage));
             }
         }
 

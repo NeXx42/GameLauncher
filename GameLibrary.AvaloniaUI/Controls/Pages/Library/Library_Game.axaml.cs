@@ -26,7 +26,7 @@ public partial class Library_Game : UserControl
     }
     private static IBrush? m_noBGBrush;
 
-    public Action<bool> pointerStatusChange;
+    public Action<bool>? pointerStatusChange;
 
     private Action? onClick;
     private int? gameId;

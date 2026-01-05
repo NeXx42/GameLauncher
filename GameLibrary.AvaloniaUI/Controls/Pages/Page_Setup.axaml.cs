@@ -18,7 +18,6 @@ public partial class Page_Setup : UserControl
 
     private string? selectedDBFolder;
     private string? selectedLibraryStorageLocation;
-    private string? enteredPin;
 
     public Page_Setup()
     {

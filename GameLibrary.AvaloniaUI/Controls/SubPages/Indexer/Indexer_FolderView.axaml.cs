@@ -15,10 +15,10 @@ namespace GameLibrary.AvaloniaUI.Controls.SubPage.Indexer;
 
 public partial class Indexer_FolderView : UserControl
 {
-    private Popup_AddGames master;
+    private Popup_AddGames? master;
 
-    private FileManager.ImportEntry_Folder inspectingFolder;
-    private Indexer_Folder inspectingFolderUI;
+    private FileManager.ImportEntry_Folder? inspectingFolder;
+    private Indexer_Folder? inspectingFolderUI;
 
     private List<Label>? drawnFiles = new List<Label>();
     private Action? btn_Generic_Callback;
@@ -57,15 +57,15 @@ public partial class Indexer_FolderView : UserControl
 
         cont_FolderView_URI.Children.Clear();
         cont_FolderView_Entries.Children.Clear();
-        drawnFiles.Clear();
+        drawnFiles!.Clear();
 
         Common_Button rootBtn = new Common_Button();
         rootBtn.Label = "/";
 
-        rootBtn.RegisterClick(() => UpdateFolderDir(inspectingFolder.extractedEntry!));
+        rootBtn.RegisterClick(() => UpdateFolderDir(inspectingFolder!.extractedEntry!));
         cont_FolderView_URI.Children.Add(rootBtn);
 
-        if (path != inspectingFolder.extractedEntry!)
+        if (path != inspectingFolder!.extractedEntry!)
         {
             string localPath = path.Remove(0, inspectingFolder.extractedEntry!.Length);
             string[] portions = localPath.Split("/");
@@ -166,15 +166,15 @@ public partial class Indexer_FolderView : UserControl
 
     private void UpdateSelectedFolderBinary(string dir)
     {
-        inspectingFolder.selectedBinary = dir;
-        inspectingFolderUI.RedrawUI();
+        inspectingFolder!.selectedBinary = dir;
+        inspectingFolderUI!.RedrawUI();
 
-        master.CloseFolderView();
+        master!.CloseFolderView();
     }
 
     private async Task ExtractFile(string dir)
     {
         await FileManager.ExtractFolder(dir);
-        UpdateFolderDir(Path.GetDirectoryName(dir));
+        UpdateFolderDir(Path.GetDirectoryName(dir)!);
     }
 }

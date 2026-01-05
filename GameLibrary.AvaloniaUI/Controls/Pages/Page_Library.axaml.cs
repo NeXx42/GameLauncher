@@ -20,7 +20,7 @@ public partial class Page_Library : UserControl
     private GameFilterRequest.OrderType currentSort = GameFilterRequest.OrderType.Id;
     private Dictionary<GameFilterRequest.OrderType, Common_ButtonToggle> sortBtns = new Dictionary<GameFilterRequest.OrderType, Common_ButtonToggle>();
 
-    private LibraryPageBase gameList;
+    private LibraryPageBase? gameList;
 
 
     public Page_Library()
@@ -54,13 +54,13 @@ public partial class Page_Library : UserControl
         ToggleTagCreator(false);
         RedrawSortNames();
 
-        await gameList.DrawGames();
+        await gameList!.DrawGames();
         await DrawTags();
     }
 
     private void BindButtons()
     {
-        Indexer.Setup(() => gameList.DrawGames());
+        Indexer.Setup(() => gameList!.DrawGames());
 
         GameViewer.PointerPressed += (_, e) => e.Handled = true;
         Indexer.PointerPressed += (_, e) => e.Handled = true;
@@ -71,15 +71,15 @@ public partial class Page_Library : UserControl
         //btn_OpenTagCreator.RegisterClick(() => ToggleTagCreator(null));
         //btn_CreateTag.RegisterClick(CreateTag);
 
-        btn_FirstPage.RegisterClick(gameList.FirstPage);
-        btn_PrevPage.RegisterClick(gameList.PrevPage);
-        btn_NextPage.RegisterClick(gameList.NextPage);
-        btn_LastPage.RegisterClick(gameList.LastPage);
+        btn_FirstPage.RegisterClick(gameList!.FirstPage);
+        btn_PrevPage.RegisterClick(gameList!.PrevPage);
+        btn_NextPage.RegisterClick(gameList!.NextPage);
+        btn_LastPage.RegisterClick(gameList!.LastPage);
 
         btn_Indexer.RegisterClick(OpenIndexer);
         btn_Settings.RegisterClick(OpenSettings);
 
-        inp_Search.KeyUp += (_, __) => gameList.DrawGames();
+        inp_Search.KeyUp += (_, __) => gameList!.DrawGames();
         btn_SortDir.RegisterClick(UpdateSortDirection);
 
         foreach (GameFilterRequest.OrderType type in Enum.GetValues(typeof(GameFilterRequest.OrderType)))
@@ -142,7 +142,7 @@ public partial class Page_Library : UserControl
             }
         }
 
-        await gameList.DrawGames();
+        await gameList!.DrawGames();
     }
 
     private async void CreateTag()
@@ -222,7 +222,7 @@ public partial class Page_Library : UserControl
         currentSortAscending = !currentSortAscending;
         RedrawSortNames();
 
-        await gameList.DrawGames();
+        await gameList!.DrawGames();
     }
 
     private async void UpdateSortType(GameFilterRequest.OrderType to)
@@ -232,7 +232,7 @@ public partial class Page_Library : UserControl
         foreach (var order in sortBtns)
             order.Value.isSelected = order.Key == to;
 
-        await gameList.DrawGames();
+        await gameList!.DrawGames();
     }
 
     private void RedrawSortNames()

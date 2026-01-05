@@ -11,10 +11,10 @@ namespace GameLibrary.AvaloniaUI.Controls;
 public partial class Common_Dropdown : UserControl
 {
     private bool ignoreEvents;
-    private Action selectionChangeCallback;
+    private Action? selectionChangeCallback;
 
     public int selectedIndex => inp.SelectedIndex;
-    public object selectedValue => inp.SelectedValue;
+    public object? selectedValue => inp.SelectedValue;
 
 
     public Common_Dropdown()

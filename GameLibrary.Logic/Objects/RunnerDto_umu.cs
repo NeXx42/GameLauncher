@@ -56,7 +56,7 @@ public class RunnerDto_umu : RunnerDto_Wine
         return Task.FromResult(res);
     }
 
-    public static async Task<string[]?> GetRunnerVersions()
+    public new static async Task<string[]?> GetRunnerVersions()
     {
         if (!Directory.Exists(getRuntimeLocationRoot))
         {

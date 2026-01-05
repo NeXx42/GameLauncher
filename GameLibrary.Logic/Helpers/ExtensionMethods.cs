@@ -9,7 +9,7 @@ public static class ExtensionMethods
         if (tagFilter?.Count <= 0)
             return inp;
 
-        return inp.Where(x => x.IsInFilter(ref tagFilter));
+        return inp.Where(x => x.IsInFilter(ref tagFilter!));
     }
 
     public static IEnumerable<GameDto> Filter_Text(this IEnumerable<GameDto> inp, string? textFilter)
