@@ -16,6 +16,7 @@ using GameLibrary.AvaloniaUI.Utils;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Objects;
+using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.AvaloniaUI.Controls.SubPage;
 
@@ -230,7 +231,7 @@ public partial class Popup_GameView : UserControl
 
             public async Task CheckForNewTags()
             {
-                int[] newTags = await LibraryHandler.GetAllTags();
+                TagDto[] newTags = await TagManager.GetAllTags();
 
                 if (allTags.Count == newTags.Length)
                     return;
@@ -238,29 +239,36 @@ public partial class Popup_GameView : UserControl
                 allTags.Clear();
                 master!.master.cont_AllTags.Children.Clear();
 
-                foreach (int tagId in newTags)
+                foreach (TagDto tag in newTags)
                 {
-                    GenerateTag(tagId);
+                    GenerateTag(tag);
                 }
 
-                void GenerateTag(int tagId)
+                void GenerateTag(TagDto tag)
                 {
-                    dbo_Tag? tag = LibraryHandler.GetTagById(tagId);
+                    Library_Tag tagUI = new Library_Tag();
 
-                    if (tag != null)
+                    if (tag is TagDto_Managed)
                     {
-                        Library_Tag tagUI = new Library_Tag();
-                        tagUI.Draw(tag, HandleTagToggle);
-
-                        master.master.cont_AllTags.Children.Add(tagUI);
-                        allTags.Add(tagId, tagUI);
+                        tagUI.Draw(tag, null);
+                        tagUI.Toggle(true);
                     }
+                    else
+                    {
+                        tagUI.Draw(tag, HandleTagToggle);
+                    }
+
+                    master.master.cont_AllTags.Children.Add(tagUI);
+                    allTags.Add(tag.id, tagUI);
                 }
             }
 
-            private async void HandleTagToggle(int tagId)
+            private async void HandleTagToggle(TagDto tag)
             {
-                await inspectingGame!.ToggleTag(tagId);
+                if (tag is TagDto_Managed)
+                    return;
+
+                await inspectingGame!.ToggleTag(tag.id);
                 await RedrawSelectedTags(inspectingGame);
             }
 
@@ -268,6 +276,9 @@ public partial class Popup_GameView : UserControl
             {
                 foreach (KeyValuePair<int, Library_Tag> tag in allTags)
                 {
+                    if (tag.Key < 0)
+                        continue;
+
                     tag.Value.Margin = new Thickness(0, 0, 0, 5);
                     tag.Value.Toggle(game?.tags.Contains(tag.Key) ?? false);
                 }

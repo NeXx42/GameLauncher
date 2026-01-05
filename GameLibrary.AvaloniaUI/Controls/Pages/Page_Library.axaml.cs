@@ -8,13 +8,14 @@ using GameLibrary.AvaloniaUI.Controls.Pages.Library;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Objects;
+using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.AvaloniaUI.Controls.Pages;
 
 public partial class Page_Library : UserControl
 {
-    private HashSet<int> activeTags = new HashSet<int>();
-    private Dictionary<int, Library_Tag> existingTags = new Dictionary<int, Library_Tag>();
+    private HashSet<TagDto> activeTags = new HashSet<TagDto>();
+    private Dictionary<TagDto, Library_Tag> generatedTagUI = new Dictionary<TagDto, Library_Tag>();
 
     private bool currentSortAscending = true;
     private GameFilterRequest.OrderType currentSort = GameFilterRequest.OrderType.Id;
@@ -99,36 +100,34 @@ public partial class Page_Library : UserControl
 
     public async Task DrawTags()
     {
-        existingTags.Clear();
+        generatedTagUI.Clear();
         activeTags.Clear();
 
         cont_AllTags.Children.Clear();
 
-        int[] tagIds = await LibraryHandler.GetAllTags();
+        TagDto[] tags = await TagManager.GetAllTags();
 
-        foreach (int tagId in tagIds)
+        foreach (TagDto tag in tags)
         {
-            if (existingTags.ContainsKey(tagId))
+            if (generatedTagUI.ContainsKey(tag))
                 continue;
 
-            existingTags.Add(tagId, CreateTagUI(tagId));
+            generatedTagUI.Add(tag, CreateTagUI(tag));
         }
 
-        Library_Tag CreateTagUI(int tagId)
+        Library_Tag CreateTagUI(TagDto tag)
         {
-            dbo_Tag? tag = LibraryHandler.GetTagById(tagId);
-
             Library_Tag ui = new Library_Tag();
-            ui.Draw(tag!, SwapTagMode);
+            ui.Draw(tag, SwapTagMode);
 
             cont_AllTags.Children.Add(ui);
             return ui;
         }
     }
 
-    private async void SwapTagMode(int tagId)
+    private async void SwapTagMode(TagDto tagId)
     {
-        if (existingTags.TryGetValue(tagId, out Library_Tag? ui))
+        if (generatedTagUI.TryGetValue(tagId, out Library_Tag? ui))
         {
             if (activeTags.Contains(tagId))
             {

@@ -1,5 +1,6 @@
 using System.Text;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.Logic.Objects;
 
@@ -13,7 +14,7 @@ public struct GameFilterRequest
     }
 
     public string? nameFilter;
-    public HashSet<int>? tagList;
+    public HashSet<TagDto>? tagList;
 
     public OrderType orderType;
     public bool orderDirection;
@@ -40,11 +41,34 @@ public struct GameFilterRequest
 
         if (tagList?.Count > 0)
         {
-            joinClause.Add($"JOIN {dbo_GameTag.tableName} gt ON gt.{nameof(dbo_GameTag.GameId)} = {nameof(dbo_Game.id)}");
-            whereClause.Add($"gt.{nameof(dbo_GameTag.TagId)} in ({string.Join(",", tagList)})");
+            List<TagDto_Managed> managedTags = new List<TagDto_Managed>(tagList.Count);
+            List<int> unmanagedTags = new List<int>(tagList.Count);
 
-            groupClause.Add($"g.{nameof(dbo_Game.id)}");
-            havingClause.Add($"COUNT(DISTINCT gt.{nameof(dbo_GameTag.TagId)}) = {tagList.Count}");
+            foreach (TagDto tag in tagList)
+            {
+                if (tag is TagDto_Managed managed)
+                {
+                    managedTags.Add(managed);
+                }
+                else
+                {
+                    unmanagedTags.Add(tag.id);
+                }
+            }
+
+            if (unmanagedTags.Count > 0)
+            {
+                joinClause.Add($"JOIN {dbo_GameTag.tableName} gt ON gt.{nameof(dbo_GameTag.GameId)} = {nameof(dbo_Game.id)}");
+                whereClause.Add($"gt.{nameof(dbo_GameTag.TagId)} in ({string.Join(",", unmanagedTags)})");
+
+                groupClause.Add($"g.{nameof(dbo_Game.id)}");
+                havingClause.Add($"COUNT(DISTINCT gt.{nameof(dbo_GameTag.TagId)}) = {unmanagedTags.Count}");
+            }
+
+            foreach (TagDto_Managed managedTag in managedTags)
+            {
+                managedTag.HandleFilterSQL(ref joinClause, ref whereClause, ref groupClause, ref havingClause);
+            }
         }
 
         if (joinClause.Count > 0)

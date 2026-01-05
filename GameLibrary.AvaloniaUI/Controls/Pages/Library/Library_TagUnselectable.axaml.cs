@@ -2,6 +2,7 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using GameLibrary.Logic;
+using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.AvaloniaUI.Controls.Pages.Library;
 
@@ -12,15 +13,15 @@ public partial class Library_TagUnselectable : UserControl
         InitializeComponent();
     }
 
-    public void Draw(int? tagNumber)
+    public void Draw(TagDto? tag)
     {
-        if (!tagNumber.HasValue)
+        if (tag == null)
         {
             IsVisible = false;
             return;
         }
 
         IsVisible = true;
-        txt.Text = LibraryHandler.GetTagName(tagNumber.Value);
+        txt.Text = tag.name;
     }
 }

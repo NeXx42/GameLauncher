@@ -40,8 +40,6 @@ namespace GameLibrary.Logic
             Sandbox_Linux_Firejail_Networking,
 
             Import_GUIDFolderNames,
-
-            Proton_SteamFolder,
         }
 
         public static ReadOnlyDictionary<string, SettingBase[]>? groupedSettings { get; private set; }

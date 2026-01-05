@@ -15,33 +15,14 @@ namespace GameLibrary.Logic
         public static Action? onGameDeletion;
         public static Action<int>? onGameDetailsUpdate;
 
-        //private static GameDto[]? games;
-        private static dbo_Tag[]? tags;
-
         private static int filteredGameCount;
         private static Dictionary<int, GameDto> activeGameList = new Dictionary<int, GameDto>();
         private static Dictionary<int, LibraryDto> cachedLibraries = new Dictionary<int, LibraryDto>();
-
-        public static bool getAreTagsDirty
-        {
-            get
-            {
-                if (m_AreTagsDirty)
-                {
-                    m_AreTagsDirty = false;
-                    return true;
-                }
-
-                return false;
-            }
-        }
-        private static bool m_AreTagsDirty;
 
 
         public static async Task Setup()
         {
             await FindLibraries();
-            await FindTags();
         }
 
         private static async Task FindLibraries()
@@ -50,11 +31,6 @@ namespace GameLibrary.Logic
             cachedLibraries = libraries.ToDictionary(x => x.libaryId, x => new LibraryDto(x));
         }
 
-
-        private static async Task FindTags()
-        {
-            tags = await Database_Manager.GetItems<dbo_Tag>();
-        }
 
         public static async Task ImportGames(List<FileManager.IImportEntry> availableImports, int? libraryId)
         {
@@ -154,25 +130,6 @@ namespace GameLibrary.Logic
             activeGameList[game.id] = dto;
         }
 
-
-        public static async Task<int[]> GetAllTags()
-        {
-            if (m_AreTagsDirty)
-            {
-                await FindTags();
-            }
-
-            return tags!.Select(x => x.TagId).ToArray();
-        }
-
-        public static dbo_Tag? GetTagById(int id)
-        {
-            return tags!.FirstOrDefault(x => x.TagId == id);
-        }
-
-        public static string? GetTagName(int id) => tags!.FirstOrDefault(x => x.TagId == id)?.TagName;
-
-        public static void MarkTagsAsDirty() => m_AreTagsDirty = true;
 
         public static async Task DeleteGame(GameDto game, bool removeFiles)
         {

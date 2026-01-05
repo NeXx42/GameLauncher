@@ -11,6 +11,7 @@ using Avalonia.Media;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Objects;
+using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.AvaloniaUI.Controls.Pages.Library;
 
@@ -83,7 +84,7 @@ public partial class Library_Game : UserControl
         lbl_NoIcon.Text = game.gameName;
         lbl_LastPlayed.Content = game.GetLastPlayedFormatted();
 
-        DrawTags(game.tags);
+        DrawTags(game);
         await ImageManager.GetGameImage<ImageBrush>(game, RedrawIcon);
     }
 
@@ -93,8 +94,10 @@ public partial class Library_Game : UserControl
         lbl_NoIcon.IsVisible = bitmapImg == null;
     }
 
-    private void DrawTags(IEnumerable<int> tags)
+    private void DrawTags(GameDto game)
     {
+        TagDto[] tags = TagManager.GetTagsForAGame(game);
+
         for (int i = 0; i < 3; i++)
         {
             if (i < tags.Count())

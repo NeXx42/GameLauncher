@@ -36,6 +36,7 @@ public static class DependencyManager
         await RunnerManager.Init();
         await LibraryHandler.Setup();
         await ConfigHandler.Init();
+        await TagManager.Init();
 
         ImageManager.Init(imageFetcher);
     }

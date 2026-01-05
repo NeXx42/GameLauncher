@@ -4,6 +4,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.AvaloniaUI.Controls.Pages.Library;
 
@@ -79,10 +80,6 @@ public partial class Library_Tag : UserControl
     }
     #endregion
 
-
-
-
-
     private Action? clickEvent;
 
     public Library_Tag()
@@ -92,12 +89,12 @@ public partial class Library_Tag : UserControl
         //border.Margin = new Thickness(0, 0, 5, 5);
     }
 
-    public void Draw(dbo_Tag tag, Action<int> onClick)
+    public void Draw(TagDto tag, Action<TagDto>? onClick)
     {
         Toggle(false);
 
-        clickEvent = () => onClick?.Invoke(tag.TagId);
-        txt.Text = tag.TagName.Replace("\n", "");
+        clickEvent = () => onClick?.Invoke(tag);
+        txt.Text = tag.name.Replace("\n", "");
     }
 
     public void Toggle(bool to)
