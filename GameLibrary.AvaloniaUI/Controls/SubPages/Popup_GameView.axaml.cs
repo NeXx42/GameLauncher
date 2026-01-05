@@ -316,12 +316,12 @@ public partial class Popup_GameView : UserControl
 
                 }
 
-                master!.master.inp_Emulate.SilentSetValue(game!.useRegionEmulation ?? false);
-                master.master.inp_CaptureLogs.SilentSetValue(game!.captureLogs ?? false);
+                master!.master.inp_Emulate.SilentSetValue(game!.GetConfigBool(GameDto.GameConfigTypes.General_LocaleEmulation, false));
+                master.master.inp_CaptureLogs.SilentSetValue(game!.GetConfigBool(GameDto.GameConfigTypes.General_CaptureLogs, false));
             }
 
-            private async Task HandleEmulateToggle(bool to) => await inspectingGame!.UpdateGameEmulationStatus(to);
-            private async Task HandleCaptureLogs(bool to) => await inspectingGame!.UpdateCaptureLogsStatus(to);
+            private async Task HandleEmulateToggle(bool to) => await inspectingGame!.UpdateConfigBool(GameDto.GameConfigTypes.General_LocaleEmulation, to);
+            private async Task HandleCaptureLogs(bool to) => await inspectingGame!.UpdateConfigBool(GameDto.GameConfigTypes.General_CaptureLogs, to);
 
             private async Task HandleWineProfileChange()
             {

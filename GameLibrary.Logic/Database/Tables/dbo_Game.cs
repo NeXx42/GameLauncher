@@ -18,9 +18,7 @@ namespace GameLibrary.DB.Tables
         public int? runnerId { get; set; }
         public required int status { get; set; }
 
-        public bool useEmulator { get; set; }
-        public bool? captureLogs { get; set; }
-
+        public int? minsPlayed { get; set; }
         public DateTime? lastPlayed { get; set; }
 
         public static Database_Column[] getColumns => new[]
@@ -32,13 +30,11 @@ namespace GameLibrary.DB.Tables
             new Database_Column() {  columnName = nameof(gameFolder), columnType = Database_ColumnType.TEXT, allowNull = true },
             new Database_Column() {  columnName = nameof(executablePath), columnType = Database_ColumnType.TEXT },
 
-            new Database_Column() {  columnName = nameof(useEmulator), columnType = Database_ColumnType.BIT },
-            new Database_Column() {  columnName = nameof(captureLogs), columnType = Database_ColumnType.BIT, allowNull = true },
-
             new Database_Column() {  columnName = nameof(libraryId), columnType = Database_ColumnType.INTEGER, allowNull = true },
             new Database_Column() {  columnName = nameof(runnerId), columnType = Database_ColumnType.INTEGER, allowNull = true },
             new Database_Column() {  columnName = nameof(status), columnType = Database_ColumnType.INTEGER, allowNull = false, defaultValue = "1" },
 
+            new Database_Column() {  columnName = nameof(minsPlayed), columnType = Database_ColumnType.INTEGER, allowNull = true},
             new Database_Column() {  columnName = nameof(lastPlayed), columnType = Database_ColumnType.DATETIME, allowNull = true},
         };
     }

@@ -28,9 +28,9 @@ public partial class MainWindow : Window
 
     private async void OnStart()
     {
-        await DependencyManager.PreSetup(new UILinker());
+        await DependencyManager.PreSetup(new UILinker(), new AvaloniaImageBrushFetcher());
 
-        if (DatabaseManager.cachedDBLocation == null)
+        if (DependencyManager.cachedDBLocation == null)
         {
             EnterPage<Page_Setup>().Enter(CompleteSetup);
         }
@@ -80,7 +80,7 @@ public partial class MainWindow : Window
 
     private async Task CompleteLoad()
     {
-        await DependencyManager.PostSetup(new AvaloniaImageBrushFetcher());
+        await DependencyManager.PostSetup();
         EnterPage<Page_Library>();
     }
 

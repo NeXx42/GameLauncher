@@ -44,8 +44,7 @@ public class RunnerDto
         this.runnerRoot = runner.runnerRoot;
         this.runnerVersion = runner.runnerVersion;
 
-        // not sure home i will handle game specifics here
-        globalRunnerValues = configValues.Where(x => !x.gameId.HasValue).ToDictionary(x => Enum.Parse<RunnerConfigValues>(x.settingKey), x => x.settingValue);
+        globalRunnerValues = configValues.ToDictionary(x => Enum.Parse<RunnerConfigValues>(x.settingKey), x => x.settingValue);
     }
 
     public static RunnerDto Create(dbo_Runner runner, dbo_RunnerConfig[] configValues)
@@ -85,12 +84,11 @@ public class RunnerDto
         dbo_RunnerConfig dbo = new dbo_RunnerConfig()
         {
             runnerId = runnerId,
-            gameId = null,
             settingKey = key.ToString(),
             settingValue = val
         };
 
-        await Database_Manager.AddOrUpdate(dbo, SQLFilter.Equal(nameof(dbo.runnerId), runnerId).IsNull(nameof(dbo.gameId)), nameof(dbo.settingValue));
+        await Database_Manager.AddOrUpdate(dbo, SQLFilter.Equal(nameof(dbo.runnerId), runnerId), nameof(dbo.settingValue));
     }
 
     // matchers

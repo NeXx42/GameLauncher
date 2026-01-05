@@ -1,3 +1,4 @@
+using CSharpSqliteORM;
 using GameLibrary.Logic.Interfaces;
 
 namespace GameLibrary.Logic;
@@ -6,11 +7,43 @@ public static class DependencyManager
 {
     private static IUILinker? uiLinker;
 
+    public const string APPLICATION_NAME = "MyLibraryApplication";
+    public const string DB_POINTER_FILE = "dblink";
 
-    public static async Task PreSetup(IUILinker linker)
+    public static string GetUserStorageFolder() => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), APPLICATION_NAME);
+    public static string? cachedDBLocation { get; private set; }
+
+
+    public static async Task PreSetup(IUILinker linker, IImageFetcher imageFetcher)
     {
         uiLinker = linker;
-        await DatabaseManager.Init();
+        ImageManager.Init(imageFetcher);
+
+        string root = GetUserStorageFolder();
+
+        if (!Directory.Exists(root))
+            Directory.CreateDirectory(root);
+
+        string dbPointerFile = Path.Combine(root, DB_POINTER_FILE);
+
+        if (File.Exists(dbPointerFile))
+        {
+            string pointer = File.ReadAllText(dbPointerFile);
+
+            if (File.Exists(pointer))
+                cachedDBLocation = pointer;
+        }
+    }
+
+    public static async Task CreateDBPointerFile(string path)
+    {
+        string dbPointerFile = Path.Combine(GetUserStorageFolder(), DB_POINTER_FILE);
+
+        if (File.Exists(dbPointerFile))
+            File.Delete(dbPointerFile);
+
+        await File.WriteAllTextAsync(dbPointerFile, path);
+        cachedDBLocation = path;
     }
 
     public static async Task LoadDatabase(string? newPointerFile = null)
@@ -19,10 +52,15 @@ public static class DependencyManager
 
         if (!string.IsNullOrEmpty(newPointerFile))
         {
-            toRun.Add(() => DatabaseManager.CreateDBPointerFile(newPointerFile));
+            toRun.Add(() => CreateDBPointerFile(newPointerFile));
         }
 
-        toRun.Add(() => DatabaseManager.LoadDatabase());
+        if (string.IsNullOrEmpty(cachedDBLocation))
+        {
+            throw new Exception("Invalid pointer file");
+        }
+
+        await Database_Manager.Init(cachedDBLocation, HandleDatabaseException);
 
         foreach (var task in toRun)
         {
@@ -30,15 +68,26 @@ public static class DependencyManager
         }
     }
 
-
-    public static async Task PostSetup(IImageFetcher imageFetcher)
+    private static async void HandleDatabaseException(Exception error, string? sql)
     {
-        await RunnerManager.Init();
-        await LibraryHandler.Setup();
-        await ConfigHandler.Init();
-        await TagManager.Init();
+        if (string.IsNullOrEmpty(sql))
+        {
+            await OpenYesNoModal("Database Logic Exception", $"{error.Message}\n\n{error.StackTrace}");
+        }
+        else
+        {
+            await OpenYesNoModal("SQL Exception", $"{sql}\n{error.Message}");
+        }
+    }
 
-        ImageManager.Init(imageFetcher);
+    public static async Task PostSetup()
+    {
+        await OpenLoadingModal(true,
+            RunnerManager.Init,
+            LibraryHandler.Setup,
+            ConfigHandler.Init,
+            TagManager.Init
+        );
     }
 
     public static void InvokeOnUIThread(Action a)

@@ -125,7 +125,7 @@ public static class RunnerManager
 
             if (game != null)
             {
-                if (game.useRegionEmulation ?? false)
+                if (game.GetConfigBool(GameDto.GameConfigTypes.General_LocaleEmulation, false))
                     embeds.Add(new GameEmbed_Locale());
             }
         }

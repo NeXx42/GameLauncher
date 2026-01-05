@@ -1,15 +1,15 @@
 using System.Diagnostics;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Database.Tables;
 
 namespace GameLibrary.Logic.Objects;
 
 public class GameDto_Custom : GameDto
 {
-    public GameDto_Custom(dbo_Game game, dbo_GameTag[] tags) : base(game, tags)
+    public GameDto_Custom(dbo_Game game, dbo_GameTag[] tags, dbo_GameConfig[] config) : base(game, tags, config)
     {
     }
-
 
     public override async Task Launch()
     {
@@ -20,21 +20,6 @@ public class GameDto_Custom : GameDto
             runnerId = runnerId
         });
     }
-
-
-
-    public override async Task UpdateGameEmulationStatus(bool to)
-    {
-        useRegionEmulation = to;
-        await UpdateDatabaseEntry(nameof(dbo_Game.useEmulator));
-    }
-
-    public override async Task UpdateCaptureLogsStatus(bool to)
-    {
-        captureLogs = to;
-        await UpdateDatabaseEntry(nameof(dbo_Game.captureLogs));
-    }
-
 
     public override async Task ChangeBinaryLocation(string? path)
     {

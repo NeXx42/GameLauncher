@@ -2,6 +2,7 @@ using System.Diagnostics;
 using System.Text;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Database.Tables;
 
 namespace GameLibrary.Logic.Objects;
 
@@ -13,6 +14,13 @@ public abstract class GameDto
         Deleted = 2,
         Placeholder = 3,
     }
+
+    public enum GameConfigTypes
+    {
+        General_LocaleEmulation,
+        General_CaptureLogs,
+    }
+
 
     public readonly int gameId;
 
@@ -26,12 +34,11 @@ public abstract class GameDto
     public int? runnerId { protected set; get; }
     public Status status { protected set; get; }
 
-    public bool? captureLogs { protected set; get; }
-    public bool? useRegionEmulation { protected set; get; }
-
+    public int? minsPlayed { protected set; get; }
     public DateTime? lastPlayed { protected set; get; }
 
     public HashSet<int> tags { protected set; get; }
+    public Dictionary<GameConfigTypes, string?> config { protected set; get; }
 
 
     public virtual string getAbsoluteFolderLocation
@@ -49,7 +56,7 @@ public abstract class GameDto
     {
         get
         {
-            if (!(captureLogs ?? false))
+            if (GetConfigBool(GameConfigTypes.General_CaptureLogs, false))
             {
                 return null;
             }
@@ -74,7 +81,7 @@ public abstract class GameDto
         return true;
     }
 
-    public GameDto(dbo_Game game, dbo_GameTag[] tags)
+    public GameDto(dbo_Game game, dbo_GameTag[] tags, dbo_GameConfig[] config)
     {
         this.gameId = game.id;
         this.gameName = game.gameName;
@@ -83,8 +90,7 @@ public abstract class GameDto
         this.folderPath = game.gameFolder;
         this.binaryPath = game.executablePath;
 
-        this.captureLogs = game.captureLogs;
-        this.useRegionEmulation = game.useEmulator;
+        this.minsPlayed = game.minsPlayed;
         this.lastPlayed = game.lastPlayed;
 
         this.runnerId = game.runnerId;
@@ -92,6 +98,7 @@ public abstract class GameDto
         this.status = (Status)game.status;
 
         this.tags = tags.Select(x => x.TagId).ToHashSet();
+        this.config = config.ToDictionary(x => Enum.Parse<GameConfigTypes>(x.configKey), x => x.configValue);
     }
 
     protected async Task UpdateDatabaseEntry(params string[] columns)
@@ -103,11 +110,10 @@ public abstract class GameDto
             gameName = gameName,
             gameFolder = folderPath,
 
-            captureLogs = captureLogs,
-            useEmulator = useRegionEmulation ?? false,
-
             iconPath = iconPath,
             executablePath = binaryPath,
+
+            minsPlayed = minsPlayed,
             lastPlayed = lastPlayed,
 
             runnerId = runnerId,
@@ -117,6 +123,60 @@ public abstract class GameDto
         }, SQLFilter.Equal(nameof(dbo_Game.id), gameId), columns);
 
         LibraryHandler.InvokeGameDetailsUpdate(gameId);
+    }
+
+    public async Task Delete()
+    {
+        await Database_Manager.Delete<dbo_GameConfig>(SQLFilter.Equal(nameof(dbo_GameConfig.gameId), gameId));
+        await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), gameId));
+        await Database_Manager.Delete<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), gameId));
+    }
+
+    // Config
+
+    public bool GetConfigBool(GameConfigTypes key, bool? defaultVal)
+    {
+        defaultVal ??= false;
+
+        if (config.TryGetValue(key, out string? b))
+        {
+            return string.IsNullOrEmpty(b) ? defaultVal.Value : b == "1";
+        }
+
+        return defaultVal.Value;
+    }
+
+    public string? GetConfigString(GameConfigTypes key, string? defaultVal)
+    {
+        if (config.TryGetValue(key, out string? b))
+            return b;
+
+        return defaultVal;
+    }
+
+    public async Task UpdateConfigBool(GameConfigTypes key, bool? val) => await UpdateConfig(key, val.HasValue ? (val.Value ? "1" : "0") : null);
+
+    public async Task UpdateConfig(GameConfigTypes key, string? val)
+    {
+        if (string.IsNullOrEmpty(val))
+        {
+            await DeleteConfig(key);
+            return;
+        }
+
+        dbo_GameConfig dbo = new dbo_GameConfig()
+        {
+            gameId = gameId,
+            configKey = key.ToString(),
+            configValue = val
+        };
+
+        await Database_Manager.AddOrUpdate(dbo, SQLFilter.Equal(nameof(dbo_GameConfig.gameId), gameId).Equal(nameof(dbo_GameConfig.configKey), dbo.configKey), nameof(dbo_GameConfig.configValue));
+    }
+
+    public async Task DeleteConfig(GameConfigTypes key)
+    {
+        await Database_Manager.Delete<dbo_GameConfig>(SQLFilter.Equal(nameof(dbo_GameConfig.gameId), gameId).Equal(nameof(dbo_GameConfig.configKey), key.ToString()));
     }
 
     // updating properties
@@ -249,8 +309,6 @@ public abstract class GameDto
 
     // custom game specific
 
-    public virtual Task UpdateGameEmulationStatus(bool to) => Task.CompletedTask;
-    public virtual Task UpdateCaptureLogsStatus(bool to) => Task.CompletedTask;
     public virtual Task ChangeBinaryLocation(string? to) => Task.CompletedTask;
     public virtual Task ChangeRunnerId(int? runnerId) => Task.CompletedTask;
 

@@ -6,7 +6,10 @@
   <Border VerticalAlignment="Center" HorizontalAlignment="Center" Width="500" Height="200" Background="{DynamicResource bg_BarLight}" CornerRadius="16" ClipToBounds="True" BorderBrush="#1b1f24" BorderThickness="1">
     <Grid RowDefinitions="30, *, 30" Margin="10">
       <Label x:Name="lbl_Title" Grid.Row="0" Content="Title" HorizontalAlignment="Center" FontSize = "18"/>
-      <TextBlock x:Name="lbl_Paragraph" Grid.Row="1" Text="Paragraph" HorizontalAlignment="Center" VerticalAlignment="Top" TextWrapping="Wrap" TextAlignment="Center"/>
+
+      <ScrollViewer Grid.Row="1">
+        <TextBlock x:Name="lbl_Paragraph" Text="Paragraph" HorizontalAlignment="Center" VerticalAlignment="Top" TextWrapping="Wrap" TextAlignment="Center"/>
+      </ScrollViewer>
 
       <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right">
         <Controls:Common_Button x:Name="btn_Negative" Width="100" Label="No"/>

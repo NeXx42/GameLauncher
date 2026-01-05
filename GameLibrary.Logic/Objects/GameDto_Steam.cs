@@ -1,4 +1,5 @@
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Database.Tables;
 
 namespace GameLibrary.Logic.Objects;
 
@@ -6,7 +7,7 @@ public class GameDto_Steam : GameDto
 {
     public long appId { private set; get; }
 
-    public GameDto_Steam(dbo_Game game, dbo_GameTag[] tags) : base(game, tags)
+    public GameDto_Steam(dbo_Game game, dbo_GameTag[] tags, dbo_GameConfig[] config) : base(game, tags, config)
     {
         appId = long.Parse(game.executablePath!);
     }

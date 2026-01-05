@@ -1,7 +1,9 @@
 ﻿using System.Text;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Database.Tables;
 using GameLibrary.Logic.Objects;
+using Logic.db;
 
 namespace GameLibrary.Logic
 {
@@ -115,18 +117,19 @@ namespace GameLibrary.Logic
         {
             GameDto? dto = null;
             dbo_GameTag[] gameTags = await Database_Manager.GetItems<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), game.id));
+            dbo_GameConfig[] config = await Database_Manager.GetItems<dbo_GameConfig>(SQLFilter.Equal(nameof(dbo_GameConfig.gameId), game.id));
 
             if (game.libraryId.HasValue && cachedLibraries.TryGetValue(game.libraryId.Value, out LibraryDto? lib) && lib != null)
             {
                 switch (lib.externalType)
                 {
                     case LibraryDto.ExternalTypes.Steam:
-                        dto = new GameDto_Steam(game, gameTags);
+                        dto = new GameDto_Steam(game, gameTags, config);
                         break;
                 }
             }
 
-            dto ??= new GameDto_Custom(game, gameTags);
+            dto ??= new GameDto_Custom(game, gameTags, config);
             activeGameList[game.id] = dto;
         }
 
@@ -148,8 +151,7 @@ namespace GameLibrary.Logic
                 }
             }
 
-            await Database_Manager.Delete<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), game.gameId));
-            await Database_Manager.Delete<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), game.gameId));
+            await game.Delete();
 
             activeGameList.Remove(game.gameId);
             onGameDeletion?.Invoke();
