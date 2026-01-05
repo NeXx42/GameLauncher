@@ -29,8 +29,11 @@ public partial class Library_Game : UserControl
 
     public Action<bool>? pointerStatusChange;
 
+    private ImageBrush? cachedImageBrush;
     private Action? onClick;
     private int? gameId;
+
+    public ImageBrush? getImage => cachedImageBrush;
 
     public Library_Game()
     {
@@ -90,6 +93,8 @@ public partial class Library_Game : UserControl
 
     public void RedrawIcon(int gameId, ImageBrush? bitmapImg)
     {
+        cachedImageBrush = bitmapImg;
+
         img.Background = bitmapImg ?? noBGBrush;
         lbl_NoIcon.IsVisible = bitmapImg == null;
     }

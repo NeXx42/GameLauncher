@@ -38,14 +38,6 @@ public partial class Page_Library : UserControl
 
         DrawEverything();
 
-        //scroll_Tags.PointerWheelChanged += (object? send, PointerWheelEventArgs args) =>
-        //{
-        //    var change = scroll_Tags.Offset.WithX(scroll_Tags.Offset.X - (args.Delta.Y * 100));
-        //
-        //    scroll_Tags.Offset = change;
-        //    args.Handled = true;
-        //};
-
         LibraryHandler.onGameDetailsUpdate += async (int gameId) => await gameList.RefreshGame(gameId);
         LibraryHandler.onGameDeletion += async () => await gameList.DrawGames();
     }
@@ -80,7 +72,7 @@ public partial class Page_Library : UserControl
         btn_Indexer.RegisterClick(OpenIndexer);
         btn_Settings.RegisterClick(OpenSettings);
 
-        inp_Search.KeyUp += (_, __) => gameList!.DrawGames();
+        inp_Search.OnChange(gameList!.DrawGames);
         btn_SortDir.RegisterClick(UpdateSortDirection);
 
         foreach (GameFilterRequest.OrderType type in Enum.GetValues(typeof(GameFilterRequest.OrderType)))
@@ -159,15 +151,9 @@ public partial class Page_Library : UserControl
         //await DrawTags();
     }
 
-    public async void ToggleGameView(int? gameId)
+    public async void ToggleGameView(int gameId)
     {
-        if (gameId == null)
-        {
-            ToggleMenu(false);
-            return;
-        }
-
-        GameDto? game = LibraryHandler.TryGetCachedGame(gameId.Value);
+        GameDto? game = LibraryHandler.TryGetCachedGame(gameId);
 
         if (game == null)
         {
@@ -243,12 +229,20 @@ public partial class Page_Library : UserControl
     {
         return new GameFilterRequest()
         {
-            nameFilter = inp_Search.Text,
+            nameFilter = inp_Search.getText,
             tagList = activeTags,
             orderDirection = currentSortAscending,
             orderType = currentSort,
             page = page,
             contentPerPage = contentPerPage
         };
+    }
+
+    public void UpdateBackgroundImage(ImageBrush? brush)
+    {
+        if (brush == null)
+            return;
+
+        img_Bg.Source = (IImage)brush!.Source!;
     }
 }

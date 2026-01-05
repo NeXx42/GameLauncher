@@ -57,20 +57,26 @@
           <Grid x:Name="tab_Settings" IsVisible="True">
             <StackPanel Orientation="Vertical">
 
-              <Grid ColumnDefinitions="150, *">
-                <Label Content="Capture Logs" VerticalAlignment="Center"/>
-                <common:Common_Toggle x:Name="inp_CaptureLogs" Grid.Column="1"/>
-              </Grid>
+              <Label FontSize="18" Content="General"/>
+              <StackPanel x:Name="tab_Settings_General" Margin="10 5">
+                <Grid ColumnDefinitions="150, *">
+                  <Label Content="Capture Logs" VerticalAlignment="Center"/>
+                  <common:Common_Toggle x:Name="inp_CaptureLogs" Grid.Column="1"/>
+                </Grid>
 
-              <Grid ColumnDefinitions="150, *">
-                <Label Content="Locale Emulation" VerticalAlignment="Center"/>
-                <common:Common_Toggle x:Name="inp_Emulate" Grid.Column="1"/>
-              </Grid>
+                <Grid ColumnDefinitions="150, *">
+                  <Label Content="Locale Emulation" VerticalAlignment="Center"/>
+                  <common:Common_Toggle x:Name="inp_Emulate" Grid.Column="1"/>
+                </Grid>
 
-              <Grid ColumnDefinitions="150, *">
-                <Label Content="Runner" VerticalAlignment="Center"/>
-                <common:Common_Dropdown x:Name="inp_WineProfile" Width="200" HorizontalAlignment="Left" Grid.Column="1"/>
-              </Grid>
+                <Grid ColumnDefinitions="150, *">
+                  <Label Content="Runner" VerticalAlignment="Center"/>
+                  <common:Common_Dropdown x:Name="inp_WineProfile" Width="200" HorizontalAlignment="Left" Grid.Column="1"/>
+                </Grid>
+              </StackPanel>
+
+
+
 
             </StackPanel>
           </Grid>

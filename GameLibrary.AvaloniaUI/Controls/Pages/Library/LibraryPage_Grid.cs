@@ -31,7 +31,12 @@ public class LibraryPage_Grid : LibraryPageBase
 
             if (m_HoveredGame.HasValue)
             {
+                library.UpdateBackgroundImage(cacheUI[m_HoveredGame.Value].getImage);
                 cacheUI[m_HoveredGame.Value].ToggleHover(true);
+            }
+            else
+            {
+                library.UpdateBackgroundImage(null);
             }
         }
     }
@@ -66,7 +71,7 @@ public class LibraryPage_Grid : LibraryPageBase
 
     public override async Task DrawGames()
     {
-        library.ToggleGameView(null);
+        library.ToggleMenu(false);
 
         activeUI.Clear();
         library.lbl_PageNum.Text = $"{page + 1}";
@@ -90,12 +95,21 @@ public class LibraryPage_Grid : LibraryPageBase
             cacheUI[i].IsVisible = true;
             cacheUI[i].ToggleHover(false);
 
-            await cacheUI[i].Draw(games[i], library.ToggleGameView);
+            await cacheUI[i].Draw(games[i], ViewGame);
 
             activeUI.Add(games[i], i);
         }
 
         hoveredGame = null;
+    }
+
+    private void ViewGame(int? id)
+    {
+        if (id == null)
+            return;
+
+        hoveredGame = activeUI[id.Value];
+        library.ToggleGameView(id.Value);
     }
 
     public override async Task RefreshGame(int gameId)
