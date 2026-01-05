@@ -56,6 +56,15 @@ namespace GameLibrary.Logic
             Dictionary<string, SettingBase[]> settings = new Dictionary<string, SettingBase[]>
             {
                 {
+                    "Application",
+                    [
+                        new Setting_Title("Security", 0, SettingOSCompatibility.Universal),
+                        new Setting_Password(),
+                        new Setting_Title("Database", 10, SettingOSCompatibility.Universal),
+                        new Setting_Database(),
+                    ]
+                },
+                {
                     "Importing",
                     [
                         new Setting_Title("Importing", 0, SettingOSCompatibility.Universal),
@@ -163,6 +172,9 @@ namespace GameLibrary.Logic
 
 
 
+
+        public static async Task DeleteConfigValue(ConfigValues config)
+            => await Database_Manager.Delete<dbo_Config>(SQLFilter.Equal(nameof(dbo_Config.key), config.ToString()));
 
         public static async Task<T> GetConfigValue<T>(ConfigValues config, T defaultVal)
         {

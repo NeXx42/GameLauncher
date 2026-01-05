@@ -1,4 +1,5 @@
 using System;
+using System.IO;
 using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
@@ -20,52 +21,16 @@ public partial class MainWindow : Window
         instance = this;
 
         InitializeComponent();
-        OnStart();
 
-        cont_Modals.IsVisible = false;
         DragDrop.SetAllowDrop(this, true);
+        cont_Modals.IsVisible = false;
+
+        OnStart();
     }
 
     private async void OnStart()
     {
         await DependencyManager.PreSetup(new UILinker(), new AvaloniaImageBrushFetcher());
-
-        if (DependencyManager.cachedDBLocation == null)
-        {
-            EnterPage<Page_Setup>().Enter(CompleteSetup);
-        }
-        else
-        {
-            await DependencyManager.LoadDatabase();
-            await HandleAuthentication();
-        }
-    }
-
-    private async void CompleteSetup(Page_Setup.SetupRequest req)
-    {
-        await DependencyManager.LoadDatabase(req.dbFile);
-
-        if (req.isExistingLoad)
-        {
-            await CompleteLoad();
-            return;
-        }
-        else
-        {
-            // when i add support for multiple libraries this should be done in the setup page
-            await LibraryHandler.GenerateLibrary(req.libraryFolder);
-
-            if (!string.IsNullOrEmpty(req.pin))
-            {
-                await ConfigHandler.SaveConfigValue(ConfigHandler.ConfigValues.PasswordHash, req.pin);
-            }
-
-            await HandleAuthentication();
-        }
-    }
-
-    private async Task HandleAuthentication()
-    {
         string passwordHash = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.PasswordHash, string.Empty);
 
         if (!string.IsNullOrEmpty(passwordHash))

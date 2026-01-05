@@ -46,28 +46,34 @@ public partial class Indexer_ImportView : UserControl
 
     private async Task ScanDirectory()
     {
-        IReadOnlyList<IStorageFolder> selectedFolders = await DialogHelper.OpenFolderAsync("Select Directories", true);
+        string[]? selectedFolders = await DependencyManager.OpenFoldersDialog("Select Directories");
 
-        if (selectedFolders.Count > 0)
+        if (selectedFolders?.Length > 0)
         {
-            availableImports.AddRange(await FileManager.CrawlGames(selectedFolders.Select(x => x.Path.AbsolutePath).ToArray()));
+            availableImports.AddRange(await FileManager.CrawlGames(selectedFolders));
             UpdateAvailableGamesUI();
         }
     }
 
     private async Task AddFile()
     {
-        IReadOnlyList<IStorageFile> selectedFiles = await DialogHelper.OpenFileAsync("Select Games", true);
-        availableImports.AddRange(selectedFiles.Select(x => new FileManager.ImportEntry_Binary(x.Path.AbsolutePath)));
+        string[]? selectedFiles = await DependencyManager.OpenFilesDialog("Select Games");
 
+        if (selectedFiles == null)
+            return;
+
+        availableImports.AddRange(selectedFiles.Select(x => new FileManager.ImportEntry_Binary(x)));
         UpdateAvailableGamesUI();
     }
 
     private async Task AddFolder()
     {
-        IReadOnlyList<IStorageFolder> selectedFiles = await DialogHelper.OpenFolderAsync("Select Games", true);
-        availableImports.AddRange(selectedFiles.Select(x => new FileManager.ImportEntry_Folder(null, x.Path.AbsolutePath)));
+        string[]? selectedFolders = await DependencyManager.OpenFilesDialog("Select Games");
 
+        if (selectedFolders == null)
+            return;
+
+        availableImports.AddRange(selectedFolders.Select(x => new FileManager.ImportEntry_Folder(null, x)));
         UpdateAvailableGamesUI();
     }
 

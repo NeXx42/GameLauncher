@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Threading;
 using GameLibrary.AvaloniaUI.Helpers;
+using GameLibrary.Logic;
 
 namespace GameLibrary.AvaloniaUI.Controls.Modals;
 
@@ -47,7 +48,7 @@ public partial class Modal_Loading : UserControl
                 }
                 catch (Exception e)
                 {
-                    await DialogHelper.OpenDatabaseExceptionDialog(e, "");
+                    await DependencyManager.OpenExceptionDialog("", e);
                 }
 
             }

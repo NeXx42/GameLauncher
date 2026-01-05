@@ -38,6 +38,8 @@ public partial class Modal_YesNo : UserControl
         lbl_Title.Content = title;
         lbl_Paragraph.Text = paragraph;
 
+        btn_Negative.Label = btns?.Length == 0 ? "Ok" : "No";
+
         extraBtns.Children.Clear();
 
         if (btns != null)

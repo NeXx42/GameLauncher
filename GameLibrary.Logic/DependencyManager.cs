@@ -33,6 +33,12 @@ public static class DependencyManager
             if (File.Exists(pointer))
                 cachedDBLocation = pointer;
         }
+        else
+        {
+            await CreateDBPointerFile(Path.Combine(GetUserStorageFolder(), $"{APPLICATION_NAME}.db"));
+        }
+
+        await Database_Manager.Init(cachedDBLocation!, HandleDatabaseException);
     }
 
     public static async Task CreateDBPointerFile(string path)
@@ -44,28 +50,6 @@ public static class DependencyManager
 
         await File.WriteAllTextAsync(dbPointerFile, path);
         cachedDBLocation = path;
-    }
-
-    public static async Task LoadDatabase(string? newPointerFile = null)
-    {
-        List<Func<Task>> toRun = new List<Func<Task>>();
-
-        if (!string.IsNullOrEmpty(newPointerFile))
-        {
-            toRun.Add(() => CreateDBPointerFile(newPointerFile));
-        }
-
-        if (string.IsNullOrEmpty(cachedDBLocation))
-        {
-            throw new Exception("Invalid pointer file");
-        }
-
-        await Database_Manager.Init(cachedDBLocation, HandleDatabaseException);
-
-        foreach (var task in toRun)
-        {
-            await task();
-        }
     }
 
     private static async void HandleDatabaseException(Exception error, string? sql)
@@ -90,17 +74,21 @@ public static class DependencyManager
         );
     }
 
+    public static void Quit()
+        => uiLinker!.Quit();
+
     public static void InvokeOnUIThread(Action a)
         => uiLinker!.InvokeOnUIThread(a);
 
     public static void InvokeOnUIThread(Func<Task> a)
         => uiLinker!.InvokeOnUIThread(async () => await a());
 
+
     public static async Task OpenLoadingModal(bool progressiveLoad, params Func<Task>[] tasks)
         => await uiLinker!.OpenLoadingModal(progressiveLoad, tasks);
 
-    public static async Task<string?> OpenStringInputModal(string title, string? existingText = "")
-        => await uiLinker!.OpenStringInputModal(title, existingText);
+    public static async Task<string?> OpenStringInputModal(string title, string? existingText = "", bool obfuscateInput = false)
+        => await uiLinker!.OpenStringInputModal(title, existingText, obfuscateInput);
 
     public static async Task<bool> OpenYesNoModal(string title, string paragraph)
         => await uiLinker!.OpenYesNoModal(title, paragraph);
@@ -110,4 +98,20 @@ public static class DependencyManager
 
     public static async Task<int> OpenConfirmationAsync(string title, string paragraph, params (string btn, Func<Task> callback, string? loadingMessage)[] controls)
         => await uiLinker!.OpenConfirmationAsync(title, paragraph, controls);
+
+    public static async Task OpenExceptionDialog(string header, Exception e) // replace with actual dialog
+        => await uiLinker!.OpenYesNoModal(header, $"{e.Message}\n\n{e.StackTrace}");
+
+
+    public static async Task<string[]?> OpenFoldersDialog(string title)
+        => await uiLinker!.OpenFoldersDialog(title);
+
+    public static async Task<string?> OpenFolderDialog(string title)
+        => await uiLinker!.OpenFolderDialog(title);
+
+    public static async Task<string[]?> OpenFilesDialog(string title, params string[] allowedTypes)
+        => await uiLinker!.OpenFilesDialog(title, allowedTypes);
+
+    public static async Task<string?> OpenFileDialog(string title, params string[] allowedTypes)
+        => await uiLinker!.OpenFileDialog(title, allowedTypes);
 }

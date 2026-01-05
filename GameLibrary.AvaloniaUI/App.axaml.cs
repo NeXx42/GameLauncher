@@ -42,7 +42,7 @@ public partial class App : Application
         // don't want this to loop endlessly loop for some reason
         try
         {
-            await DialogHelper.OpenExceptionDialog(exception);
+            await DependencyManager.OpenYesNoModal("Unhandled exception", $"{exception.Message}\n\n{exception.StackTrace}");
         }
         catch { }
     }

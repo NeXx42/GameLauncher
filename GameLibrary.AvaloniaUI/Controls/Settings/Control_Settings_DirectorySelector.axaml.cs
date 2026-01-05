@@ -43,16 +43,12 @@ public partial class Control_Settings_DirectorySelector : UserControl, ISettingC
 
         if (constraints.folder)
         {
-            var selectedFolders = await DialogHelper.OpenFolderAsync(new FolderPickerOpenOptions()
-            {
-                Title = setting.getName,
-                AllowMultiple = false
-            });
+            string? selectedFolder = await DependencyManager.OpenFolderDialog(setting.getName);
 
-            if (selectedFolders.Count == 1)
+            if (!string.IsNullOrEmpty(selectedFolder))
             {
-                await setting.SaveSetting(selectedFolders[0].Path.AbsolutePath);
-                UpdateLabel(selectedFolders[0].Path.AbsolutePath);
+                await setting.SaveSetting(selectedFolder);
+                UpdateLabel(selectedFolder);
             }
         }
         else

@@ -121,17 +121,13 @@ public partial class Modal_Settings_Runner : UserControl
 
     private async Task SelectDirectory()
     {
-        IReadOnlyList<IStorageFolder> folders = await DialogHelper.OpenFolderAsync(new FolderPickerOpenOptions()
-        {
-            Title = "Pick Folder",
-            AllowMultiple = false,
-        });
+        string? folder = await DependencyManager.OpenFolderDialog("Pick folder");
 
-        if (folders.Count == 1)
-        {
-            selectedRoot = folders[0].Path.AbsolutePath;
-            btn_Dir.Label = selectedRoot;
-        }
+        if (string.IsNullOrEmpty(folder))
+            return;
+
+        selectedRoot = folder;
+        btn_Dir.Label = selectedRoot;
     }
 
     private async Task ChangeRunnerType()
@@ -191,8 +187,10 @@ public partial class Modal_Settings_Runner : UserControl
         if (!await EnsureExistingProfile())
             return;
 
-        var folders = await DialogHelper.OpenFolderAsync("Select shared folder", false);
-        string selectedPath = folders[0].Path.AbsolutePath;
+        string? selectedPath = await DependencyManager.OpenFolderDialog("Select shared folder");
+
+        if (string.IsNullOrEmpty(selectedPath))
+            return;
 
         int result = await DependencyManager.OpenConfirmationAsync(
             "Share prefix documents?",
