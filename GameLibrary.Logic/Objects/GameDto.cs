@@ -150,6 +150,7 @@ public abstract class GameDto
     {
         if (string.IsNullOrEmpty(val))
         {
+            config.Remove(key);
             await DeleteConfig(key);
             return;
         }
@@ -162,6 +163,7 @@ public abstract class GameDto
         };
 
         await Database_Manager.AddOrUpdate(dbo, SQLFilter.Equal(nameof(dbo_GameConfig.gameId), gameId).Equal(nameof(dbo_GameConfig.configKey), dbo.configKey), nameof(dbo_GameConfig.configValue));
+        config[key] = dbo.configValue;
     }
 
     public async Task DeleteConfig(GameConfigTypes key)

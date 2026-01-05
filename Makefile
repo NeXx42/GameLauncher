@@ -2,7 +2,7 @@ OUTPUT_DIR = ./_Output/
 
 publish:
 
-	rm -rf ${OUTPUT_DIR}
+	rm -rf ${OUTPUT_DIR}/*
 	
 	# app
 	dotnet publish GameLibrary.AvaloniaUI/GameLibrary.AvaloniaUI.csproj \

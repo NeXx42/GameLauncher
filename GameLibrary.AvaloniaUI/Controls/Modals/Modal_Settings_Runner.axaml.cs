@@ -34,7 +34,8 @@ public partial class Modal_Settings_Runner : UserControl
 
         btn_Dir.RegisterClick(SelectDirectory);
 
-        btn_Wine_WineCfg.RegisterClick(OpenWineTricks, "Loading");
+        btn_Wine_WineCfg.RegisterClick(OpenWineCfg, "Loading");
+        btn_Wine_WineTricks.RegisterClick(OpenWineTricks, "Loading");
         btn_Wine_SharedDocuments.Register(ShareDocuments, "Updating");
 
         tabGroup = new UITabGroup(TabGroup_Buttons, TabGroup_Content, true);
@@ -174,12 +175,20 @@ public partial class Modal_Settings_Runner : UserControl
         return true;
     }
 
+    private async Task OpenWineCfg()
+    {
+        if (!await EnsureExistingProfile())
+            return;
+
+        await RunnerManager.RunWineTricks(selectedRunner!.runnerId, "wine", "winecfg");
+    }
+
     private async Task OpenWineTricks()
     {
         if (!await EnsureExistingProfile())
             return;
 
-        await RunnerManager.RunWineTricks(selectedRunner!.runnerId);
+        await RunnerManager.RunWineTricks(selectedRunner!.runnerId, "winetricks", string.Empty);
     }
 
     private async Task ShareDocuments(bool val)

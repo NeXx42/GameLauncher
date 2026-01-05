@@ -95,11 +95,11 @@ public static class RunnerManager
         }
     }
 
-    public static async Task RunWineTricks(int runnerId)
+    public static async Task RunWineTricks(int runnerId, string process, string? subprocess)
     {
-        if (IsBinaryRunning("winecfg"))
+        if (IsBinaryRunning($"{runnerId}_{process}"))
         {
-            await DependencyManager.OpenYesNoModal("Already running", "Winecfg is already running, close before trying again");
+            await DependencyManager.OpenYesNoModal("Already running", $"{process} is already running, close before trying again");
             return;
         }
 
@@ -108,10 +108,12 @@ public static class RunnerManager
         await runnerDto.SetupRunner();
         LaunchArguments req = await runnerDto.InitRunDetails(new LaunchRequest() { runnerId = runnerId });
 
-        req.command = "wine";
-        req.arguments.AddFirst("winecfg");
+        req.command = process;
 
-        ExecuteRunRequest(req, "winecfg", null);
+        if (!string.IsNullOrEmpty(subprocess))
+            req.arguments.AddFirst(subprocess);
+
+        ExecuteRunRequest(req, $"{runnerId}_{process}", null);
     }
 
     private static async Task HandleEmbeds(int? gameId, LaunchArguments args, RunnerDto runnerDto)
