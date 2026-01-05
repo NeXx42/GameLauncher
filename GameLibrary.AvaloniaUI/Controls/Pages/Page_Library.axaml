@@ -19,30 +19,29 @@
                 </Grid>
 
                 <Border Background="#0e1419" BorderBrush="#1e2328" BorderThickness="1" CornerRadius="0" BoxShadow="0 0 10 0 #000000" Grid.Row="1" MinWidth="500">
-                    <Grid ColumnDefinitions="*, 15, Auto" Margin="15" Height="30">
+                    <Grid ColumnDefinitions="*, 15, Auto" Margin="15" Height="70">
 
                         <!-- Tags -->
-                        <Grid VerticalAlignment="Stretch" ColumnDefinitions="Auto 10 *">
+                        <Grid ColumnDefinitions="Auto 10 *">
                             <Label Content="Tags:" Foreground="#FFAFAFAF" VerticalAlignment="Top"/>
-                            <ScrollViewer Grid.Column="2" x:Name="scroll_Tags" HorizontalScrollBarVisibility="Hidden">
-                                <!-- vertical scrolling
+                            <ScrollViewer Grid.Column="2" x:Name="scroll_Tags" VerticalAlignment="Top" VerticalScrollBarVisibility="Hidden">
                                 <WrapPanel x:Name="cont_AllTags" Orientation="Horizontal" ItemSpacing="5" LineSpacing="5"/>
-                                -->
-                                <StackPanel x:Name="cont_AllTags" Orientation="Horizontal" Spacing="5"/>
                             </ScrollViewer>
                         </Grid>
 
                         <!-- Sort -->
-                        <StackPanel HorizontalAlignment="Right" Grid.Column="2" Orientation="Horizontal" Spacing="15" VerticalAlignment="Top">
-                            <Label Content="Sort:" Foreground="#FFAFAFAF" VerticalAlignment="Center"/>
-                            <StackPanel x:Name="inp_SortTypes" Orientation="Horizontal" Spacing="5" />
-                            <common:Common_Button x:Name="btn_SortDir" Margin="0, 0, 0, 0" Label="Ascending" Width="100"/>
+                        <StackPanel Grid.Column="2" VerticalAlignment="Top" Spacing="8">
+                            <StackPanel Orientation="Horizontal" Spacing="15">
+                                <Label Content="Sort:" Foreground="#FFAFAFAF" VerticalAlignment="Center" Width="75"/>
+                                <StackPanel x:Name="inp_SortTypes" Orientation="Horizontal" Spacing="5" />
+                                <common:Common_Button x:Name="btn_SortDir" Margin="0, 0, 0, 0" Label="Ascending" Width="100"/>
+                            </StackPanel>
 
-                            <common:Common_Dropdown x:Name="inp_SortType" Width="100" IsVisible="False"/>
-                            <StackPanel HorizontalAlignment="Right" Orientation="Horizontal" Margin="5" IsVisible="False">
-                                <Label Content="Search" VerticalAlignment="Center"/>
+                            <StackPanel Orientation="Horizontal" Spacing="15">
+                                <Label Content="Search:" Foreground="#FFAFAFAF" VerticalAlignment="Center" Width="75"/>
                                 <TextBox x:Name="inp_Search" Width="300"/>
                             </StackPanel>
+
                         </StackPanel>
                     </Grid>
                 </Border>

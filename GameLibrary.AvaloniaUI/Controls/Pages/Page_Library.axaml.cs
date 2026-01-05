@@ -37,13 +37,13 @@ public partial class Page_Library : UserControl
 
         DrawEverything();
 
-        scroll_Tags.PointerWheelChanged += (object? send, PointerWheelEventArgs args) =>
-        {
-            var change = scroll_Tags.Offset.WithX(scroll_Tags.Offset.X - (args.Delta.Y * 100));
-
-            scroll_Tags.Offset = change;
-            args.Handled = true;
-        };
+        //scroll_Tags.PointerWheelChanged += (object? send, PointerWheelEventArgs args) =>
+        //{
+        //    var change = scroll_Tags.Offset.WithX(scroll_Tags.Offset.X - (args.Delta.Y * 100));
+        //
+        //    scroll_Tags.Offset = change;
+        //    args.Handled = true;
+        //};
 
         LibraryHandler.onGameDetailsUpdate += async (int gameId) => await gameList.RefreshGame(gameId);
         LibraryHandler.onGameDeletion += async () => await gameList.DrawGames();
