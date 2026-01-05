@@ -34,6 +34,13 @@ public class RunnerDto_Wine : RunnerDto
     {
         RunnerManager.LaunchArguments res = new RunnerManager.LaunchArguments() { command = getWineExecutable };
         res.command = getWineExecutable;
+
+        if ((game.gameConfig?.TryGetValue(GameDto.GameConfigTypes.Wine_ExplorerLaunch, out string? _ExplorerTrick) ?? false) && _ExplorerTrick == "1")
+        {
+            res.arguments.AddLast("explorer");
+            res.arguments.AddLast("/desktop=Game,800x600");
+        }
+
         res.arguments.AddLast(game.path);
 
         res.whiteListedDirs.Add(Path.GetDirectoryName(game.path)!);
@@ -74,7 +81,7 @@ public class RunnerDto_Wine : RunnerDto
         return new Dictionary<string, string>()
         {
             { "WINEPREFIX", prefixFolder },
-            {"WINEDEBUG", "-all"}
+            { "WINEDEBUG", "-all"}
         };
     }
 

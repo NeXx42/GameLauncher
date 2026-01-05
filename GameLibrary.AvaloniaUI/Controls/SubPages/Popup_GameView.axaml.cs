@@ -313,6 +313,8 @@ public partial class Popup_GameView : UserControl
             {
                 master.master.inp_Emulate.RegisterOnChange((b) => UpdateConfigValue(GameDto.GameConfigTypes.General_LocaleEmulation, b));
                 master.master.inp_CaptureLogs.RegisterOnChange((b) => UpdateConfigValue(GameDto.GameConfigTypes.General_CaptureLogs, b));
+
+                master.master.inp_Wine_VirtualDesktop.RegisterOnChange((b) => UpdateConfigValue(GameDto.GameConfigTypes.Wine_ExplorerLaunch, b));
             }
 
             protected override async Task OpenWithGame(GameDto? game, bool isNewGame)
@@ -325,6 +327,8 @@ public partial class Popup_GameView : UserControl
 
                 master!.master.inp_Emulate.SilentSetValue(game!.GetConfigBool(GameDto.GameConfigTypes.General_LocaleEmulation, false));
                 master.master.inp_CaptureLogs.SilentSetValue(game!.GetConfigBool(GameDto.GameConfigTypes.General_CaptureLogs, false));
+
+                master.master.inp_Wine_VirtualDesktop.SilentSetValue(game!.GetConfigBool(GameDto.GameConfigTypes.Wine_ExplorerLaunch, false));
             }
 
             private void DrawRunners(GameDto game)

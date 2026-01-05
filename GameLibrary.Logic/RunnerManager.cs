@@ -324,6 +324,8 @@ public static class RunnerManager
         public int? gameId;
         public int? runnerId;
         public string path;
+
+        public Dictionary<GameDto.GameConfigTypes, string?>? gameConfig;
     }
 
 

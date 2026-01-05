@@ -19,6 +19,8 @@ public abstract class GameDto
     {
         General_LocaleEmulation,
         General_CaptureLogs,
+
+        Wine_ExplorerLaunch
     }
 
 

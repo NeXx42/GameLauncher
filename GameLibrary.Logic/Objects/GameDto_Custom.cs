@@ -17,7 +17,9 @@ public class GameDto_Custom : GameDto
         {
             gameId = gameId,
             path = getAbsoluteBinaryLocation,
-            runnerId = runnerId
+            runnerId = runnerId,
+
+            gameConfig = config
         });
     }
 

@@ -82,7 +82,13 @@
                 </Grid>
               </StackPanel>
 
-
+              <Label FontSize="18" Content="Wine" />
+              <StackPanel x:Name="tab_Settings_Wine" Margin="10 5" Spacing="5">
+                <Grid ColumnDefinitions="150, *">
+                  <Label Content="Virtual Wine desktop" VerticalAlignment="Center"/>
+                  <common:Common_Toggle x:Name="inp_Wine_VirtualDesktop" Grid.Column="1"/>
+                </Grid>
+              </StackPanel>
 
 
             </StackPanel>
