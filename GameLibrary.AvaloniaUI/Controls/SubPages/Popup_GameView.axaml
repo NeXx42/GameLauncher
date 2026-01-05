@@ -57,10 +57,10 @@
 
           <!-- Options -->
           <Grid x:Name="tab_Settings" IsVisible="True">
-            <StackPanel Orientation="Vertical">
+            <StackPanel Orientation="Vertical" Spacing="10">
 
-              <Label FontSize="18" Content="General"/>
-              <StackPanel x:Name="tab_Settings_General" Margin="10 5">
+              <Label FontSize="18" Content="General" />
+              <StackPanel x:Name="tab_Settings_General" Margin="10 5" Spacing="5">
                 <Grid ColumnDefinitions="150, *">
                   <Label Content="Capture Logs" VerticalAlignment="Center"/>
                   <common:Common_Toggle x:Name="inp_CaptureLogs" Grid.Column="1"/>
@@ -71,9 +71,14 @@
                   <common:Common_Toggle x:Name="inp_Emulate" Grid.Column="1"/>
                 </Grid>
 
-                <Grid ColumnDefinitions="150, *">
+                <Grid ColumnDefinitions="150, 300">
+                  <Label Content="Binary" VerticalAlignment="Center"/>
+                  <common:Common_Dropdown x:Name="inp_binary" Grid.Column="1"/>
+                </Grid>
+
+                <Grid ColumnDefinitions="150, 300">
                   <Label Content="Runner" VerticalAlignment="Center"/>
-                  <common:Common_Dropdown x:Name="inp_WineProfile" Width="200" HorizontalAlignment="Left" Grid.Column="1"/>
+                  <common:Common_Dropdown x:Name="inp_WineProfile" Grid.Column="1"/>
                 </Grid>
               </StackPanel>
 
@@ -97,7 +102,6 @@
           <StackPanel Orientation="Horizontal" HorizontalAlignment="Left">
             <common:Common_Button Classes="negative" Margin="0,0,5,0" x:Name="btn_Delete" Width="90" Label="🗑 Delete"/>
             <common:Common_Button Margin="0,0,5,0" x:Name="btn_Overlay" Width="150" Label="🧩 Open Overlay"/>
-            <common:Common_Dropdown Margin="0,0,5,0" x:Name="inp_binary" Width="355"/>
             <common:Common_Button Margin="0,0,5,0" x:Name="btn_Browse" Width="150" Label="📁 Browse"/>
           </StackPanel>
 

@@ -57,19 +57,6 @@ public partial class Popup_GameView : UserControl
 
         await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
         await tabs.OpenFresh();
-
-
-        (int? currentExecutable, string[] possibleBinaries)? options = game.GetPossibleBinaries();
-
-        if (options != null)
-        {
-            inp_binary.IsVisible = true;
-            inp_binary.SetupAsync(options.Value.possibleBinaries.Select(x => Path.GetFileName(x)), options.Value.currentExecutable, HandleBinaryChange);
-        }
-        else
-        {
-            inp_binary.IsVisible = false;
-        }
     }
 
     private void DrawWarnings()
@@ -134,7 +121,6 @@ public partial class Popup_GameView : UserControl
     }
 
     private async Task OpenOverlay() => await OverlayManager.LaunchOverlay(inspectingGame!.gameId);
-    private async Task HandleBinaryChange() => await inspectingGame!.ChangeBinaryLocation(inp_binary.selectedValue?.ToString());
 
     private async Task StartNameChange()
     {
@@ -325,31 +311,53 @@ public partial class Popup_GameView : UserControl
 
             protected override void InternalSetup(GameView_Tabs master)
             {
-                master.master.inp_Emulate.RegisterOnChange(HandleEmulateToggle);
-                master.master.inp_CaptureLogs.RegisterOnChange(HandleCaptureLogs);
+                master.master.inp_Emulate.RegisterOnChange((b) => UpdateConfigValue(GameDto.GameConfigTypes.General_LocaleEmulation, b));
+                master.master.inp_CaptureLogs.RegisterOnChange((b) => UpdateConfigValue(GameDto.GameConfigTypes.General_CaptureLogs, b));
             }
 
             protected override async Task OpenWithGame(GameDto? game, bool isNewGame)
             {
                 if (isNewGame)
                 {
-                    possibleRunners = RunnerManager.GetRunnerProfiles().ToList();// await DatabaseHandler.GetItems<dbo_WineProfile>(QueryBuilder.OrderBy(nameof(dbo_WineProfile.isDefault), true));
-                    string firstProfile = possibleRunners.Count > 0 ? possibleRunners[0].runnerName : "INVALID";
-
-                    string[] profileOptions = [$"Default ({firstProfile})", .. possibleRunners!.Select(x => x.runnerName)!.ToArray()];
-                    int selectedProfile = possibleRunners.Select(x => x.runnerId).ToList().IndexOf(game?.runnerId ?? -1);
-
-                    master!.master.inp_WineProfile.IsVisible = true;
-                    master.master.inp_WineProfile.SetupAsync(profileOptions, selectedProfile >= 0 ? (selectedProfile + 1) : 0, HandleWineProfileChange);
-
+                    DrawRunners(game!);
+                    DrawBinaries(game!);
                 }
 
                 master!.master.inp_Emulate.SilentSetValue(game!.GetConfigBool(GameDto.GameConfigTypes.General_LocaleEmulation, false));
                 master.master.inp_CaptureLogs.SilentSetValue(game!.GetConfigBool(GameDto.GameConfigTypes.General_CaptureLogs, false));
             }
 
-            private async Task HandleEmulateToggle(bool to) => await inspectingGame!.UpdateConfigBool(GameDto.GameConfigTypes.General_LocaleEmulation, to);
-            private async Task HandleCaptureLogs(bool to) => await inspectingGame!.UpdateConfigBool(GameDto.GameConfigTypes.General_CaptureLogs, to);
+            private void DrawRunners(GameDto game)
+            {
+                possibleRunners = RunnerManager.GetRunnerProfiles().ToList();
+                string firstProfile = possibleRunners.Count > 0 ? possibleRunners[0].runnerName : "INVALID";
+
+                string[] profileOptions = [$"Default ({firstProfile})", .. possibleRunners!.Select(x => x.runnerName)!.ToArray()];
+                int selectedProfile = possibleRunners.Select(x => x.runnerId).ToList().IndexOf(game.runnerId ?? -1);
+
+                master!.master.inp_WineProfile.IsVisible = true;
+                master.master.inp_WineProfile.SetupAsync(profileOptions, selectedProfile >= 0 ? (selectedProfile + 1) : 0, HandleWineProfileChange);
+            }
+
+            private void DrawBinaries(GameDto game)
+            {
+                (int? currentExecutable, string[] possibleBinaries)? options = game.GetPossibleBinaries();
+
+                if (options != null)
+                {
+                    (master!.master.inp_binary.Parent as Control)!.IsVisible = true;
+                    master!.master.inp_binary.SetupAsync(options.Value.possibleBinaries.Select(x => Path.GetFileName(x)), options.Value.currentExecutable, HandleBinaryChange);
+                }
+                else
+                {
+                    (master!.master.inp_binary.Parent as Control)!.IsVisible = false;
+                }
+            }
+
+
+
+            private async Task HandleBinaryChange() => await inspectingGame!.ChangeBinaryLocation(master!.master.inp_binary.selectedValue?.ToString());
+            private async Task UpdateConfigValue(GameDto.GameConfigTypes key, bool to) => await inspectingGame!.UpdateConfigBool(key, to);
 
             private async Task HandleWineProfileChange()
             {

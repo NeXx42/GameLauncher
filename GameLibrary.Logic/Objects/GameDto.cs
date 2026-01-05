@@ -46,7 +46,7 @@ public abstract class GameDto
     {
         get
         {
-            if (GetConfigBool(GameConfigTypes.General_CaptureLogs, false))
+            if (!GetConfigBool(GameConfigTypes.General_CaptureLogs, false))
             {
                 return null;
             }
@@ -263,7 +263,7 @@ public abstract class GameDto
     {
         List<(string, Func<Task>)> warnings = new List<(string, Func<Task>)>();
 
-        if (folderPath.Contains(","))
+        if (folderPath.Contains(',') || folderPath.Contains('!'))
         {
             CreateFixer("Illegal Folder", "This will rename the folder to remove the illegal characters", ResolveFolderPath);
         }
@@ -286,7 +286,7 @@ public abstract class GameDto
 
         string existing = getAbsoluteFolderLocation;
 
-        folderPath = folderPath.Replace(",", string.Empty);
+        folderPath = folderPath.Replace(",", string.Empty).Replace("!", string.Empty);
         Directory.Move(existing, getAbsoluteFolderLocation);
 
         await UpdateDatabaseEntry(nameof(dbo_Game.gameFolder));
