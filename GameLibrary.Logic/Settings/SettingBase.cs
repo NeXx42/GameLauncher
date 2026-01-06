@@ -1,3 +1,4 @@
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.Settings.UI;
 
 namespace GameLibrary.Logic.Settings;
@@ -13,10 +14,10 @@ public abstract class SettingBase
 
     public abstract ISettingsUI GetUI();
 
-    public virtual async Task<T?> LoadSettingAsConfig<T>(ConfigHandler.ConfigValues configName)
+    public virtual async Task<T?> LoadSettingAsConfig<T>(ConfigKeys configName)
         => await ConfigHandler.configProvider!.GetGeneric<T>(configName);
 
-    public virtual async Task<bool> SaveSettingAsConfig<T>(ConfigHandler.ConfigValues configName, T obj)
+    public virtual async Task<bool> SaveSettingAsConfig<T>(ConfigKeys configName, T obj)
         => await ConfigHandler.configProvider!.SaveGeneric(configName, obj);
 }
 

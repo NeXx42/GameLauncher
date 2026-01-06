@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CSharpSqliteORM;
 using GameLibrary.DB;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.Helpers;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
@@ -19,34 +20,14 @@ namespace GameLibrary.Logic
     {
         public static bool isOnLinux { private set; get; }
 
-        public enum ConfigValues
-        {
-            RootPath,
-            EmulatorPath,
-            PasswordHash,
-
-            Launcher_Concurrency,
-
-            Sandbox_Windows_SandieboxBox,
-            Sandbox_Windows_SandieboxLocation,
-            Sandbox_Linux_Firejail_Enabled,
-            Sandbox_Linux_Firejail_FileSystemIsolation,
-            Sandbox_Linux_Firejail_Networking,
-
-            Import_GUIDFolderNames,
-
-            Appearance_Layout,
-            Appearance_BackgroundImage,
-        }
-
-        public static ConfigProvider<ConfigValues>? configProvider;
+        public static ConfigProvider<ConfigKeys>? configProvider;
         public static ReadOnlyDictionary<string, SettingBase[]>? groupedSettings { get; private set; }
 
 
         public static async Task Init()
         {
             dbo_Config[] config = await Database_Manager.GetItems<dbo_Config>();
-            configProvider = new ConfigProvider<ConfigValues>(config.Select(x => (x.key, x.value)), SaveConfig, DeleteConfig);
+            configProvider = new ConfigProvider<ConfigKeys>(config.Select(x => (x.key, x.value)), SaveConfig, DeleteConfig);
 
             isOnLinux = RuntimeInformation.IsOSPlatform(OSPlatform.Linux);
             RegisterSettings();
@@ -64,10 +45,10 @@ namespace GameLibrary.Logic
                         new Setting_Title("Database", 10, SettingOSCompatibility.Universal),
                         new Setting_Database(),
                         new Setting_Title("Appearance", 10, SettingOSCompatibility.Universal),
-                        new Setting_Generic_Config("Page Layout", SettingOSCompatibility.Universal, ConfigValues.Appearance_Layout, new SettingsUI_Dropdown(["Paginated", "Endless"])),
-                        new Setting_Generic_Config("Disable background images", SettingOSCompatibility.Universal, ConfigValues.Appearance_BackgroundImage, new SettingsUI_Toggle()),
+                        new Setting_Generic_Config("Page Layout", SettingOSCompatibility.Universal, ConfigKeys.Appearance_Layout, new SettingsUI_Dropdown(["Paginated", "Endless"])),
+                        new Setting_Generic_Config("Disable background images", SettingOSCompatibility.Universal, ConfigKeys.Appearance_BackgroundImage, new SettingsUI_Toggle()),
                         new Setting_Title("Importing", 10, SettingOSCompatibility.Universal),
-                        new Setting_Generic_Config("Unique folder import", SettingOSCompatibility.Universal, ConfigValues.Import_GUIDFolderNames, new SettingsUI_Toggle()),
+                        new Setting_Generic_Config("Unique folder import", SettingOSCompatibility.Universal, ConfigKeys.Import_GUIDFolderNames, new SettingsUI_Toggle()),
                     ]
                 },
                 {
@@ -85,20 +66,20 @@ namespace GameLibrary.Logic
                         new Setting_Runners(),
 
                         new Setting_Title("Misc", 10, SettingOSCompatibility.Universal),
-                        new Setting_Generic_Config("Concurrency", SettingOSCompatibility.Universal, ConfigValues.Launcher_Concurrency, new SettingsUI_Toggle()),
+                        new Setting_Generic_Config("Concurrency", SettingOSCompatibility.Universal, ConfigKeys.Launcher_Concurrency, new SettingsUI_Toggle()),
                     ]
                 },
                 {
                     "Sandboxing",
                     [
                         new Setting_Title("Firejail", 0, SettingOSCompatibility.Linux),
-                        new Setting_Generic_Config("Use firejail", SettingOSCompatibility.Linux, ConfigValues.Sandbox_Linux_Firejail_Enabled, new SettingsUI_Toggle()),
-                        new Setting_Generic_Config("Block networktivity", SettingOSCompatibility.Linux, ConfigValues.Sandbox_Linux_Firejail_Networking, new SettingsUI_Toggle()),
-                        new Setting_Generic_Config("Isolate filesystem", SettingOSCompatibility.Linux, ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, new SettingsUI_Toggle()),
+                        new Setting_Generic_Config("Use firejail", SettingOSCompatibility.Linux, ConfigKeys.Sandbox_Linux_Firejail_Enabled, new SettingsUI_Toggle()),
+                        new Setting_Generic_Config("Block networktivity", SettingOSCompatibility.Linux, ConfigKeys.Sandbox_Linux_Firejail_Networking, new SettingsUI_Toggle()),
+                        new Setting_Generic_Config("Isolate filesystem", SettingOSCompatibility.Linux, ConfigKeys.Sandbox_Linux_Firejail_FileSystemIsolation, new SettingsUI_Toggle()),
 
                         new Setting_Title("Sandboxie", 10, SettingOSCompatibility.Windows),
-                        new Setting_Generic_Config("Sandboxie box name", SettingOSCompatibility.Windows, ConfigValues.Sandbox_Windows_SandieboxBox, new SettingsUI_Toggle()),
-                        new Setting_Generic_Config("Sandboxie location", SettingOSCompatibility.Windows, ConfigValues.Sandbox_Windows_SandieboxLocation, new SettingsUI_DirectorySelector(){ folder = true}),
+                        new Setting_Generic_Config("Sandboxie box name", SettingOSCompatibility.Windows, ConfigKeys.Sandbox_Windows_SandieboxBox, new SettingsUI_Toggle()),
+                        new Setting_Generic_Config("Sandboxie location", SettingOSCompatibility.Windows, ConfigKeys.Sandbox_Windows_SandieboxLocation, new SettingsUI_DirectorySelector(){ folder = true}),
                     ]
                 }
             };

@@ -1,4 +1,5 @@
 using CSharpSqliteORM;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.Settings.UI;
 
 namespace GameLibrary.Logic.Settings;
@@ -12,7 +13,7 @@ public class Setting_Password : SettingBase
 
     public override async Task<T?> LoadSetting<T>() where T : default
     {
-        string? hash = ConfigHandler.configProvider!.GetValue(ConfigHandler.ConfigValues.PasswordHash);
+        string? hash = ConfigHandler.configProvider!.GetValue(ConfigKeys.PasswordHash);
         return (T?)(object)!string.IsNullOrEmpty(hash);
     }
 
@@ -24,6 +25,6 @@ public class Setting_Password : SettingBase
             return false;
 
         result = string.IsNullOrEmpty(result) ? null : EncryptionHelper.EncryptPassword(result);
-        return await ConfigHandler.configProvider!.SaveValue(ConfigHandler.ConfigValues.PasswordHash, result);
+        return await ConfigHandler.configProvider!.SaveValue(ConfigKeys.PasswordHash, result);
     }
 }

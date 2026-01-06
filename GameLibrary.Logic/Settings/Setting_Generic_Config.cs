@@ -1,3 +1,4 @@
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.Settings.UI;
 
 namespace GameLibrary.Logic.Settings;
@@ -6,10 +7,10 @@ public class Setting_Generic_Config : SettingBase
 {
     private string settingName;
     private SettingOSCompatibility compatibility;
-    private ConfigHandler.ConfigValues configValue;
+    private ConfigKeys configValue;
     private ISettingsUI uiSettings;
 
-    public Setting_Generic_Config(string settingName, SettingOSCompatibility compatibility, ConfigHandler.ConfigValues configValue, ISettingsUI uiSettings)
+    public Setting_Generic_Config(string settingName, SettingOSCompatibility compatibility, ConfigKeys configValue, ISettingsUI uiSettings)
     {
         this.settingName = settingName;
         this.compatibility = compatibility;

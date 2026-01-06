@@ -8,6 +8,7 @@ using GameLibrary.AvaloniaUI.Controls.Pages;
 using GameLibrary.AvaloniaUI.Helpers;
 using GameLibrary.AvaloniaUI.Utils;
 using GameLibrary.Logic;
+using GameLibrary.Logic.Enums;
 
 namespace GameLibrary.AvaloniaUI;
 
@@ -31,7 +32,7 @@ public partial class MainWindow : Window
     private async void OnStart()
     {
         await DependencyManager.PreSetup(new UILinker(), new AvaloniaImageBrushFetcher());
-        string? passwordHash = ConfigHandler.configProvider!.GetValue(ConfigHandler.ConfigValues.PasswordHash);
+        string? passwordHash = ConfigHandler.configProvider!.GetValue(ConfigKeys.PasswordHash);
 
         if (!string.IsNullOrEmpty(passwordHash))
         {

@@ -137,16 +137,16 @@ public static class RunnerManager
 
         if (ConfigHandler.isOnLinux)
         {
-            if (ConfigHandler.configProvider!.GetBoolean(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Enabled, false))
+            if (ConfigHandler.configProvider!.GetBoolean(ConfigKeys.Sandbox_Linux_Firejail_Enabled, false))
             {
                 embeds.Add(new GameEmbed_Firejail());
 
-                if (ConfigHandler.configProvider!.GetBoolean(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Networking, false))
+                if (ConfigHandler.configProvider!.GetBoolean(ConfigKeys.Sandbox_Linux_Firejail_Networking, false))
                 {
                     await globalConfigValues.SaveBool(RunnerDto.RunnerConfigValues.Generic_Sandbox_BlockNetwork, true);
                 }
 
-                if (ConfigHandler.configProvider!.GetBoolean(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, false))
+                if (ConfigHandler.configProvider!.GetBoolean(ConfigKeys.Sandbox_Linux_Firejail_FileSystemIsolation, false))
                 {
                     await globalConfigValues.SaveBool(RunnerDto.RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true);
                 }
