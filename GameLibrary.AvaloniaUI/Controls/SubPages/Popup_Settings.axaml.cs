@@ -51,6 +51,7 @@ public partial class Popup_Settings : UserControl
         {
             StackPanel stack = new StackPanel();
             stack.Margin = new Thickness(10);
+            stack.Spacing = 5;
 
             foreach (SettingBase setting in settings)
             {
@@ -63,7 +64,7 @@ public partial class Popup_Settings : UserControl
                 {
                     activeControls.Add(control);
 
-                    uc.Margin = new Thickness(0, 5, 0, 0);
+                    uc.Margin = new Thickness(control is Control_Settings_Title ? 0 : 15, uc.Margin.Top, uc.Margin.Right, uc.Margin.Bottom);
                     stack.Children.Add(uc);
                 }
             }
@@ -77,6 +78,7 @@ public partial class Popup_Settings : UserControl
             {
                 case SettingsUI_DirectorySelector settingsUI_DirectorySelector: return new Control_Settings_DirectorySelector().Draw(setting, settingsUI_DirectorySelector);
                 case SettingsUI_Toggle settingsUI_Toggle: return new Control_Settings_Toggle().Draw(setting, settingsUI_Toggle);
+                case SettingsUI_Dropdown settingsUI_Dropdown: return new Control_Settings_Dropdown().Draw(setting, settingsUI_Dropdown);
 
                 case SettingsUI_Runners settingsUI_Runners: return new Control_Settings_Runners().Draw(setting, settingsUI_Runners);
 

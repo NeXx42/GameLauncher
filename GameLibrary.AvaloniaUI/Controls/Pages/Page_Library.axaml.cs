@@ -23,7 +23,7 @@ public partial class Page_Library : UserControl
     private Dictionary<GameFilterRequest.OrderType, Common_ButtonToggle> sortBtns = new Dictionary<GameFilterRequest.OrderType, Common_ButtonToggle>();
 
     private LibraryPageBase? gameList;
-
+    private bool disableBackgroundImages;
 
     public Page_Library()
     {
@@ -32,29 +32,47 @@ public partial class Page_Library : UserControl
         if (Design.IsDesignMode)
             return;
 
-        gameList = new LibraryPage_Grid(this);
-
         BindButtons();
         ToggleMenu(false);
 
         DrawEverything();
+        CreateGameList();
 
-        LibraryManager.onGameDetailsUpdate += async (int gameId) => await gameList.RefreshGame(gameId);
-        LibraryManager.onGameDeletion += async () => await gameList.DrawGames();
+        LibraryManager.onGameDetailsUpdate += async (int gameId) => await RedrawGameFromGameList(gameId);
+        LibraryManager.onGameDeletion += async () => await RedrawGameList();
     }
 
     private async void DrawEverything()
     {
-        ToggleTagCreator(false);
         RedrawSortNames();
-
-        await gameList!.DrawGames();
         await DrawTags();
     }
 
+    private async void CreateGameList()
+    {
+        gameList = null;
+        disableBackgroundImages = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Appearance_BackgroundImage, false);
+
+        switch (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Appearance_Layout, 0))
+        {
+            case 1:
+                gameList = new LibraryPage_Endless(this);
+                break;
+
+            default:
+                gameList = new LibraryPage_Grid(this);
+                break;
+        }
+
+        cont_GameList.Children.Add(gameList);
+
+        await gameList!.DrawGames();
+    }
+
+
     private void BindButtons()
     {
-        Indexer.Setup(() => gameList!.DrawGames());
+        Indexer.Setup(RedrawGameList);
 
         GameViewer.PointerPressed += (_, e) => e.Handled = true;
         Indexer.PointerPressed += (_, e) => e.Handled = true;
@@ -62,18 +80,10 @@ public partial class Page_Library : UserControl
 
         cont_MenuView.PointerPressed += (_, __) => ToggleMenu(false);
 
-        //btn_OpenTagCreator.RegisterClick(() => ToggleTagCreator(null));
-        //btn_CreateTag.RegisterClick(CreateTag);
-
-        btn_FirstPage.RegisterClick(gameList!.FirstPage);
-        btn_PrevPage.RegisterClick(gameList!.PrevPage);
-        btn_NextPage.RegisterClick(gameList!.NextPage);
-        btn_LastPage.RegisterClick(gameList!.LastPage);
-
         btn_Indexer.RegisterClick(OpenIndexer);
         btn_Settings.RegisterClick(OpenSettings);
 
-        inp_Search.OnChange(gameList!.DrawGames);
+        inp_Search.OnChange(RedrawGameList);
         btn_SortDir.RegisterClick(UpdateSortDirection);
 
         foreach (GameFilterRequest.OrderType type in Enum.GetValues(typeof(GameFilterRequest.OrderType)))
@@ -133,23 +143,6 @@ public partial class Page_Library : UserControl
                 ui.Toggle(true);
             }
         }
-
-        await gameList!.DrawGames();
-    }
-
-    private async void CreateTag()
-    {
-        //string newTagName = inp_TagName.Text!;
-        //
-        //if (string.IsNullOrEmpty(newTagName))
-        //    return;
-        //
-        //inp_TagName.Text = "";
-        //
-        //await LibraryHandler.CreateTag(newTagName);
-        //
-        //LibraryHandler.MarkTagsAsDirty();
-        //await DrawTags();
     }
 
     public void ToggleGameView(int gameId)
@@ -178,6 +171,27 @@ public partial class Page_Library : UserControl
         Indexer.IsVisible = false;
     }
 
+    private async Task RedrawGameList() => await RedrawGameList(false);
+    private async Task RedrawGameList(bool resetLayout)
+    {
+        if (gameList == null)
+            return;
+
+        if (resetLayout)
+            gameList!.ResetLayout();
+
+        await gameList!.DrawGames();
+    }
+
+    private async Task RedrawGameFromGameList(int gameId)
+    {
+        if (gameList == null)
+            return;
+
+        await gameList.RefreshGame(gameId);
+    }
+
+
     private void OpenIndexer()
     {
         ToggleMenu(true);
@@ -191,16 +205,6 @@ public partial class Page_Library : UserControl
         await Settings.OnOpen();
     }
 
-    private void ToggleTagCreator(bool? to)
-    {
-        //if (!to.HasValue)
-        //{
-        //    to = !cont_TagCreator.IsVisible;
-        //}
-        //
-        //cont_TagCreator.IsVisible = to.Value;
-        //btn_OpenTagCreator.Label = to.Value ? $"Close" : "+ Add Tag";
-    }
 
     // sort
     private async void UpdateSortDirection()
@@ -208,7 +212,7 @@ public partial class Page_Library : UserControl
         currentSortAscending = !currentSortAscending;
         RedrawSortNames();
 
-        await gameList!.DrawGames();
+        await RedrawGameList(true);
     }
 
     private async void UpdateSortType(GameFilterRequest.OrderType to)
@@ -218,7 +222,7 @@ public partial class Page_Library : UserControl
         foreach (var order in sortBtns)
             order.Value.isSelected = order.Key == to;
 
-        await gameList!.DrawGames();
+        await RedrawGameList(true);
     }
 
     private void RedrawSortNames()
@@ -241,7 +245,7 @@ public partial class Page_Library : UserControl
 
     public void UpdateBackgroundImage(ImageBrush? brush)
     {
-        if (brush == null)
+        if (disableBackgroundImages || brush == null)
             return;
 
         img_Bg.Source = (IImage)brush!.Source!;

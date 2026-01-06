@@ -22,6 +22,7 @@ namespace GameLibrary.Logic
         {
             String,
             Boolean,
+            Integer,
             FolderDirectory
         }
 
@@ -40,6 +41,9 @@ namespace GameLibrary.Logic
             Sandbox_Linux_Firejail_Networking,
 
             Import_GUIDFolderNames,
+
+            Appearance_Layout,
+            Appearance_BackgroundImage,
         }
 
         public static ReadOnlyDictionary<string, SettingBase[]>? groupedSettings { get; private set; }
@@ -62,12 +66,10 @@ namespace GameLibrary.Logic
                         new Setting_Password(),
                         new Setting_Title("Database", 10, SettingOSCompatibility.Universal),
                         new Setting_Database(),
-                    ]
-                },
-                {
-                    "Importing",
-                    [
-                        new Setting_Title("Importing", 0, SettingOSCompatibility.Universal),
+                        new Setting_Title("Appearance", 10, SettingOSCompatibility.Universal),
+                        new Setting_Generic_Config("Page Layout", SettingOSCompatibility.Universal, ConfigValues.Appearance_Layout, new SettingsUI_Dropdown(["Paginated", "Endless"]), ConfigSerialization.Integer),
+                        new Setting_Generic_Config("Disable background images", SettingOSCompatibility.Universal, ConfigValues.Appearance_BackgroundImage, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
+                        new Setting_Title("Importing", 10, SettingOSCompatibility.Universal),
                         new Setting_Generic_Config("Unique folder import", SettingOSCompatibility.Universal, ConfigValues.Import_GUIDFolderNames, new SettingsUI_Toggle(), ConfigSerialization.Boolean),
                     ]
                 },
@@ -123,6 +125,7 @@ namespace GameLibrary.Logic
             {
                 case bool b: return b ? "1" : "0";
                 case string s: return s;
+                case int i: return i.ToString();
             }
 
             return null;
@@ -139,6 +142,8 @@ namespace GameLibrary.Logic
 
                 case nameof(Object):
                 case nameof(String): return (T)(object)inp;
+
+                case nameof(Int32): return (T)(object)(int.Parse(inp));
             }
 
             throw new Exception("Unhandled type");
@@ -152,6 +157,7 @@ namespace GameLibrary.Logic
                 {
                     case ConfigSerialization.Boolean: return (true, SerializeConfigObject((bool)val));
                     case ConfigSerialization.String: return (true, SerializeConfigObject((string)val));
+                    case ConfigSerialization.Integer: return (true, SerializeConfigObject((int)val));
 
                     case ConfigSerialization.FolderDirectory:
                         string f_dir = (string)val;
@@ -214,6 +220,14 @@ namespace GameLibrary.Logic
 
         private static async Task SaveConfigValue_Internal(ConfigValues config, string serializedVal)
         {
+            switch (config)
+            {
+                case ConfigValues.Appearance_BackgroundImage:
+                case ConfigValues.Appearance_Layout:
+                    await DependencyManager.OpenConfirmationAsync("Restart", "For this property to take affect requires a restart");
+                    break;
+            }
+
             dbo_Config val = new dbo_Config()
             {
                 key = config.ToString(),

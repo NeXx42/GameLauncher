@@ -14,7 +14,7 @@
         </Image>
 
         <Border x:Name="eff_Blur">
-            <Grid RowDefinitions="Auto Auto * Auto">
+            <Grid RowDefinitions="Auto Auto *">
                 <Grid Height="60" Margin="0 5 0 0" Grid.Row="0" MinWidth="500">
                     <Label Margin="20, 0, 0, 0" FontSize="30" Content="Games" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center" FontWeight="300"/>
                     <StackPanel Margin="10" Orientation="Horizontal" HorizontalAlignment="Right">
@@ -48,27 +48,7 @@
                     </Grid>
                 </Border>
 
-                <!-- Games -->
-                <ScrollViewer Grid.Row="2">
-                    <WrapPanel x:Name="cont_Games" HorizontalAlignment="Center" ItemSpacing="15" LineSpacing="15" Margin="0 15" />
-                </ScrollViewer>
-
-                <!-- Controls -->
-
-                <Border Height="40" Margin="10,0,10,10" Grid.Row="3">
-                    <StackPanel Orientation="Horizontal" Width="270" HorizontalAlignment="Right">
-
-                        <common:Common_Button Margin="0, 0, 5, 0" x:Name="btn_FirstPage" Label="&lt;&lt;" HorizontalAlignment="Right" Width="50"/>
-                        <common:Common_Button Margin="0, 0, 5, 0" x:Name="btn_PrevPage" Label="&lt;" HorizontalAlignment="Right" Width="50"/>
-
-                        <Border CornerRadius="5" HorizontalAlignment="Right" Width="50" Margin="2">
-                            <TextBlock x:Name="lbl_PageNum" Text="5" Foreground="White" HorizontalAlignment="Center" FontSize="30" VerticalAlignment="Center"/>
-                        </Border>
-
-                        <common:Common_Button Margin="0, 0, 5, 0" x:Name="btn_NextPage" Label=">" HorizontalAlignment="Right" Width="50"/>
-                        <common:Common_Button Margin="0, 0, 5, 0" x:Name="btn_LastPage" Label=">>" HorizontalAlignment="Right" Width="50"/>
-                    </StackPanel>
-                </Border>
+                <Grid x:Name="cont_GameList" Grid.Row="2"/>
             </Grid>
         </Border>
 
