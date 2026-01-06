@@ -10,6 +10,7 @@ using Avalonia.Input;
 using Avalonia.Interactivity;
 using Avalonia.Media;
 using Avalonia.Media.Immutable;
+using Avalonia.Threading;
 using GameLibrary.AvaloniaUI.Controls.Pages.Library;
 using GameLibrary.AvaloniaUI.Helpers;
 using GameLibrary.AvaloniaUI.Utils;
@@ -39,11 +40,11 @@ public partial class Popup_GameView : UserControl
 
         lbl_Title.PointerPressed += async (_, __) => await StartNameChange();
 
-        LibraryManager.onGameDetailsUpdate += async (int id) => await RefreshSelectedGame(id);
+        LibraryManager.onGameDetailsUpdate += RefreshSelectedGame;
         RunnerManager.onGameStatusChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b));
     }
 
-    public async Task Draw(GameDto game)
+    public async void Draw(GameDto game)
     {
         inspectingGame = game;
         img_bg.Source = null;
@@ -55,6 +56,7 @@ public partial class Popup_GameView : UserControl
 
         DrawWarnings();
 
+        await Dispatcher.UIThread.InvokeAsync(() => { });
         await ImageManager.GetGameImage<ImageBrush>(game, UpdateGameIcon);
         await tabs.OpenFresh();
     }
@@ -81,7 +83,7 @@ public partial class Popup_GameView : UserControl
         async Task HandleWarningFix(Func<Task> body)
         {
             await body();
-            await Draw(inspectingGame!);
+            RefreshSelectedGame(inspectingGame!.gameId);
         }
     }
 
@@ -130,12 +132,12 @@ public partial class Popup_GameView : UserControl
             await inspectingGame!.UpdateGameName(res);
     }
 
-    private async Task RefreshSelectedGame(int gameId)
+    private void RefreshSelectedGame(int gameId)
     {
         if (gameId != inspectingGame?.gameId)
             return;
 
-        await Draw(inspectingGame!);
+        Draw(inspectingGame!);
     }
 
     private void UpdateRunningGameStatus(string binary, bool to)

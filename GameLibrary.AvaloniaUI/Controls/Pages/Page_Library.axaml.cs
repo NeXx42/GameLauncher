@@ -4,6 +4,7 @@ using System.Threading.Tasks;
 using Avalonia.Controls;
 using Avalonia.Input;
 using Avalonia.Media;
+using Avalonia.Threading;
 using GameLibrary.AvaloniaUI.Controls.Pages.Library;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
@@ -151,7 +152,7 @@ public partial class Page_Library : UserControl
         //await DrawTags();
     }
 
-    public async void ToggleGameView(int gameId)
+    public void ToggleGameView(int gameId)
     {
         GameDto? game = LibraryManager.TryGetCachedGame(gameId);
 
@@ -164,7 +165,7 @@ public partial class Page_Library : UserControl
         ToggleMenu(true);
         GameViewer.IsVisible = true;
 
-        await GameViewer.Draw(game);
+        GameViewer.Draw(game);
     }
 
     public void ToggleMenu(bool to)

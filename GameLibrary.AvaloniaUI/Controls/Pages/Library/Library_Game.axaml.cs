@@ -93,6 +93,9 @@ public partial class Library_Game : UserControl
 
     public void RedrawIcon(int gameId, ImageBrush? bitmapImg)
     {
+        if (this.gameId != gameId)
+            return;
+
         cachedImageBrush = bitmapImg;
 
         img.Background = bitmapImg ?? noBGBrush;

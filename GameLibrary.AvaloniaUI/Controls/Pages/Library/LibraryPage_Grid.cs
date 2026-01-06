@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Media;
+using Avalonia.Threading;
 using GameLibrary.AvaloniaUI.Controls;
 using GameLibrary.Logic;
 using ZstdSharp.Unsafe;
@@ -73,7 +74,6 @@ public class LibraryPage_Grid : LibraryPageBase
     {
         library.ToggleMenu(false);
 
-        activeUI.Clear();
         library.lbl_PageNum.Text = $"{page + 1}";
 
         foreach (Library_Game ui in cacheUI)
@@ -82,7 +82,10 @@ public class LibraryPage_Grid : LibraryPageBase
             ui.DrawSkeleton();
         }
 
+        await Dispatcher.UIThread.InvokeAsync(() => { });
         int[] games = await LibraryManager.GetGameList(library.GetGameFilter(page, ContentPerPage.x * ContentPerPage.y));
+
+        activeUI.Clear();
 
         for (int i = 0; i < cacheUI.Length; i++)
         {
