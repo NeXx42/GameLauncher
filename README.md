@@ -4,9 +4,9 @@ A simple Linux game launcher designed to make managing and launching your games.
 Built with Avalonia, cross platform. However mainly designed for linux.
 
 ## Screenshots
-<img width="1920" height="1081" alt="image" src="https://github.com/user-attachments/assets/c0941bf4-3696-4e45-88f5-3bc82ccc1293" />
-<img width="1920" height="1081" alt="image" src="https://github.com/user-attachments/assets/fea2cf9a-c65a-4cf1-a556-e78407d5eed2" />
-<img width="1921" height="1081" alt="image" src="https://github.com/user-attachments/assets/6e085277-43e6-4548-bb8a-b1fd1d57564c" />
+<img width="1671" height="892" alt="image" src="https://github.com/user-attachments/assets/01499658-6e39-4223-bbf6-0b074b4bf097" />
+<img width="1921" height="1081" alt="image" src="https://github.com/user-attachments/assets/0a215d25-9bb9-4c11-a589-87af4ef61ba6" />
+<img width="1920" height="1081" alt="image" src="https://github.com/user-attachments/assets/f3394608-cb8f-4069-9d20-459ea2d06ec1" />
 
 ## Prerequists
 
@@ -27,3 +27,4 @@ make publish
 ```sh
 ./_Output/AvaloniaUI/GameLibrary.AvaloniaUI
 ```
+
