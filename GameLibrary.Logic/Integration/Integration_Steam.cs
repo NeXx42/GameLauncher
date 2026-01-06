@@ -1,6 +1,7 @@
 using System.Text.Json;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.Objects;
 using ValveKeyValue;
 
@@ -55,18 +56,18 @@ public static class Integration_Steam
 
     private static async Task<int> GetOrCreateLibrary()
     {
-        dbo_Libraries? existingLib = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), (int)LibraryDto.ExternalTypes.Steam));
+        dbo_Libraries? existingLib = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), (int)Library_ExternalProviders.Steam));
 
         if (existingLib == null)
         {
             existingLib = new dbo_Libraries()
             {
                 rootPath = "steamlib",
-                libraryExternalType = (int)LibraryDto.ExternalTypes.Steam,
+                libraryExternalType = (int)Library_ExternalProviders.Steam,
             };
 
             await Database_Manager.InsertItem(existingLib);
-            existingLib = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), (int)LibraryDto.ExternalTypes.Steam)); // need to refetch for auto id
+            existingLib = await Database_Manager.GetItem<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), (int)Library_ExternalProviders.Steam)); // need to refetch for auto id
         }
 
         return existingLib!.libaryId;
@@ -140,7 +141,7 @@ public static class Integration_Steam
                 gameFolder = folderName,
 
                 libraryId = libraryId,
-                status = (int)GameDto.Status.Active
+                status = (int)Game_Status.Active
             };
         }
 
@@ -150,7 +151,7 @@ public static class Integration_Steam
             gameFolder = root,
 
             gameName = "steam_placeholder",
-            status = (int)GameDto.Status.Placeholder,
+            status = (int)Game_Status.Placeholder,
             libraryId = libraryId
         };
     }

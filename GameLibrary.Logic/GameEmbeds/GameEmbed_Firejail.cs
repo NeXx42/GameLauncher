@@ -1,4 +1,5 @@
 using GameLibrary.Logic.GameRunners;
+using GameLibrary.Logic.Helpers;
 using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic.GameEmbeds;
@@ -7,20 +8,20 @@ public class GameEmbed_Firejail : IGameEmbed
 {
     public int getPriority => 1000;
 
-    public void Embed(RunnerManager.LaunchArguments inp, Dictionary<RunnerDto.RunnerConfigValues, string?> args)
+    public void Embed(RunnerManager.LaunchArguments inp, ConfigProvider<RunnerDto.RunnerConfigValues> args)
     {
         string actualCommand = inp.command;
         inp.command = "firejail";
 
         LinkedListNode<string> argumentsEnd = inp.arguments.AddFirst("--noprofile");
 
-        if (args.HasConfigValueOf(RunnerDto.RunnerConfigValues.Generic_Sandbox_BlockNetwork, true))
+        if (args.GetBoolean(RunnerDto.RunnerConfigValues.Generic_Sandbox_BlockNetwork, true))
         {
             argumentsEnd = inp.arguments.AddAfter(argumentsEnd, "--net=none");
             //inp.environmentArguments.Add("WINEDLLOVERRIDES", "wininet=n;dnsapi=n;ws2_32=n");
         }
 
-        if (args.HasConfigValueOf(RunnerDto.RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true))
+        if (args.GetBoolean(RunnerDto.RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true))
         {
             if (args.TryGetValue(RunnerDto.RunnerConfigValues.Wine_SharedDocuments, out string? documentsStorage) && !string.IsNullOrEmpty(documentsStorage))
             {

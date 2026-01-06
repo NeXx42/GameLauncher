@@ -1,5 +1,6 @@
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.Enums;
 
 namespace GameLibrary.Logic.Objects.Tags;
 
@@ -40,7 +41,7 @@ public class TagDto_Managed : TagDto
         {
             case ManagedTagType.Steam:
                 joinClause.Add($"INNER JOIN {dbo_Libraries.tableName} tls ON g.{nameof(dbo_Game.libraryId)} = tls.{nameof(dbo_Libraries.libaryId)}");
-                whereClause.Add($"tls.{nameof(dbo_Libraries.libraryExternalType)} = {(int)LibraryDto.ExternalTypes.Steam}");
+                whereClause.Add($"tls.{nameof(dbo_Libraries.libraryExternalType)} = {(int)Library_ExternalProviders.Steam}");
                 break;
         }
     }

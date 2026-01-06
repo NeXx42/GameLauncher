@@ -1,6 +1,7 @@
 using CSharpSqliteORM;
 using GameLibrary.Logic.Database.Tables;
 using GameLibrary.Logic.GameRunners;
+using GameLibrary.Logic.Helpers;
 
 namespace GameLibrary.Logic.Objects;
 
@@ -32,7 +33,7 @@ public class RunnerDto
     public string runnerRoot { set; get; }
     public string runnerVersion { set; get; }
 
-    public Dictionary<RunnerConfigValues, string?> globalRunnerValues = new Dictionary<RunnerConfigValues, string?>();
+    public ConfigProvider<RunnerConfigValues> globalRunnerValues { private set; get; }
 
     public RunnerDto(dbo_Runner runner, dbo_RunnerConfig[] configValues)
     {
@@ -44,7 +45,7 @@ public class RunnerDto
         this.runnerRoot = runner.runnerRoot;
         this.runnerVersion = runner.runnerVersion;
 
-        globalRunnerValues = configValues.ToDictionary(x => Enum.Parse<RunnerConfigValues>(x.settingKey), x => x.settingValue);
+        globalRunnerValues = new ConfigProvider<RunnerConfigValues>(configValues.Select(x => (x.settingKey, x.settingValue)), SaveConfigValue, DeleteConfigValue);
     }
 
     public static RunnerDto Create(dbo_Runner runner, dbo_RunnerConfig[] configValues)
@@ -77,10 +78,8 @@ public class RunnerDto
         await Database_Manager.Update(dbo, SQLFilter.Equal(nameof(dbo_Runner.runnerId), runnerId), columns);
     }
 
-    public async Task AddOrUpdateConfigValue(RunnerConfigValues key, string? val)
+    private async Task SaveConfigValue(string key, string val)
     {
-        globalRunnerValues[key] = val;
-
         dbo_RunnerConfig dbo = new dbo_RunnerConfig()
         {
             runnerId = runnerId,
@@ -88,8 +87,12 @@ public class RunnerDto
             settingValue = val
         };
 
-        await Database_Manager.AddOrUpdate(dbo, SQLFilter.Equal(nameof(dbo.runnerId), runnerId), nameof(dbo.settingValue));
+        await Database_Manager.AddOrUpdate(dbo, SQLFilter.Equal(nameof(dbo_RunnerConfig.runnerId), runnerId).Equal(nameof(dbo_RunnerConfig.settingKey), key), nameof(dbo_RunnerConfig.settingValue));
     }
+
+    private async Task DeleteConfigValue(string key)
+        => await Database_Manager.Delete<dbo_RunnerConfig>(SQLFilter.Equal(nameof(dbo_RunnerConfig.runnerId), runnerId).Equal(nameof(dbo_RunnerConfig.settingKey), key));
+
 
     // matchers
 

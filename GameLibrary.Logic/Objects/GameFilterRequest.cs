@@ -1,5 +1,6 @@
 using System.Text;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.Logic.Objects;
@@ -32,7 +33,7 @@ public struct GameFilterRequest
         List<string> havingClause = new List<string>();
 
         // active filter, may allow you to filter uninstalled steam games?
-        whereClause.Add($"g.{nameof(dbo_Game.status)} = {(int)GameDto.Status.Active}");
+        whereClause.Add($"g.{nameof(dbo_Game.status)} = {(int)Game_Status.Active}");
 
         if (!string.IsNullOrEmpty(nameFilter))
         {

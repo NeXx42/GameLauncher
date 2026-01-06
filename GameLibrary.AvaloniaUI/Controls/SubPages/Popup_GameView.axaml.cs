@@ -16,6 +16,7 @@ using GameLibrary.AvaloniaUI.Helpers;
 using GameLibrary.AvaloniaUI.Utils;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.Objects;
 using GameLibrary.Logic.Objects.Tags;
 
@@ -313,10 +314,10 @@ public partial class Popup_GameView : UserControl
 
             protected override void InternalSetup(GameView_Tabs master)
             {
-                master.master.inp_Emulate.RegisterOnChange((b) => UpdateConfigValue(GameDto.GameConfigTypes.General_LocaleEmulation, b));
-                master.master.inp_CaptureLogs.RegisterOnChange((b) => UpdateConfigValue(GameDto.GameConfigTypes.General_CaptureLogs, b));
+                master.master.inp_Emulate.RegisterOnChange((b) => UpdateConfigValue(Game_Config.General_LocaleEmulation, b));
+                master.master.inp_CaptureLogs.Setup(Enum.GetNames<LoggingLevel>(), 0, async () => await UpdateConfigValue(Game_Config.General_LoggingLevel, master.master.inp_CaptureLogs.selectedIndex));
 
-                master.master.inp_Wine_VirtualDesktop.RegisterOnChange((b) => UpdateConfigValue(GameDto.GameConfigTypes.Wine_ExplorerLaunch, b));
+                master.master.inp_Wine_VirtualDesktop.RegisterOnChange((b) => UpdateConfigValue(Game_Config.Wine_ExplorerLaunch, b));
             }
 
             protected override async Task OpenWithGame(GameDto? game, bool isNewGame)
@@ -327,10 +328,10 @@ public partial class Popup_GameView : UserControl
                     DrawBinaries(game!);
                 }
 
-                master!.master.inp_Emulate.SilentSetValue(game!.GetConfigBool(GameDto.GameConfigTypes.General_LocaleEmulation, false));
-                master.master.inp_CaptureLogs.SilentSetValue(game!.GetConfigBool(GameDto.GameConfigTypes.General_CaptureLogs, false));
+                master!.master.inp_Emulate.SilentSetValue(game!.config.GetBoolean(Game_Config.General_LocaleEmulation, false));
+                master.master.inp_CaptureLogs.SilentlyChangeValue(game!.config.GetInteger(Game_Config.General_LoggingLevel, 0));
 
-                master.master.inp_Wine_VirtualDesktop.SilentSetValue(game!.GetConfigBool(GameDto.GameConfigTypes.Wine_ExplorerLaunch, false));
+                master.master.inp_Wine_VirtualDesktop.SilentSetValue(game!.config.GetBoolean(Game_Config.Wine_ExplorerLaunch, false));
             }
 
             private void DrawRunners(GameDto game)
@@ -363,7 +364,7 @@ public partial class Popup_GameView : UserControl
 
 
             private async Task HandleBinaryChange() => await inspectingGame!.ChangeBinaryLocation(master!.master.inp_binary.selectedValue?.ToString());
-            private async Task UpdateConfigValue(GameDto.GameConfigTypes key, bool to) => await inspectingGame!.UpdateConfigBool(key, to);
+            private async Task UpdateConfigValue<T>(Game_Config key, T to) => await inspectingGame!.config.SaveGeneric(key, to);
 
             private async Task HandleWineProfileChange()
             {

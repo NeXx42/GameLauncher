@@ -1,3 +1,4 @@
+using GameLibrary.Logic.Helpers;
 using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic.GameEmbeds;
@@ -6,7 +7,7 @@ public class GameEmbed_Locale : IGameEmbed
 {
     public int getPriority => 0;
 
-    public void Embed(RunnerManager.LaunchArguments inp, Dictionary<RunnerDto.RunnerConfigValues, string?> args)
+    public void Embed(RunnerManager.LaunchArguments inp, ConfigProvider<RunnerDto.RunnerConfigValues> args)
     {
         //inp.environmentArguments.Add("LANG", "ja_JP.UTF-8"); // breaks it?
 

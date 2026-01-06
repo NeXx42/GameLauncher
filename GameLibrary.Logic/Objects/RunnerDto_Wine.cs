@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.GameRunners;
 using GameLibrary.Logic.Helpers;
 
@@ -35,7 +36,7 @@ public class RunnerDto_Wine : RunnerDto
         RunnerManager.LaunchArguments res = new RunnerManager.LaunchArguments() { command = getWineExecutable };
         res.command = getWineExecutable;
 
-        if ((game.gameConfig?.TryGetValue(GameDto.GameConfigTypes.Wine_ExplorerLaunch, out string? _ExplorerTrick) ?? false) && _ExplorerTrick == "1")
+        if ((game.gameConfig?.TryGetValue(Game_Config.Wine_ExplorerLaunch, out string? _ExplorerTrick) ?? false) && _ExplorerTrick == "1")
         {
             res.arguments.AddLast("explorer");
             res.arguments.AddLast("/desktop=Game,800x600");
@@ -50,7 +51,33 @@ public class RunnerDto_Wine : RunnerDto
         foreach (var a in GetWineEnvironmentVariables())
             res.environmentArguments.Add(a.Key, a.Value);
 
+        AddLogging(res, game.gameConfig?.GetEnum(Game_Config.General_LoggingLevel, LoggingLevel.Off) ?? LoggingLevel.Off);
         return res;
+    }
+
+    protected virtual void AddLogging(RunnerManager.LaunchArguments args, LoggingLevel level)
+    {
+        string? logString = null;
+
+        switch (level)
+        {
+            case LoggingLevel.Low:
+                logString = "+err";
+                break;
+
+            case LoggingLevel.High:
+                logString = "+err,+warn";
+                break;
+
+            case LoggingLevel.Everything:
+                logString = "+all";
+                break;
+        }
+
+        if (string.IsNullOrEmpty(logString))
+            return;
+
+        args.environmentArguments.Add("WINEDEBUG", logString);
     }
 
 
@@ -80,8 +107,7 @@ public class RunnerDto_Wine : RunnerDto
     {
         return new Dictionary<string, string>()
         {
-            { "WINEPREFIX", prefixFolder },
-            { "WINEDEBUG", "-all"}
+            { "WINEPREFIX", prefixFolder }
         };
     }
 
@@ -97,7 +123,7 @@ public class RunnerDto_Wine : RunnerDto
         foreach (string usr in users)
             HandleUser(usr);
 
-        await AddOrUpdateConfigValue(RunnerConfigValues.Wine_SharedDocuments, path);
+        await globalRunnerValues.SaveValue(RunnerConfigValues.Wine_SharedDocuments, path);
 
         void HandleUser(string usrPath)
         {

@@ -3,27 +3,14 @@ using System.Text;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.Enums;
+using GameLibrary.Logic.Helpers;
+using Logic.db;
 
 namespace GameLibrary.Logic.Objects;
 
 public abstract class GameDto
 {
-    public enum Status
-    {
-        Active = 1,
-        Deleted = 2,
-        Placeholder = 3,
-    }
-
-    public enum GameConfigTypes
-    {
-        General_LocaleEmulation,
-        General_CaptureLogs,
-
-        Wine_ExplorerLaunch
-    }
-
-
     public readonly int gameId;
 
     public string gameName { protected set; get; }
@@ -34,28 +21,17 @@ public abstract class GameDto
 
     public int? libraryId { protected set; get; }
     public int? runnerId { protected set; get; }
-    public Status status { protected set; get; }
+    public Game_Status status { protected set; get; }
 
     public int? minsPlayed { protected set; get; }
     public DateTime? lastPlayed { protected set; get; }
 
     public HashSet<int> tags { protected set; get; }
-    public Dictionary<GameConfigTypes, string?> config { protected set; get; }
+    public ConfigProvider<Game_Config> config { protected set; get; }
 
 
     public virtual string getAbsoluteFolderLocation => Path.Combine(LibraryManager.GetLibraryRoute(this), folderPath);
-    public virtual string? getAbsoluteLogFile
-    {
-        get
-        {
-            if (!GetConfigBool(GameConfigTypes.General_CaptureLogs, false))
-            {
-                return null;
-            }
-
-            return $"{getAbsoluteBinaryLocation}.log";
-        }
-    }
+    public virtual string getAbsoluteLogFile => $"{getAbsoluteBinaryLocation}.log";
 
     protected virtual string getAbsoluteIconPath => Path.Combine(getAbsoluteFolderLocation, iconPath ?? "");
     public virtual string getAbsoluteBinaryLocation => Path.Combine(getAbsoluteFolderLocation, binaryPath ?? "INVALID.INVALID");
@@ -87,10 +63,10 @@ public abstract class GameDto
 
         this.runnerId = game.runnerId;
         this.libraryId = game.libraryId;
-        this.status = (Status)game.status;
+        this.status = (Game_Status)game.status;
 
         this.tags = tags.Select(x => x.TagId).ToHashSet();
-        this.config = config.ToDictionary(x => Enum.Parse<GameConfigTypes>(x.configKey), x => x.configValue);
+        this.config = new ConfigProvider<Game_Config>(config.Select(x => (x.configKey, x.configValue)), SaveConfig, DeleteConfig);
     }
 
     protected async Task UpdateDatabaseEntry(params string[] columns)
@@ -126,49 +102,19 @@ public abstract class GameDto
 
     // Config
 
-    public bool GetConfigBool(GameConfigTypes key, bool? defaultVal)
+    private async Task SaveConfig(string key, string val)
     {
-        defaultVal ??= false;
-
-        if (config.TryGetValue(key, out string? b))
-        {
-            return string.IsNullOrEmpty(b) ? defaultVal.Value : b == "1";
-        }
-
-        return defaultVal.Value;
-    }
-
-    public string? GetConfigString(GameConfigTypes key, string? defaultVal)
-    {
-        if (config.TryGetValue(key, out string? b))
-            return b;
-
-        return defaultVal;
-    }
-
-    public async Task UpdateConfigBool(GameConfigTypes key, bool? val) => await UpdateConfig(key, val.HasValue ? (val.Value ? "1" : "0") : null);
-
-    public async Task UpdateConfig(GameConfigTypes key, string? val)
-    {
-        if (string.IsNullOrEmpty(val))
-        {
-            config.Remove(key);
-            await DeleteConfig(key);
-            return;
-        }
-
-        dbo_GameConfig dbo = new dbo_GameConfig()
+        dbo_GameConfig conf = new dbo_GameConfig()
         {
             gameId = gameId,
-            configKey = key.ToString(),
+            configKey = key,
             configValue = val
         };
 
-        await Database_Manager.AddOrUpdate(dbo, SQLFilter.Equal(nameof(dbo_GameConfig.gameId), gameId).Equal(nameof(dbo_GameConfig.configKey), dbo.configKey), nameof(dbo_GameConfig.configValue));
-        config[key] = dbo.configValue;
+        await Database_Manager.AddOrUpdate(conf, SQLFilter.Equal(nameof(dbo_GameConfig.gameId), gameId).Equal(nameof(dbo_GameConfig.configKey), key));
     }
 
-    public async Task DeleteConfig(GameConfigTypes key)
+    private async Task DeleteConfig(string key)
     {
         await Database_Manager.Delete<dbo_GameConfig>(SQLFilter.Equal(nameof(dbo_GameConfig.gameId), gameId).Equal(nameof(dbo_GameConfig.configKey), key.ToString()));
     }

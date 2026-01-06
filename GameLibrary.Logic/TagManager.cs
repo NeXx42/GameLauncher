@@ -1,6 +1,7 @@
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.Objects;
 using GameLibrary.Logic.Objects.Tags;
 
@@ -37,7 +38,7 @@ public static class TagManager
     {
         managedTags = new List<TagDto>();
 
-        if (await Database_Manager.Exists<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), LibraryDto.ExternalTypes.Steam)))
+        if (await Database_Manager.Exists<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), Library_ExternalProviders.Steam)))
         {
             managedTags.Add(new TagDto_Managed(TagDto_Managed.ManagedTagType.Steam));
         }

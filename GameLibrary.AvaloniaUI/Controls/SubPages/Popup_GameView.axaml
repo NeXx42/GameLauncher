@@ -61,19 +61,14 @@
 
               <Label FontSize="18" Content="General" />
               <StackPanel x:Name="tab_Settings_General" Margin="10 5" Spacing="5">
-                <Grid ColumnDefinitions="150, *">
-                  <Label Content="Capture Logs" VerticalAlignment="Center"/>
-                  <common:Common_Toggle x:Name="inp_CaptureLogs" Grid.Column="1"/>
-                </Grid>
-
-                <Grid ColumnDefinitions="150, *">
+                <Grid ColumnDefinitions="150, 300">
                   <Label Content="Locale Emulation" VerticalAlignment="Center"/>
                   <common:Common_Toggle x:Name="inp_Emulate" Grid.Column="1"/>
                 </Grid>
 
                 <Grid ColumnDefinitions="150, 300">
-                  <Label Content="Binary" VerticalAlignment="Center"/>
-                  <common:Common_Dropdown x:Name="inp_binary" Grid.Column="1"/>
+                  <Label Content="Logging Level" VerticalAlignment="Center"/>
+                  <common:Common_Dropdown x:Name="inp_CaptureLogs" Grid.Column="1"/>
                 </Grid>
 
                 <Grid ColumnDefinitions="150, 300">
@@ -84,10 +79,16 @@
 
               <Label FontSize="18" Content="Wine" />
               <StackPanel x:Name="tab_Settings_Wine" Margin="10 5" Spacing="5">
-                <Grid ColumnDefinitions="150, *">
+                <Grid ColumnDefinitions="150, 300">
+                  <Label Content="Binary" VerticalAlignment="Center"/>
+                  <common:Common_Dropdown x:Name="inp_binary" Grid.Column="1"/>
+                </Grid>
+
+                <Grid ColumnDefinitions="150, 300">
                   <Label Content="Virtual Wine desktop" VerticalAlignment="Center"/>
                   <common:Common_Toggle x:Name="inp_Wine_VirtualDesktop" Grid.Column="1"/>
                 </Grid>
+
               </StackPanel>
 
 

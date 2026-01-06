@@ -8,6 +8,7 @@ using System.Threading.Tasks;
 using CSharpSqliteORM;
 using GameLibrary.DB;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Helpers;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
 using Logic.db;
@@ -111,8 +112,7 @@ namespace GameLibrary.Logic
         }
 
 
-
-
+        // ugly code
 
         public static string? SerializeConfigObject<T>(T val)
         {

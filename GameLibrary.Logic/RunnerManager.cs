@@ -4,8 +4,10 @@ using System.Runtime.InteropServices;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.GameEmbeds;
 using GameLibrary.Logic.GameRunners;
+using GameLibrary.Logic.Helpers;
 using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.Logic;
@@ -73,7 +75,7 @@ public static class RunnerManager
             LaunchArguments launchArguments = await selectedRunner.InitRunDetails(launchRequest);
 
             await HandleEmbeds(launchRequest.gameId, launchArguments, selectedRunner);
-            ExecuteRunRequest(launchArguments, launchRequest.path, gameDto?.getAbsoluteLogFile);
+            ExecuteRunRequest(launchArguments, launchRequest.path, gameDto?.getAbsoluteLogFile, gameDto?.config.GetEnum(Game_Config.General_LoggingLevel, LoggingLevel.Off) ?? LoggingLevel.Off);
 
             if (gameDto != null)
             {
@@ -113,12 +115,12 @@ public static class RunnerManager
         if (!string.IsNullOrEmpty(subprocess))
             req.arguments.AddFirst(subprocess);
 
-        ExecuteRunRequest(req, $"{runnerId}_{process}", null);
+        ExecuteRunRequest(req, $"{runnerId}_{process}", null, LoggingLevel.Off);
     }
 
     private static async Task HandleEmbeds(int? gameId, LaunchArguments args, RunnerDto runnerDto)
     {
-        Dictionary<RunnerDto.RunnerConfigValues, string?> globalConfigValues = new Dictionary<RunnerDto.RunnerConfigValues, string?>(runnerDto.globalRunnerValues);
+        ConfigProvider<RunnerDto.RunnerConfigValues> globalConfigValues = new ConfigProvider<RunnerDto.RunnerConfigValues>(runnerDto.globalRunnerValues); // new Dictionary<RunnerDto.RunnerConfigValues, string?>();
         List<IGameEmbed> embeds = new List<IGameEmbed>();
 
         if (gameId.HasValue)
@@ -127,7 +129,7 @@ public static class RunnerManager
 
             if (game != null)
             {
-                if (game.GetConfigBool(GameDto.GameConfigTypes.General_LocaleEmulation, false))
+                if (game.config.GetBoolean(Game_Config.General_LocaleEmulation, false))
                     embeds.Add(new GameEmbed_Locale());
             }
         }
@@ -141,12 +143,12 @@ public static class RunnerManager
 
                 if (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_Networking, false))
                 {
-                    globalConfigValues.AddOrOverride(RunnerDto.RunnerConfigValues.Generic_Sandbox_BlockNetwork, true);
+                    await globalConfigValues.SaveBool(RunnerDto.RunnerConfigValues.Generic_Sandbox_BlockNetwork, true);
                 }
 
                 if (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Sandbox_Linux_Firejail_FileSystemIsolation, false))
                 {
-                    globalConfigValues.AddOrOverride(RunnerDto.RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true);
+                    await globalConfigValues.SaveBool(RunnerDto.RunnerConfigValues.Generic_Sandbox_IsolateFilesystem, true);
                 }
             }
         }
@@ -158,7 +160,7 @@ public static class RunnerManager
             embed.Embed(args, globalConfigValues);
     }
 
-    private static void ExecuteRunRequest(LaunchArguments req, string identifier, string? logFile)
+    private static void ExecuteRunRequest(LaunchArguments req, string identifier, string? logFile, LoggingLevel loggingLevel)
     {
         ProcessStartInfo info = new ProcessStartInfo();
         info.FileName = req.command;
@@ -210,7 +212,7 @@ public static class RunnerManager
         LaunchArguments dat = new LaunchArguments() { command = "steam" };
         dat.arguments.AddLast($"steam://rungameid/{appId}");
 
-        ExecuteRunRequest(dat, appId.ToString(), null);
+        ExecuteRunRequest(dat, appId.ToString(), null, LoggingLevel.Off);
     }
 
 
@@ -325,7 +327,7 @@ public static class RunnerManager
         public int? runnerId;
         public string path;
 
-        public Dictionary<GameDto.GameConfigTypes, string?>? gameConfig;
+        public ConfigProvider<Game_Config>? gameConfig;
     }
 
 

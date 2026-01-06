@@ -1,5 +1,6 @@
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.Integration;
 using GameLibrary.Logic.Objects;
 using GameLibrary.Logic.Settings.UI;
@@ -15,7 +16,7 @@ public class Setting_SteamIntegration : SettingBase
 
     public override async Task<T?> LoadSetting<T>() where T : default
     {
-        return (T)(object)await Database_Manager.Exists<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), (int)LibraryDto.ExternalTypes.Steam));
+        return (T)(object)await Database_Manager.Exists<dbo_Libraries>(SQLFilter.Equal(nameof(dbo_Libraries.libraryExternalType), (int)Library_ExternalProviders.Steam));
     }
 
     public override async Task<bool> SaveSetting(object val)

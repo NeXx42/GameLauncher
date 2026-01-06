@@ -3,6 +3,7 @@ using System.Text;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.Objects;
 using Logic.db;
 
@@ -64,7 +65,7 @@ namespace GameLibrary.Logic
                     gameFolder = absoluteFolder,
                     executablePath = Path.GetFileName(folder.getBinaryPath),
                     libraryId = libraryId,
-                    status = (int)GameDto.Status.Active
+                    status = (int)Game_Status.Active
                 };
 
                 try
@@ -132,7 +133,7 @@ namespace GameLibrary.Logic
             {
                 switch (lib.externalType)
                 {
-                    case LibraryDto.ExternalTypes.Steam:
+                    case Library_ExternalProviders.Steam:
                         dto = new GameDto_Steam(game, gameTags, config);
                         break;
                 }
