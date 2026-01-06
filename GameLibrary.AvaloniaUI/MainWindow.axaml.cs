@@ -31,7 +31,7 @@ public partial class MainWindow : Window
     private async void OnStart()
     {
         await DependencyManager.PreSetup(new UILinker(), new AvaloniaImageBrushFetcher());
-        string passwordHash = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.PasswordHash, string.Empty);
+        string? passwordHash = ConfigHandler.configProvider!.GetValue(ConfigHandler.ConfigValues.PasswordHash);
 
         if (!string.IsNullOrEmpty(passwordHash))
         {

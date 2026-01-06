@@ -12,7 +12,7 @@ public class Setting_Password : SettingBase
 
     public override async Task<T?> LoadSetting<T>() where T : default
     {
-        string? hash = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.PasswordHash, string.Empty);
+        string? hash = ConfigHandler.configProvider!.GetValue(ConfigHandler.ConfigValues.PasswordHash);
         return (T?)(object)!string.IsNullOrEmpty(hash);
     }
 
@@ -20,18 +20,10 @@ public class Setting_Password : SettingBase
     {
         string? result = await DependencyManager.OpenStringInputModal("Password", string.Empty, true);
 
-        if (string.IsNullOrEmpty(result))
-        {
-            if (!await DependencyManager.OpenYesNoModal("Clear password?", "Are you sure you want to clear the password?"))
-            {
-                return false;
-            }
+        if (string.IsNullOrEmpty(result) && !await DependencyManager.OpenYesNoModal("Clear password?", "Are you sure you want to clear the password?"))
+            return false;
 
-            await ConfigHandler.DeleteConfigValue(ConfigHandler.ConfigValues.PasswordHash);
-            return true;
-        }
-
-        await ConfigHandler.SaveConfigValue(ConfigHandler.ConfigValues.PasswordHash, EncryptionHelper.EncryptPassword(result));
-        return true;
+        result = string.IsNullOrEmpty(result) ? null : EncryptionHelper.EncryptPassword(result);
+        return await ConfigHandler.configProvider!.SaveValue(ConfigHandler.ConfigValues.PasswordHash, result);
     }
 }

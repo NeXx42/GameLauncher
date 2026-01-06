@@ -39,6 +39,7 @@ public static class DependencyManager
         }
 
         await Database_Manager.Init(cachedDBLocation!, HandleDatabaseException);
+        await ConfigHandler.Init();
     }
 
     public static async Task CreateDBPointerFile(string path)
@@ -69,7 +70,6 @@ public static class DependencyManager
         await OpenLoadingModal(true,
             RunnerManager.Init,
             LibraryManager.Setup,
-            ConfigHandler.Init,
             TagManager.Init
         );
     }

@@ -46,10 +46,15 @@ public class RunnerDto_Wine : RunnerDto
 
             if (game.gameConfig.GetBoolean(Game_Config.Wine_IsolatedPrefix, false))
             {
-                string fileName = Path.GetFileName(game.path);
-                fileName.Replace(",", string.Empty).Replace("!", string.Empty);
+                prefixName = game.path;
+                prefixName = prefixName.Replace("!", string.Empty);
+                prefixName = prefixName.Replace(",", string.Empty);
+                prefixName = prefixName.Replace(" ", string.Empty);
+                prefixName = prefixName.Replace("_", string.Empty);
+                prefixName = prefixName.Replace("'", string.Empty);
+                prefixName = prefixName.Replace("/", "_");
 
-                prefixName = fileName;
+                // from this i can later split on _ and get just the "folder name" or close enough
             }
         }
 

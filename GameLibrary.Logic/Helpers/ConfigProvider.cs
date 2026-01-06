@@ -37,23 +37,25 @@ public class ConfigProvider<ENUMTYPE>
 
     // save
 
-    public async Task SaveGeneric<T>(ENUMTYPE key, T obj)
+    public async Task<bool> SaveGeneric<T>(ENUMTYPE key, T obj)
     {
         switch (typeof(T).Name)
         {
-            case nameof(String): await SaveValue(key, Convert.ToString(obj)); break;
-            case nameof(Boolean): await SaveBool(key, Convert.ToBoolean(obj)); break;
+            case nameof(String): return await SaveValue(key, Convert.ToString(obj));
+            case nameof(Boolean): return await SaveBool(key, Convert.ToBoolean(obj));
 
             case nameof(Enum):
-            case nameof(Int32): await SaveInteger(key, Convert.ToInt32(obj)); break;
+            case nameof(Int32): return await SaveInteger(key, Convert.ToInt32(obj));
         }
+
+        return false;
     }
 
-    public async Task SaveEnum<T>(ENUMTYPE key, T v) where T : Enum => await SaveInteger(key, Convert.ToInt32(v));
-    public async Task SaveInteger(ENUMTYPE key, int v) => await SaveValue(key, v.ToString());
-    public async Task SaveBool(ENUMTYPE key, bool b) => await SaveValue(key, b ? "1" : "0");
+    public async Task<bool> SaveEnum<T>(ENUMTYPE key, T v) where T : Enum => await SaveInteger(key, Convert.ToInt32(v));
+    public async Task<bool> SaveInteger(ENUMTYPE key, int v) => await SaveValue(key, v.ToString());
+    public async Task<bool> SaveBool(ENUMTYPE key, bool b) => await SaveValue(key, b ? "1" : "0");
 
-    public async Task SaveValue(ENUMTYPE key, string? val)
+    public async Task<bool> SaveValue(ENUMTYPE key, string? val)
     {
         if (string.IsNullOrEmpty(val))
         {
@@ -61,21 +63,25 @@ public class ConfigProvider<ENUMTYPE>
                 await handleDelete(key.ToString());
 
             data.Remove(key);
-            return;
+            return true;
         }
 
         if (handleSave != null)
             await handleSave(key.ToString(), val);
 
         data[key] = val;
+        return true;
     }
 
     // get
 
     public async Task<T> GetGeneric<T>(ENUMTYPE key, T defaultVal)
+        => (await GetGeneric<T>(key)) ?? defaultVal;
+
+    public async Task<T?> GetGeneric<T>(ENUMTYPE key)
     {
         if (!TryGetValue(key, out string res))
-            return defaultVal;
+            return default;
 
         switch (typeof(T).Name)
         {
@@ -86,7 +92,7 @@ public class ConfigProvider<ENUMTYPE>
             case nameof(Int32): return (T)(object)int.Parse(res);
         }
 
-        return defaultVal;
+        return default;
     }
 
     public T GetEnum<T>(ENUMTYPE key, T defaultVal) where T : Enum

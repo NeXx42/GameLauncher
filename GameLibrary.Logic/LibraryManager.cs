@@ -38,7 +38,7 @@ namespace GameLibrary.Logic
 
         public static async Task ImportGames(List<FileManager.IImportEntry> availableImports, int? libraryId)
         {
-            bool useGuidFolderNames = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Import_GUIDFolderNames, true);
+            bool useGuidFolderNames = ConfigHandler.configProvider!.GetBoolean(ConfigHandler.ConfigValues.Import_GUIDFolderNames, true);
 
             for (int i = availableImports.Count - 1; i >= 0; i--)
             {

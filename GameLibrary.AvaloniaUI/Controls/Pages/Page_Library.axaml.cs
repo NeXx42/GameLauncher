@@ -51,9 +51,9 @@ public partial class Page_Library : UserControl
     private async void CreateGameList()
     {
         gameList = null;
-        disableBackgroundImages = await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Appearance_BackgroundImage, false);
+        disableBackgroundImages = ConfigHandler.configProvider!.GetBoolean(ConfigHandler.ConfigValues.Appearance_BackgroundImage, false);
 
-        switch (await ConfigHandler.GetConfigValue(ConfigHandler.ConfigValues.Appearance_Layout, 0))
+        switch (ConfigHandler.configProvider!.GetInteger(ConfigHandler.ConfigValues.Appearance_Layout, 0))
         {
             case 1:
                 gameList = new LibraryPage_Endless(this);

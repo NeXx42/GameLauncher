@@ -14,10 +14,10 @@ public abstract class SettingBase
     public abstract ISettingsUI GetUI();
 
     public virtual async Task<T?> LoadSettingAsConfig<T>(ConfigHandler.ConfigValues configName)
-        => await ConfigHandler.GetConfigValue<T?>(configName, default);
+        => await ConfigHandler.configProvider!.GetGeneric<T>(configName);
 
-    public virtual async Task<bool> SaveSettingAsConfig(ConfigHandler.ConfigValues configName, object obj, ConfigHandler.ConfigSerialization configSerialization)
-        => await ConfigHandler.SaveConfigValue(configName, obj, configSerialization);
+    public virtual async Task<bool> SaveSettingAsConfig<T>(ConfigHandler.ConfigValues configName, T obj)
+        => await ConfigHandler.configProvider!.SaveGeneric(configName, obj);
 }
 
 public enum SettingOSCompatibility
