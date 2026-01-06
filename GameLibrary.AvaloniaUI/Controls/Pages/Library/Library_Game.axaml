@@ -24,9 +24,9 @@
 
 
         <Grid RowDefinitions="163, *">
-            <Border CornerRadius="10 10 0 0" x:Name="img" ClipToBounds="True" Background="red">
+            <Border CornerRadius="10 10 0 0" x:Name="img" ClipToBounds="True" Background="Black">
                 <Grid>
-                    <TextBlock x:Name="lbl_NoIcon" Text="GAME" VerticalAlignment="Center" HorizontalAlignment="Center" Margin="10" TextWrapping="Wrap"/>
+                    <TextBlock x:Name="lbl_NoIcon" Text="GAME" VerticalAlignment="Center" Foreground="#202020" HorizontalAlignment="Center" Margin="10" TextWrapping="Wrap" FontWeight="800"/>
 
                     <Border VerticalAlignment="Bottom" Height="50" CornerRadius="0">
                         <Border.Background>
