@@ -160,7 +160,7 @@ public static class RunnerManager
             embed.Embed(args, globalConfigValues);
     }
 
-    private static void ExecuteRunRequest(LaunchArguments req, string identifier, string? logFile, LoggingLevel loggingLevel)
+    public static Process ExecuteRunRequest(LaunchArguments req, string? identifier, string? logFile, LoggingLevel loggingLevel)
     {
         ProcessStartInfo info = new ProcessStartInfo();
         info.FileName = req.command;
@@ -186,9 +186,18 @@ public static class RunnerManager
         process.StartInfo = info;
         process.EnableRaisingEvents = true;
 
-        // ActiveProcess - starts the process
-        activeGames.Add(identifier, new ActiveProcess(identifier, process, logFile));
-        onGameStatusChange?.Invoke(identifier, true);
+        if (!string.IsNullOrEmpty(identifier))
+        {
+            // ActiveProcess - starts the process
+            activeGames.Add(identifier, new ActiveProcess(identifier, process, logFile));
+            onGameStatusChange?.Invoke(identifier, true);
+        }
+        else
+        {
+            process.Start();
+        }
+
+        return process;
     }
 
 

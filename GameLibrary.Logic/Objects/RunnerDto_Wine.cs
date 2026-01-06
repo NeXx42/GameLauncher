@@ -9,8 +9,9 @@ namespace GameLibrary.Logic.Objects;
 public class RunnerDto_Wine : RunnerDto
 {
     protected readonly string rootLoc;
+    protected readonly string prefixRoot;
 
-    protected string prefixFolder;
+    protected virtual string getSharedPrefixFolder => Path.Combine(prefixRoot, "shared");
     protected virtual string getWineExecutable => "wine";
 
     public static Task<string[]?> GetRunnerVersions() => Task.FromResult<string[]?>(null);
@@ -20,15 +21,12 @@ public class RunnerDto_Wine : RunnerDto
 
     public RunnerDto_Wine(dbo_Runner runner, dbo_RunnerConfig[] configValues) : base(runner, configValues)
     {
-        rootLoc = GetRoot();
+        rootLoc = GetRoot().CreateDirectoryIfNotExists();
+        Path.Combine(rootLoc, "binaries").CreateDirectoryIfNotExists();
+        Path.Combine(rootLoc, "prefixes").CreateDirectoryIfNotExists();
 
-        GameRunnerHelperMethods.EnsureDirectoryExists(rootLoc);
-        GameRunnerHelperMethods.EnsureDirectoryExists(Path.Combine(rootLoc, "binaries"));
-        GameRunnerHelperMethods.EnsureDirectoryExists(Path.Combine(rootLoc, "prefixes"));
-
-        prefixFolder = Path.Combine(rootLoc, "prefixes", "shared");
-
-        GameRunnerHelperMethods.EnsureDirectoryExists(prefixFolder);
+        prefixRoot = Path.Combine(rootLoc, "prefixes").CreateDirectoryIfNotExists();
+        getSharedPrefixFolder.CreateDirectoryIfNotExists();
     }
 
     public override async Task<RunnerManager.LaunchArguments> InitRunDetails(RunnerManager.LaunchRequest game)
@@ -36,20 +34,32 @@ public class RunnerDto_Wine : RunnerDto
         RunnerManager.LaunchArguments res = new RunnerManager.LaunchArguments() { command = getWineExecutable };
         res.command = getWineExecutable;
 
-        if ((game.gameConfig?.TryGetValue(Game_Config.Wine_ExplorerLaunch, out string? _ExplorerTrick) ?? false) && _ExplorerTrick == "1")
+        string prefixName = "shared";
+
+        if (game.gameConfig != null)
         {
-            res.arguments.AddLast("explorer");
-            res.arguments.AddLast("/desktop=Game,800x600");
+            if (game.gameConfig.GetBoolean(Game_Config.Wine_ExplorerLaunch, false))
+            {
+                res.arguments.AddLast("explorer");
+                res.arguments.AddLast("/desktop=Game,800x600");
+            }
+
+            if (game.gameConfig.GetBoolean(Game_Config.Wine_IsolatedPrefix, false))
+            {
+                string fileName = Path.GetFileName(game.path);
+                fileName.Replace(",", string.Empty).Replace("!", string.Empty);
+
+                prefixName = fileName;
+            }
         }
 
         res.arguments.AddLast(game.path);
 
         res.whiteListedDirs.Add(Path.GetDirectoryName(game.path)!);
-        res.whiteListedDirs.Add(prefixFolder);
+        res.whiteListedDirs.Add(Path.Combine(prefixRoot, prefixName));
         res.whiteListedDirs.Add(rootLoc);
 
-        foreach (var a in GetWineEnvironmentVariables())
-            res.environmentArguments.Add(a.Key, a.Value);
+        res.environmentArguments.Add("WINEPREFIX", Path.Combine(prefixRoot, prefixName));
 
         AddLogging(res, game.gameConfig?.GetEnum(Game_Config.General_LoggingLevel, LoggingLevel.Off) ?? LoggingLevel.Off);
         return res;
@@ -83,38 +93,21 @@ public class RunnerDto_Wine : RunnerDto
 
     protected virtual async Task RunWine(params string[] args)
     {
-        var startInfo = new ProcessStartInfo
+        await RunnerManager.ExecuteRunRequest(await InitRunDetails(new RunnerManager.LaunchRequest()
         {
-            FileName = getWineExecutable,
-
-            UseShellExecute = false,
-            RedirectStandardOutput = true,
-            RedirectStandardError = true,
-            CreateNoWindow = false
-        };
-
-        foreach (var a in GetWineEnvironmentVariables())
-            startInfo.EnvironmentVariables[a.Key] = a.Value;
-
-        Process process = new Process();
-        process.StartInfo = startInfo;
-
-        process.Start();
-        await process.WaitForExitAsync();
+            path = "reg",
+        }),
+            null,
+            null,
+            LoggingLevel.Off
+        )
+        .WaitForExitAsync();
     }
-
-    protected virtual Dictionary<string, string> GetWineEnvironmentVariables()
-    {
-        return new Dictionary<string, string>()
-        {
-            { "WINEPREFIX", prefixFolder }
-        };
-    }
-
-
 
     public override async Task SharePrefixDocuments(string path)
     {
+        string prefixFolder = Path.Combine(rootLoc, "shared");
+
         if (!Directory.Exists(prefixFolder))
             throw new Exception("Profile hasnt been ran yet");
 

@@ -2,8 +2,7 @@
   xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
   xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
   xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080" x:Class="GameLibrary.AvaloniaUI.Controls.SubPage.Popup_GameView"
-  xmlns:common="clr-namespace:GameLibrary.AvaloniaUI.Controls"
-  xmlns:local="clr-namespace:GameLibrary.AvaloniaUI.Controls.Pages.Library">
+  xmlns:common="clr-namespace:GameLibrary.AvaloniaUI.Controls">
   <Border Background="#0a0e13" CornerRadius="16,16,0,0" BorderBrush="{DynamicResource bg_Border}" BorderThickness="1" ClipToBounds="True">
     <Grid>
       <Grid.RowDefinitions>
@@ -46,61 +45,7 @@
 
       <!-- tab group -->
       <ScrollViewer Grid.Row="1" Margin="20">
-        <Grid >
-
-          <!-- TAGS -->
-          <Grid x:Name="tab_Tags" IsVisible="False">
-            <WrapPanel Orientation="Horizontal" x:Name="cont_AllTags" VerticalAlignment="Top" ItemSpacing="5" LineSpacing="5">
-              <local:Library_Tag/>
-            </WrapPanel>
-          </Grid>
-
-          <!-- Options -->
-          <Grid x:Name="tab_Settings" IsVisible="True">
-            <StackPanel Orientation="Vertical" Spacing="10">
-
-              <Label FontSize="18" Content="General" />
-              <StackPanel x:Name="tab_Settings_General" Margin="10 5" Spacing="5">
-                <Grid ColumnDefinitions="150, 300">
-                  <Label Content="Locale Emulation" VerticalAlignment="Center"/>
-                  <common:Common_Toggle x:Name="inp_Emulate" Grid.Column="1"/>
-                </Grid>
-
-                <Grid ColumnDefinitions="150, 300">
-                  <Label Content="Logging Level" VerticalAlignment="Center"/>
-                  <common:Common_Dropdown x:Name="inp_CaptureLogs" Grid.Column="1"/>
-                </Grid>
-
-                <Grid ColumnDefinitions="150, 300">
-                  <Label Content="Runner" VerticalAlignment="Center"/>
-                  <common:Common_Dropdown x:Name="inp_WineProfile" Grid.Column="1"/>
-                </Grid>
-              </StackPanel>
-
-              <Label FontSize="18" Content="Wine" />
-              <StackPanel x:Name="tab_Settings_Wine" Margin="10 5" Spacing="5">
-                <Grid ColumnDefinitions="150, 300">
-                  <Label Content="Binary" VerticalAlignment="Center"/>
-                  <common:Common_Dropdown x:Name="inp_binary" Grid.Column="1"/>
-                </Grid>
-
-                <Grid ColumnDefinitions="150, 300">
-                  <Label Content="Virtual Wine desktop" VerticalAlignment="Center"/>
-                  <common:Common_Toggle x:Name="inp_Wine_VirtualDesktop" Grid.Column="1"/>
-                </Grid>
-
-              </StackPanel>
-
-
-            </StackPanel>
-          </Grid>
-
-          <!-- Logs -->
-          <Grid x:Name="tab_Logs" IsVisible="True">
-            <TextBlock x:Name="lbl_Logs" Text="YO"/>
-          </Grid>
-
-        </Grid>
+        <Grid x:Name="tab_Container"/>
       </ScrollViewer>
 
       <!-- Controls -->

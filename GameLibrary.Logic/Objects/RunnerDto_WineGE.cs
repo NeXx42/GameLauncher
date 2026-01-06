@@ -1,6 +1,7 @@
 using System.Diagnostics;
 using System.Text.Json;
 using GameLibrary.Logic.Database.Tables;
+using GameLibrary.Logic.Enums;
 using GameLibrary.Logic.GameRunners;
 
 namespace GameLibrary.Logic.Objects;
@@ -11,7 +12,6 @@ public class RunnerDto_WineGE : RunnerDto_Wine
 
     protected readonly string version;
     protected readonly string binaryFolder;
-    protected readonly string dxvkFolder;
 
     protected string? binaryPath;
 
@@ -22,10 +22,6 @@ public class RunnerDto_WineGE : RunnerDto_Wine
     public RunnerDto_WineGE(dbo_Runner runner, dbo_RunnerConfig[] configValues) : base(runner, configValues)
     {
         version = runner.runnerVersion;
-
-        GameRunnerHelperMethods.EnsureDirectoryExists(Path.Combine(rootLoc, "DXVK"));
-
-        dxvkFolder = Path.Combine(rootLoc, "DXVK", "latest"); // add versioning later
         binaryFolder = Path.Combine(rootLoc, "binaries", version);
     }
 
@@ -63,11 +59,6 @@ public class RunnerDto_WineGE : RunnerDto_Wine
         {
             await InstallWine();
         }
-
-        //if (!Directory.Exists(dxvkFolder))
-        //{
-        //    await InstallDXVK();
-        //}
     }
 
     protected async Task InstallWine()
@@ -106,32 +97,6 @@ public class RunnerDto_WineGE : RunnerDto_Wine
 
         throw new Exception("Failed to find asset to download");
     }
-
-    protected async Task InstallDXVK()
-    {
-
-        await DownloadFile("https://github.com/doitsujin/dxvk/releases/download/v2.7.1/dxvk-2.7.1.tar.gz", $"{dxvkFolder}.tar.xz");
-        await ExtractFile($"{dxvkFolder}.tar.xz", dxvkFolder);
-
-        string root = Directory.GetDirectories(dxvkFolder).First();
-
-        CopyDLLS(Path.Combine(root, "x64"), Path.Combine(prefixFolder, "drive_c", "windows", "system32"));
-        CopyDLLS(Path.Combine(root, "x32"), Path.Combine(prefixFolder, "drive_c", "windows", "syswow64"));
-
-        await RunWine("reg", "add", @"HKCU\\Software\\Wine\\Direct3D\", "/v", "EnableDXVK", "/t", "REG_DWORD", "/d", "1", "/f");
-
-        void CopyDLLS(string from, string to)
-        {
-            string[] libraries = Directory.GetFileSystemEntries(from);
-
-            foreach (string library in libraries)
-            {
-                string destName = Path.GetFileName(library);
-                File.Copy(library, Path.Combine(to, destName), true);
-            }
-        }
-    }
-
 
     private async Task DownloadFile(string url, string outputFile)
     {
@@ -177,15 +142,20 @@ public class RunnerDto_WineGE : RunnerDto_Wine
         var res = await base.InitRunDetails(game);
         res.whiteListedDirs.Add(binaryFolder);
 
+        res.environmentArguments.Add("LD_LIBRARY_PATH", getWineLib);
         return res;
     }
 
-    protected override Dictionary<string, string> GetWineEnvironmentVariables()
+    protected override void AddLogging(RunnerManager.LaunchArguments args, LoggingLevel level)
     {
-        var defaultVars = base.GetWineEnvironmentVariables();
-        defaultVars.Add("DXVK_LOG_LEVEL=info", "info");
-        defaultVars.Add("LD_LIBRARY_PATH", getWineLib);
-
-        return defaultVars;
+        base.AddLogging(args, level);
+        
+        switch (level)
+        {
+            case LoggingLevel.High:
+            case LoggingLevel.Everything:
+                args.environmentArguments.Add("DXVK_LOG_LEVEL", "info");
+                break;
+        }
     }
 }
