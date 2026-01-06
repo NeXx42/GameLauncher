@@ -81,25 +81,21 @@ public partial class Page_Library : UserControl
 
         cont_MenuView.PointerPressed += (_, __) => ToggleMenu(false);
 
+        btn_Tags.RegisterClick(OpenTagManager);
         btn_Indexer.RegisterClick(OpenIndexer);
         btn_Settings.RegisterClick(OpenSettings);
 
         inp_Search.OnChange(RedrawGameList);
         btn_SortDir.RegisterClick(UpdateSortDirection);
 
-        foreach (GameFilterRequest.OrderType type in Enum.GetValues(typeof(GameFilterRequest.OrderType)))
-        {
-            Common_ButtonToggle btn = new Common_ButtonToggle();
-            btn.Label = type.ToString();
-            btn.MinWidth = 40;
+        btn_SorType.Setup(GameFilterRequest.getOrderOptionsNames, 0, UpdateSortType);
 
-            btn.Register(_ => UpdateSortType(type));
+        (int type, bool asc) = GameFilterRequest.DecodeOrder(ConfigHandler.configProvider!.GetInteger(ConfigKeys.Appearance_DefaultFilter, 0));
 
-            sortBtns.Add(type, btn);
-            inp_SortTypes.Children.Add(btn);
-        }
+        btn_SorType.ChangeValue(type);
+        currentSortAscending = asc;
 
-        UpdateSortType(GameFilterRequest.OrderType.Id);
+        RedrawSortNames();
     }
 
     public async Task DrawTags()
@@ -162,16 +158,6 @@ public partial class Page_Library : UserControl
         GameViewer.Draw(game);
     }
 
-    public void ToggleMenu(bool to)
-    {
-        eff_Blur.Effect = to ? new ImmutableBlurEffect(20) : null;//. .Radius = to ? 10 : 0;
-        cont_MenuView.IsVisible = to;
-
-        GameViewer.IsVisible = false;
-        Settings.IsVisible = false;
-        Indexer.IsVisible = false;
-    }
-
     private async Task RedrawGameList() => await RedrawGameList(false);
     private async Task RedrawGameList(bool resetLayout)
     {
@@ -193,6 +179,18 @@ public partial class Page_Library : UserControl
     }
 
 
+
+    public void ToggleMenu(bool to)
+    {
+        eff_Blur.Effect = to ? new ImmutableBlurEffect(20) : null;
+        cont_MenuView.IsVisible = to;
+
+        GameViewer.IsVisible = false;
+        Settings.IsVisible = false;
+        Indexer.IsVisible = false;
+        TagEditor.IsVisible = false;
+    }
+
     private void OpenIndexer()
     {
         ToggleMenu(true);
@@ -206,6 +204,13 @@ public partial class Page_Library : UserControl
         await Settings.OnOpen();
     }
 
+    private void OpenTagManager()
+    {
+        ToggleMenu(true);
+        TagEditor.IsVisible = true;
+        TagEditor.OnOpen();
+    }
+
 
     // sort
     private async void UpdateSortDirection()
@@ -216,13 +221,9 @@ public partial class Page_Library : UserControl
         await RedrawGameList(true);
     }
 
-    private async void UpdateSortType(GameFilterRequest.OrderType to)
+    private async void UpdateSortType()
     {
-        currentSort = to;
-
-        foreach (var order in sortBtns)
-            order.Value.isSelected = order.Key == to;
-
+        currentSort = (GameFilterRequest.OrderType)btn_SorType.selectedIndex;
         await RedrawGameList(true);
     }
 

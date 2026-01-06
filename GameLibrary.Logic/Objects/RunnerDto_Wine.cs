@@ -101,12 +101,7 @@ public class RunnerDto_Wine : RunnerDto
         await RunnerManager.ExecuteRunRequest(await InitRunDetails(new RunnerManager.LaunchRequest()
         {
             path = "reg",
-        }),
-            null,
-            null,
-            LoggingLevel.Off
-        )
-        .WaitForExitAsync();
+        }), null).WaitForExitAsync();
     }
 
     public override async Task SharePrefixDocuments(string path)

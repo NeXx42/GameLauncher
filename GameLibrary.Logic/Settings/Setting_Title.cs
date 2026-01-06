@@ -21,5 +21,5 @@ public class Setting_Title : SettingBase
     public override ISettingsUI GetUI() => new SettingsUI_Title(name, margin);
 
     public override Task<T?> LoadSetting<T>() where T : default => Task.FromResult<T?>(default);
-    public override Task<bool> SaveSetting(object val) => Task.FromResult(true);
+    public override Task<bool> SaveSetting<T>(T val) => Task.FromResult(true);
 }

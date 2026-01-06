@@ -12,7 +12,24 @@ public struct GameFilterRequest
         Id,
         Name,
         LastPlayed,
+        PlayTime,
     }
+
+    public static string[] getOrderOptionsNames = [
+        "ID",
+        "Name",
+        "Last Played",
+        "Play Time"
+    ];
+
+    public static (int, bool) DecodeOrder(int from)
+    {
+        bool ascending = from >= 0;
+        return (ascending ? from : -(from + 1), ascending);
+    }
+
+    public static int EncodeOrder(int type, bool asc) => asc ? type : -(type + 1);
+
 
     public string? nameFilter;
     public HashSet<TagDto>? tagList;
@@ -110,6 +127,7 @@ public struct GameFilterRequest
             case OrderType.Id: sql.Append($"g.{nameof(dbo_Game.id)}"); break;
             case OrderType.Name: sql.Append($"g.{nameof(dbo_Game.gameName)}"); break;
             case OrderType.LastPlayed: sql.Append($"g.{nameof(dbo_Game.lastPlayed)}"); break;
+            case OrderType.PlayTime: sql.Append($"g.{nameof(dbo_Game.minsPlayed)}"); break;
         }
 
         sql.Append(orderDirection ? " ASC" : " DESC");

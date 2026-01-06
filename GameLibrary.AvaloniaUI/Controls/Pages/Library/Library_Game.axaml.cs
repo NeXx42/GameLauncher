@@ -86,6 +86,7 @@ public partial class Library_Game : UserControl
         title.Text = game.gameName;
         lbl_NoIcon.Text = game.gameName;
         lbl_LastPlayed.Content = game.GetLastPlayedFormatted();
+        lbl_TimePlayed.Content = game.GetTimePlayedFormatted();
 
         DrawTags(game);
         await ImageManager.GetGameImage<ImageBrush>(game, RedrawIcon);

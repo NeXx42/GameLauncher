@@ -76,13 +76,13 @@ public partial class Popup_Settings : UserControl
         {
             switch (setting.GetUI())
             {
+                case SettingsUI_Title settingsUI_Title: return new Control_Settings_Title().Draw(settingsUI_Title);
                 case SettingsUI_DirectorySelector settingsUI_DirectorySelector: return new Control_Settings_DirectorySelector().Draw(setting, settingsUI_DirectorySelector);
                 case SettingsUI_Toggle settingsUI_Toggle: return new Control_Settings_Toggle().Draw(setting, settingsUI_Toggle);
                 case SettingsUI_Dropdown settingsUI_Dropdown: return new Control_Settings_Dropdown().Draw(setting, settingsUI_Dropdown);
 
                 case SettingsUI_Runners settingsUI_Runners: return new Control_Settings_Runners().Draw(setting, settingsUI_Runners);
-
-                case SettingsUI_Title settingsUI_Title: return new Control_Settings_Title().Draw(settingsUI_Title);
+                case SettingsUI_DefaultFilter settingsUI_DefaultFilter: return new Control_Settings_DefaultFilter(setting);
             }
 
             return null;

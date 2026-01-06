@@ -43,6 +43,6 @@ public class GameDto_Steam : GameDto
 
     public override async Task Launch()
     {
-        await RunnerManager.RunSteamGame(appId);
+        await RunnerManager.RunSteamGame(gameId, appId);
     }
 }

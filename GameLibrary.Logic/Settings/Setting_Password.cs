@@ -17,7 +17,7 @@ public class Setting_Password : SettingBase
         return (T?)(object)!string.IsNullOrEmpty(hash);
     }
 
-    public override async Task<bool> SaveSetting(object val)
+    public override async Task<bool> SaveSetting<T>(T val)
     {
         string? result = await DependencyManager.OpenStringInputModal("Password", string.Empty, true);
 

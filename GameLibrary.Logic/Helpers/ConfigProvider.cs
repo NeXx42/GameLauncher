@@ -75,10 +75,10 @@ public class ConfigProvider<ENUMTYPE>
 
     // get
 
-    public async Task<T> GetGeneric<T>(ENUMTYPE key, T defaultVal)
-        => (await GetGeneric<T>(key)) ?? defaultVal;
+    public T GetGeneric<T>(ENUMTYPE key, T defaultVal)
+        => GetGeneric<T>(key) ?? defaultVal;
 
-    public async Task<T?> GetGeneric<T>(ENUMTYPE key)
+    public T? GetGeneric<T>(ENUMTYPE key)
     {
         if (!TryGetValue(key, out string res))
             return default;

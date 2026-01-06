@@ -188,6 +188,14 @@ public abstract class GameDto
         await UpdateDatabaseEntry(nameof(dbo_Game.lastPlayed));
     }
 
+    public async Task UpdatePlayTime(int extraMins)
+    {
+        minsPlayed ??= 0;
+        minsPlayed += extraMins;
+
+        await UpdateDatabaseEntry(nameof(dbo_Game.minsPlayed));
+    }
+
     public string GetLastPlayedFormatted()
     {
         if (lastPlayed == null) return "Never";
@@ -205,6 +213,17 @@ public abstract class GameDto
             double rounded = Math.Ceiling(time);
             return $"{rounded} {interval}{(rounded > 1 ? "s" : "")} ago";
         }
+    }
+
+    public string GetTimePlayedFormatted()
+    {
+        if (!minsPlayed.HasValue)
+            return string.Empty;
+
+        int hours = (int)Math.Floor(minsPlayed.Value / 60f);
+
+        if (hours == 0) return $"{minsPlayed.Value} min{(minsPlayed.Value > 1 ? "s" : "")}";
+        return $"{hours} hour{(hours > 1 ? "s" : "")}";
     }
 
     public (string msg, Func<Task> resolution)[] GetWarnings()

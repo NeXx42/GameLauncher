@@ -45,6 +45,7 @@ namespace GameLibrary.Logic
                         new Setting_Title("Database", 10, SettingOSCompatibility.Universal),
                         new Setting_Database(),
                         new Setting_Title("Appearance", 10, SettingOSCompatibility.Universal),
+                        new Setting_Generic_Config("Default Filter", SettingOSCompatibility.Universal, ConfigKeys.Appearance_DefaultFilter, new SettingsUI_DefaultFilter()),
                         new Setting_Generic_Config("Page Layout", SettingOSCompatibility.Universal, ConfigKeys.Appearance_Layout, new SettingsUI_Dropdown(["Paginated", "Endless"])),
                         new Setting_Generic_Config("Disable background images", SettingOSCompatibility.Universal, ConfigKeys.Appearance_BackgroundImage, new SettingsUI_Toggle()),
                         new Setting_Title("Importing", 10, SettingOSCompatibility.Universal),

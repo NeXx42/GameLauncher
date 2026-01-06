@@ -17,10 +17,10 @@
             <Grid RowDefinitions="Auto Auto *">
                 <Grid Height="60" Margin="0 5 0 0" Grid.Row="0" MinWidth="500">
                     <Label Margin="20, 0, 0, 0" FontSize="30" Content="Games" Foreground="White" HorizontalAlignment="Left" VerticalAlignment="Center" FontWeight="300"/>
-                    <StackPanel Margin="10" Orientation="Horizontal" HorizontalAlignment="Right">
-                        <common:Common_Button Label="Edit Tags" x:Name="btn_Tags" HorizontalAlignment="Center" Width="100" Margin="0,0,10,0"/>
-                        <common:Common_Button Label="Add Games" x:Name="btn_Indexer" HorizontalAlignment="Center" Width="100" Margin="0,0,10,0"/>
-                        <common:Common_Button Label="Settings" x:Name="btn_Settings" HorizontalAlignment="Center" Width="100" Margin="0,0,10,0"/>
+                    <StackPanel Margin="10" Orientation="Horizontal" HorizontalAlignment="Right" Spacing="5" Height="40">
+                        <common:Common_Button Label="Edit Tags" x:Name="btn_Tags" HorizontalAlignment="Center" Width="100"/>
+                        <common:Common_Button Label="Add Games" x:Name="btn_Indexer" HorizontalAlignment="Center" Width="100"/>
+                        <common:Common_Button Label="Settings" x:Name="btn_Settings" HorizontalAlignment="Center" Width="100"/>
                     </StackPanel>
                 </Grid>
 
@@ -39,8 +39,8 @@
                         <StackPanel Grid.Column="2" VerticalAlignment="Top" Spacing="8" Width="400">
                             <Grid ColumnDefinitions="60 * 100">
                                 <Label Content="Sort:" Foreground="#FFAFAFAF" VerticalAlignment="Center"/>
-                                <StackPanel x:Name="inp_SortTypes" Orientation="Horizontal" Spacing="5" Grid.Column="1"/>
-                                <common:Common_Button x:Name="btn_SortDir" Margin="0, 0, 0, 0" Label="Ascending" Grid.Column="2"/>
+                                <common:Common_Dropdown x:Name="btn_SorType" Margin="0 0 5 0" Grid.Column="1"/>
+                                <common:Common_Button x:Name="btn_SortDir" Label="Ascending" Grid.Column="2"/>
                             </Grid>
 
                             <common:Common_InputField x:Name="inp_Search" Placeholder="Search"/>
@@ -53,9 +53,10 @@
         </Border>
 
         <Grid x:Name="cont_MenuView" Background="#7F000000">
-            <components:Popup_GameView x:Name="GameViewer" MinWidth="800" MaxWidth="1200" IsVisible="False" HorizontalAlignment="Stretch" Margin="0, 100, 0, 0"/>
             <components:Popup_AddGames x:Name="Indexer" MinWidth="800" MaxWidth="1200" IsVisible="False" HorizontalAlignment="Stretch" Margin="0, 100, 0, 0"/>
             <components:Popup_Settings x:Name="Settings" MinWidth="800" MaxWidth="1200" IsVisible="False" HorizontalAlignment="Stretch" Margin="0, 100, 0, 0"/>
+            <components:Popup_GameView x:Name="GameViewer" MinWidth="800" MaxWidth="1200" IsVisible="False" HorizontalAlignment="Stretch" Margin="0, 100, 0, 0"/>
+            <components:Popup_TagManager x:Name="TagEditor" MinWidth="800" MaxWidth="1200" IsVisible="False" HorizontalAlignment="Stretch" Margin="0, 100, 0, 0"/>
         </Grid>
     </Grid>
 </UserControl>

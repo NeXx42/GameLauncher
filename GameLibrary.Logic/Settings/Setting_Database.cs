@@ -14,7 +14,7 @@ public class Setting_Database : SettingBase
         return Task.FromResult((T?)(object)true);
     }
 
-    public override async Task<bool> SaveSetting(object val)
+    public override async Task<bool> SaveSetting<T>(T val)
     {
         int res = await DependencyManager.OpenConfirmationAsync("Change Database", "Do you want to either move, or select another database?",
             ("Select Other", SelectDatabase, "Loading"),

@@ -21,12 +21,12 @@ public class Setting_Generic_Config : SettingBase
     public override string getName => settingName;
 
     public override SettingOSCompatibility getCompatibility => compatibility;
-
     public override ISettingsUI GetUI() => uiSettings;
 
-    public override async Task<T?> LoadSetting<T>() where T : default
-    => await LoadSettingAsConfig<T>(configValue);
 
-    public override async Task<bool> SaveSetting(object val)
-        => await SaveSettingAsConfig(configValue, val);
+    public override async Task<T?> LoadSetting<T>() where T : default
+        => ConfigHandler.configProvider!.GetGeneric<T>(configValue);
+
+    public override async Task<bool> SaveSetting<T>(T val)
+        => await ConfigHandler.configProvider!.SaveGeneric(configValue, val);
 }

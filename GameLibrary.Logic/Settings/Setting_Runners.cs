@@ -16,5 +16,5 @@ public class Setting_Runners : SettingBase
         return (T?)(object)RunnerManager.GetRunnerProfiles();
     }
 
-    public override Task<bool> SaveSetting(object val) => Task.FromResult(false);
+    public override Task<bool> SaveSetting<T>(T val) => Task.FromResult(false);
 }

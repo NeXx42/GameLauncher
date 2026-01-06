@@ -73,9 +73,13 @@ public static class RunnerManager
 
             await selectedRunner.SetupRunner();
             LaunchArguments launchArguments = await selectedRunner.InitRunDetails(launchRequest);
-
             await HandleEmbeds(launchRequest.gameId, launchArguments, selectedRunner);
-            ExecuteRunRequest(launchArguments, launchRequest.path, gameDto?.getAbsoluteLogFile, gameDto?.config.GetEnum(Game_Config.General_LoggingLevel, LoggingLevel.Off) ?? LoggingLevel.Off);
+
+            launchArguments.gameId = gameDto?.gameId;
+            launchArguments.identifier = launchRequest.path;
+            launchArguments.loggingLevel = gameDto?.config.GetEnum(Game_Config.General_LoggingLevel, LoggingLevel.Off) ?? LoggingLevel.Off;
+
+            ExecuteRunRequest(launchArguments, gameDto?.getAbsoluteLogFile);
 
             if (gameDto != null)
             {
@@ -97,6 +101,21 @@ public static class RunnerManager
         }
     }
 
+    public static async Task RunSteamGame(int gameId, long appId)
+    {
+        LaunchArguments dat = new LaunchArguments()
+        {
+            gameId = gameId,
+            identifier = appId.ToString(),
+
+            command = "steam"
+        };
+        dat.arguments.AddLast($"steam://rungameid/{appId}");
+
+        ExecuteRunRequest(dat, null);
+    }
+
+
     public static async Task RunWineTricks(int runnerId, string process, string? subprocess)
     {
         if (IsBinaryRunning($"{runnerId}_{process}"))
@@ -115,8 +134,14 @@ public static class RunnerManager
         if (!string.IsNullOrEmpty(subprocess))
             req.arguments.AddFirst(subprocess);
 
-        ExecuteRunRequest(req, $"{runnerId}_{process}", null, LoggingLevel.Off);
+        req.identifier = $"{runnerId}_{process}";
+        req.loggingLevel = LoggingLevel.Off;
+
+        ExecuteRunRequest(req, null);
     }
+
+
+
 
     private static async Task HandleEmbeds(int? gameId, LaunchArguments args, RunnerDto runnerDto)
     {
@@ -160,7 +185,7 @@ public static class RunnerManager
             embed.Embed(args, globalConfigValues);
     }
 
-    public static Process ExecuteRunRequest(LaunchArguments req, string? identifier, string? logFile, LoggingLevel loggingLevel)
+    public static Process ExecuteRunRequest(LaunchArguments req, string? logFile)
     {
         ProcessStartInfo info = new ProcessStartInfo();
         info.FileName = req.command;
@@ -186,11 +211,11 @@ public static class RunnerManager
         process.StartInfo = info;
         process.EnableRaisingEvents = true;
 
-        if (!string.IsNullOrEmpty(identifier))
+        if (!string.IsNullOrEmpty(req.identifier))
         {
             // ActiveProcess - starts the process
-            activeGames.Add(identifier, new ActiveProcess(identifier, process, logFile));
-            onGameStatusChange?.Invoke(identifier, true);
+            activeGames.Add(req.identifier, new ActiveProcess(req.identifier, req.gameId, process, logFile));
+            onGameStatusChange?.Invoke(req.identifier, true);
         }
         else
         {
@@ -209,20 +234,21 @@ public static class RunnerManager
             activeGames[identifier].Dispose();
     }
 
-    public static void OnExitProcess(string identifier)
+    public static async void OnExitProcess(string identifier)
     {
-        activeGames.Remove(identifier);
+        if (activeGames.TryGetValue(identifier, out ActiveProcess? process) && process != null)
+        {
+            if (LibraryManager.TryGetCachedGame(process.getGameId, out GameDto? game) && game != null)
+                await game!.UpdatePlayTime(process.GetPlayMinutes());
+
+            process?.Dispose();
+            activeGames.Remove(identifier);
+        }
+
         onGameStatusChange?.Invoke(identifier, false);
     }
 
 
-    public static async Task RunSteamGame(long appId)
-    {
-        LaunchArguments dat = new LaunchArguments() { command = "steam" };
-        dat.arguments.AddLast($"steam://rungameid/{appId}");
-
-        ExecuteRunRequest(dat, appId.ToString(), null, LoggingLevel.Off);
-    }
 
 
 
@@ -342,6 +368,10 @@ public static class RunnerManager
 
     public class LaunchArguments
     {
+        public int? gameId;
+        public string? identifier;
+        public LoggingLevel loggingLevel;
+
         public List<string> whiteListedDirs = new List<string>();
 
         public required string command;
@@ -351,15 +381,21 @@ public static class RunnerManager
 
     private class ActiveProcess : IDisposable
     {
+        private readonly int? gameId;
         private readonly string identifier;
         private readonly Process process;
+
+        private readonly DateTime startTime;
 
         private StreamWriter? writer;
         private readonly SemaphoreSlim _writeLock = new SemaphoreSlim(1, 1);
 
+        public int? getGameId => gameId;
         public bool IsActive => !process.HasExited;
 
-        public ActiveProcess(string identifier, Process process, string? logFile)
+        public int GetPlayMinutes() => (int)(DateTime.UtcNow - startTime).TotalMinutes;
+
+        public ActiveProcess(string identifier, int? gameId, Process process, string? logFile)
         {
             if (!string.IsNullOrEmpty(logFile))
             {
@@ -371,8 +407,10 @@ public static class RunnerManager
                 });
             }
 
+            this.gameId = gameId;
             this.identifier = identifier;
             this.process = process;
+            this.startTime = DateTime.UtcNow;
 
             process.Exited += HandleExit;
 
