@@ -31,8 +31,8 @@ public partial class Indexer_ImportView : UserControl
         this.master = master;
         cont_FoundGames.Children.Clear();
 
-        var v = LibraryHandler.GetLibraries();
-        availableLibraries = LibraryHandler.GetLibraries().Where(x => x.externalType == null).ToArray();
+        var v = LibraryManager.GetLibraries();
+        availableLibraries = LibraryManager.GetLibraries().Where(x => x.externalType == null).ToArray();
         string[] libraries = ["No Library", .. availableLibraries.Select(x => x.root)];
 
         inp_Library.Setup(libraries, 0, null);
@@ -116,7 +116,7 @@ public partial class Indexer_ImportView : UserControl
         async Task Import()
         {
             // maybe move the inner logic into the dto
-            await LibraryHandler.ImportGames(availableImports, selectedLibrary?.libraryId);
+            await LibraryManager.ImportGames(availableImports, selectedLibrary?.libraryId);
         }
     }
 }

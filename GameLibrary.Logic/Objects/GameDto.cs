@@ -43,7 +43,7 @@ public abstract class GameDto
     public Dictionary<GameConfigTypes, string?> config { protected set; get; }
 
 
-    public virtual string getAbsoluteFolderLocation => Path.Combine(LibraryHandler.GetLibraryRoute(this), folderPath);
+    public virtual string getAbsoluteFolderLocation => Path.Combine(LibraryManager.GetLibraryRoute(this), folderPath);
     public virtual string? getAbsoluteLogFile
     {
         get
@@ -114,7 +114,7 @@ public abstract class GameDto
 
         }, SQLFilter.Equal(nameof(dbo_Game.id), gameId), columns);
 
-        LibraryHandler.InvokeGameDetailsUpdate(gameId);
+        LibraryManager.InvokeGameDetailsUpdate(gameId);
     }
 
     public async Task Delete()
@@ -213,7 +213,7 @@ public abstract class GameDto
             await Database_Manager.InsertItem(new dbo_GameTag() { GameId = gameId, TagId = tagId });
         }
 
-        LibraryHandler.onGameDetailsUpdate?.Invoke(gameId);
+        LibraryManager.onGameDetailsUpdate?.Invoke(gameId);
     }
 
     public void BrowseToGame()

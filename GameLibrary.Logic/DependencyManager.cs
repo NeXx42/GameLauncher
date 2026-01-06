@@ -68,7 +68,7 @@ public static class DependencyManager
     {
         await OpenLoadingModal(true,
             RunnerManager.Init,
-            LibraryHandler.Setup,
+            LibraryManager.Setup,
             ConfigHandler.Init,
             TagManager.Init
         );

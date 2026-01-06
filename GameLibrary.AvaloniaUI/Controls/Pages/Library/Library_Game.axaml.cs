@@ -78,7 +78,7 @@ public partial class Library_Game : UserControl
         lbl_NoIcon.IsVisible = true;
         lbl_LastPlayed.Content = "";
 
-        GameDto? game = LibraryHandler.TryGetCachedGame(gameId);
+        GameDto? game = LibraryManager.TryGetCachedGame(gameId);
 
         if (game == null)
             return;

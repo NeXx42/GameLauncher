@@ -1,4 +1,5 @@
-﻿using System.Text;
+﻿using System.Data.SQLite;
+using System.Text;
 using CSharpSqliteORM;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic.Database.Tables;
@@ -7,7 +8,7 @@ using Logic.db;
 
 namespace GameLibrary.Logic
 {
-    public static class LibraryHandler
+    public static class LibraryManager
     {
         public enum ExternalLibraryTypes
         {
@@ -102,20 +103,28 @@ namespace GameLibrary.Logic
 
         public static async Task<int[]> GetGameList(GameFilterRequest filterRequest)
         {
-            (dbo_Game[] games, filteredGameCount) = await Database_Manager.GetItemsWithCount<dbo_Game>(filterRequest.ConstructSQL());
+            (int gameId, int count)[] res = await Database_Manager.GetItemsGeneric(filterRequest.ConstructSQL(), DeserializeDatabaseRequest);
+            filteredGameCount = res.Length > 0 ? res[0].count : 0;
 
-            foreach (dbo_Game game in games)
+            foreach ((int gameId, int _) in res)
             {
-                if (!activeGameList.TryGetValue(game.id, out GameDto? gameObject))
-                    await LoadGame(game);
+                if (!activeGameList.TryGetValue(gameId, out GameDto? gameObject))
+                    await LoadGame(gameId);
             }
 
-            return games.Select(x => x.id).ToArray();
+            return res.Select(x => x.gameId).ToArray();
+
+            async Task<(int, int)> DeserializeDatabaseRequest(SQLiteDataReader reader)
+            {
+                return (Convert.ToInt32(reader["id"]), Convert.ToInt32(reader["total_count"]));
+            }
         }
 
-        private static async Task LoadGame(dbo_Game game)
+        private static async Task LoadGame(int gameId)
         {
             GameDto? dto = null;
+
+            dbo_Game game = (await Database_Manager.GetItem<dbo_Game>(SQLFilter.Equal(nameof(dbo_Game.id), gameId)))!;
             dbo_GameTag[] gameTags = await Database_Manager.GetItems<dbo_GameTag>(SQLFilter.Equal(nameof(dbo_GameTag.GameId), game.id));
             dbo_GameConfig[] config = await Database_Manager.GetItems<dbo_GameConfig>(SQLFilter.Equal(nameof(dbo_GameConfig.gameId), game.id));
 

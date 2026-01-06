@@ -82,7 +82,7 @@ public class LibraryPage_Grid : LibraryPageBase
             ui.DrawSkeleton();
         }
 
-        int[] games = await LibraryHandler.GetGameList(library.GetGameFilter(page, ContentPerPage.x * ContentPerPage.y));
+        int[] games = await LibraryManager.GetGameList(library.GetGameFilter(page, ContentPerPage.x * ContentPerPage.y));
 
         for (int i = 0; i < cacheUI.Length; i++)
         {
@@ -125,9 +125,9 @@ public class LibraryPage_Grid : LibraryPageBase
     }
 
     public override async Task PrevPage() => await UpdatePage(Math.Max(page - 1, 0));
-    public override async Task NextPage() => await UpdatePage(Math.Min(page + 1, LibraryHandler.GetMaxPages(ContentPerPage.x * ContentPerPage.y)));
+    public override async Task NextPage() => await UpdatePage(Math.Min(page + 1, LibraryManager.GetMaxPages(ContentPerPage.x * ContentPerPage.y)));
     public override async Task FirstPage() => await UpdatePage(0);
-    public override async Task LastPage() => await UpdatePage(LibraryHandler.GetMaxPages(ContentPerPage.x * ContentPerPage.y));
+    public override async Task LastPage() => await UpdatePage(LibraryManager.GetMaxPages(ContentPerPage.x * ContentPerPage.y));
 
     private async Task UpdatePage(int to)
     {

@@ -29,7 +29,7 @@ namespace GameLibrary.Logic
 
         public static async Task UpdateGameIcon(int gameId, Uri newIconPath)
         {
-            GameDto? game = LibraryHandler.TryGetCachedGame(gameId);
+            GameDto? game = LibraryManager.TryGetCachedGame(gameId);
 
             if (!File.Exists(newIconPath.LocalPath) || game == null)
             {

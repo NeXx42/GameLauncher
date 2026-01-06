@@ -67,7 +67,7 @@ public static class RunnerManager
                 throw new Exception($"Invalid file for the runner - {launchRequest.path}");
             }
 
-            LibraryHandler.TryGetCachedGame(launchRequest.gameId, out GameDto? gameDto);
+            LibraryManager.TryGetCachedGame(launchRequest.gameId, out GameDto? gameDto);
 
             await selectedRunner.SetupRunner();
             LaunchArguments launchArguments = await selectedRunner.InitRunDetails(launchRequest);
@@ -123,7 +123,7 @@ public static class RunnerManager
 
         if (gameId.HasValue)
         {
-            GameDto? game = LibraryHandler.TryGetCachedGame(gameId.Value);
+            GameDto? game = LibraryManager.TryGetCachedGame(gameId.Value);
 
             if (game != null)
             {

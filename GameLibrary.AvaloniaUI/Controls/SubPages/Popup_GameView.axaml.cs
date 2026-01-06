@@ -39,7 +39,7 @@ public partial class Popup_GameView : UserControl
 
         lbl_Title.PointerPressed += async (_, __) => await StartNameChange();
 
-        LibraryHandler.onGameDetailsUpdate += async (int id) => await RefreshSelectedGame(id);
+        LibraryManager.onGameDetailsUpdate += async (int id) => await RefreshSelectedGame(id);
         RunnerManager.onGameStatusChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b));
     }
 
@@ -115,8 +115,8 @@ public partial class Popup_GameView : UserControl
         string paragraph = $"Files are located:\n\n{inspectingGame!.getAbsoluteFolderLocation}";
         await DependencyManager.OpenConfirmationAsync("Delete Game?", paragraph,
         [
-            ("Remove", async () => await LibraryHandler.DeleteGame(inspectingGame, false), "Removing"),
-            ("Delete Files", async () => await LibraryHandler.DeleteGame(inspectingGame, true), "Deleting"),
+            ("Remove", async () => await LibraryManager.DeleteGame(inspectingGame, false), "Removing"),
+            ("Delete Files", async () => await LibraryManager.DeleteGame(inspectingGame, true), "Deleting"),
         ]);
     }
 

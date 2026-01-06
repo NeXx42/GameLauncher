@@ -38,8 +38,8 @@ public partial class Page_Library : UserControl
 
         DrawEverything();
 
-        LibraryHandler.onGameDetailsUpdate += async (int gameId) => await gameList.RefreshGame(gameId);
-        LibraryHandler.onGameDeletion += async () => await gameList.DrawGames();
+        LibraryManager.onGameDetailsUpdate += async (int gameId) => await gameList.RefreshGame(gameId);
+        LibraryManager.onGameDeletion += async () => await gameList.DrawGames();
     }
 
     private async void DrawEverything()
@@ -153,7 +153,7 @@ public partial class Page_Library : UserControl
 
     public async void ToggleGameView(int gameId)
     {
-        GameDto? game = LibraryHandler.TryGetCachedGame(gameId);
+        GameDto? game = LibraryManager.TryGetCachedGame(gameId);
 
         if (game == null)
         {

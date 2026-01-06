@@ -24,7 +24,7 @@ public struct GameFilterRequest
 
     public string ConstructSQL()
     {
-        StringBuilder sql = new StringBuilder($"SELECT g.*, count(*) OVER() as total_count FROM {dbo_Game.tableName} g ");
+        StringBuilder sql = new StringBuilder($"SELECT g.{nameof(dbo_Game.id)} as id, count(*) OVER() as total_count FROM {dbo_Game.tableName} g ");
 
         List<string> joinClause = new List<string>();
         List<string> whereClause = new List<string>();
