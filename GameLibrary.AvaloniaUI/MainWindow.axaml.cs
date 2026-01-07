@@ -94,6 +94,9 @@ public partial class MainWindow : Window, IControllerInputCallback
 
     public void Move(int x, int y)
     {
+        if (!IsActive)
+            return;
+
         if (activePage is Page_Library lib)
         {
             Dispatcher.UIThread.Post(() => _ = lib.Move(x, y));
@@ -102,6 +105,9 @@ public partial class MainWindow : Window, IControllerInputCallback
 
     public void PressButton(ControllerButton btn)
     {
+        if (!IsActive)
+            return;
+
         if (activePage is Page_Library lib)
         {
             Dispatcher.UIThread.Post(() => _ = lib.PressButton(btn));
