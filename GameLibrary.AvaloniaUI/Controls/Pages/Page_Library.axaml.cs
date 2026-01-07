@@ -183,9 +183,11 @@ public partial class Page_Library : UserControl, IControlChild
     }
     private async Task OpenSettings()
     {
+
         ToggleMenu(true);
         Settings.IsVisible = true;
         await Settings.OnOpen();
+        openedMenu = Settings;
     }
 
     private async Task OpenTagManager()
@@ -332,6 +334,12 @@ public partial class Page_Library : UserControl, IControlChild
                 ToggleMenu(false);
             }
 
+            return false;
+        }
+
+        if (btn == ControllerButton.Settings)
+        {
+            await OpenSettings();
             return false;
         }
 

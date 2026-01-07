@@ -5,13 +5,15 @@ using Avalonia.Controls;
 using Avalonia.Media;
 using GameLibrary.AvaloniaUI.Controls.Settings;
 using GameLibrary.AvaloniaUI.Helpers;
+using GameLibrary.AvaloniaUI.Utils;
+using GameLibrary.Controller;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Settings;
 using GameLibrary.Logic.Settings.UI;
 
 namespace GameLibrary.AvaloniaUI.Controls.SubPage;
 
-public partial class Popup_Settings : UserControl
+public partial class Popup_Settings : UserControl, IControlChild
 {
     private UITabGroup? tabGroup;
     private List<ISettingControl> activeControls = new List<ISettingControl>();
@@ -97,6 +99,9 @@ public partial class Popup_Settings : UserControl
         }
     }
 
+    public Task Enter() => Task.CompletedTask;
+    public Task<bool> Move(int x, int y) => Task.FromResult(false);
+    public Task<bool> PressButton(ControllerButton btn) => Task.FromResult(btn == ControllerButton.B);
 
     internal class Popup_TabGroup : UITabGroup_Group
     {

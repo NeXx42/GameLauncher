@@ -29,8 +29,6 @@ public partial class MainWindow : Window, IControllerInputCallback
         DragDrop.SetAllowDrop(this, true);
         cont_Modals.IsVisible = false;
 
-        ControllerInputHandler.Init(this);
-
         _ = OnStartAsync();
     }
 
@@ -52,6 +50,12 @@ public partial class MainWindow : Window, IControllerInputCallback
     private async Task CompleteLoadAsync()
     {
         await DependencyManager.PostSetup();
+
+        if (ConfigHandler.configProvider!.GetBoolean(ConfigKeys.Input_ControllerSupport, false))
+        {
+            ControllerInputHandler.Init(this);
+        }
+
         EnterPage<Page_Library>();
     }
 

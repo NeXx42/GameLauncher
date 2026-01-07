@@ -10,6 +10,8 @@ public enum ControllerButton
 
     RightBumper,
     LeftBumper,
+
+    Settings,
 }
 
 public interface IControllerInputCallback

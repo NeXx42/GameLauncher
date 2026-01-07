@@ -44,20 +44,38 @@ public partial class LibraryPage_Grid : LibraryPageBase
         return base.DrawGames();
     }
 
-    public async Task PrevPage() => await UpdatePage(Math.Max(page - 1, 0));
-    public async Task NextPage() => await UpdatePage(Math.Min(page + 1, LibraryManager.GetMaxPages(ContentPerPage)));
-    public async Task FirstPage() => await UpdatePage(0);
-    public async Task LastPage() => await UpdatePage(LibraryManager.GetMaxPages(ContentPerPage));
+    public async Task<bool> PrevPage() => await UpdatePage(Math.Max(page - 1, 0));
+    public async Task<bool> NextPage() => await UpdatePage(Math.Min(page + 1, LibraryManager.GetMaxPages(ContentPerPage)));
+    public async Task<bool> FirstPage() => await UpdatePage(0);
+    public async Task<bool> LastPage() => await UpdatePage(LibraryManager.GetMaxPages(ContentPerPage));
 
-    private async Task UpdatePage(int to)
+    private async Task<bool> UpdatePage(int to)
     {
         if (page == to)
-            return;
+            return false;
 
         page = to;
         await DrawGames();
+        return true;
     }
 
     protected override GameFilterRequest GetGameFilter() => library.GetGameFilter(page, ContentPerPage);
     public override void ResetLayout() => page = 0;
+
+    public override async Task<bool> PressButton(ControllerButton btn)
+    {
+        if (btn == ControllerButton.RightBumper && await NextPage())
+        {
+            hoveredGame = 0;
+            return false;
+        }
+
+        if (btn == ControllerButton.LeftBumper && await PrevPage())
+        {
+            hoveredGame = activeUI.Count - 1;
+            return false;
+        }
+
+        return await base.PressButton(btn);
+    }
 }

@@ -8,7 +8,7 @@ namespace GameLibrary.Controller;
 
 public static class ControllerInputHandler
 {
-    private const float DELAY_BETWEEN_INPUT = .1f;
+    private const float DELAY_BETWEEN_INPUT = .25f;
 
     private static Dictionary<string, DateTime> inputCooldown = new Dictionary<string, DateTime>();
 
@@ -45,9 +45,10 @@ public static class ControllerInputHandler
                 return;
         }
 
+        Console.WriteLine(control.Info.PropertyName);
+
         if (SwitchProperty())
         {
-            Console.WriteLine(control.Info.PropertyName);
             inputCooldown[control.Info.PropertyName] = DateTime.UtcNow.AddSeconds(DELAY_BETWEEN_INPUT);
         }
 
@@ -79,6 +80,8 @@ public static class ControllerInputHandler
                 case "BButton": callback?.PressButton(ControllerButton.A); return true;
                 case "LeftBumper": callback?.PressButton(ControllerButton.LeftBumper); return true;
                 case "RightBumper": callback?.PressButton(ControllerButton.RightBumper); return true;
+
+                case "RightStick": callback?.PressButton(ControllerButton.Settings); return true;
             }
 
             return false;

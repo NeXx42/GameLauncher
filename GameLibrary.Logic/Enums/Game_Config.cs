@@ -6,5 +6,5 @@ public enum Game_Config
     General_LoggingLevel,
 
     Wine_ExplorerLaunch,
-    Wine_IsolatedPrefix
+    Wine_IsolatedPrefix,
 }
