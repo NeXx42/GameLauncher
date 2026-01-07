@@ -6,6 +6,8 @@ using Avalonia.Input;
 using Avalonia.Media;
 using Avalonia.Threading;
 using GameLibrary.AvaloniaUI.Controls.Pages.Library;
+using GameLibrary.AvaloniaUI.Utils;
+using GameLibrary.Controller;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Enums;
@@ -14,7 +16,7 @@ using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.AvaloniaUI.Controls.Pages;
 
-public partial class Page_Library : UserControl
+public partial class Page_Library : UserControl, IControlChild
 {
     private HashSet<TagDto> activeTags = new HashSet<TagDto>();
     private Dictionary<TagDto, Library_Tag> generatedTagUI = new Dictionary<TagDto, Library_Tag>();
@@ -22,6 +24,7 @@ public partial class Page_Library : UserControl
     private bool currentSortAscending = true;
     private GameFilterRequest.OrderType currentSort = GameFilterRequest.OrderType.Id;
 
+    private IControlChild? openedMenu;
     private LibraryPageBase? gameList;
     private bool disableBackgroundImages;
 
@@ -37,23 +40,23 @@ public partial class Page_Library : UserControl
         BindButtons();
         ToggleMenu(false);
 
-        DrawEverything();
-        CreateGameList();
+        _ = DrawEverything();
+        _ = CreateGameList();
 
-        LibraryManager.onGameDetailsUpdate += async (int gameId) => await RedrawGameFromGameList(gameId);
-        LibraryManager.onGameDeletion += async () => await RedrawGameList();
+        LibraryManager.onGameDetailsUpdate += (int gameId) => _ = RedrawGameFromGameList(gameId);
+        LibraryManager.onGameDeletion += () => _ = RedrawGameList();
 
         RunnerManager.onGameStatusChange += UpdateActiveGameList;
-        TagManager.onTagChange += async (TagDto? tag, bool didDelete) => await HandleTagChange(tag, didDelete);
+        TagManager.onTagChange += (TagDto? tag, bool didDelete) => _ = HandleTagChange(tag, didDelete);
     }
 
-    private async void DrawEverything()
+    private async Task DrawEverything()
     {
         RedrawSortNames();
         await DrawTags();
     }
 
-    private async void CreateGameList()
+    private async Task CreateGameList()
     {
         gameList = null;
         disableBackgroundImages = ConfigHandler.configProvider!.GetBoolean(ConfigKeys.Appearance_BackgroundImage, false);
@@ -103,7 +106,7 @@ public partial class Page_Library : UserControl
         RedrawSortNames();
     }
 
-    private async void SwapTagMode(TagDto tagId)
+    private async Task SwapTagMode(TagDto tagId)
     {
         if (generatedTagUI.TryGetValue(tagId, out Library_Tag? ui))
         {
@@ -120,22 +123,6 @@ public partial class Page_Library : UserControl
 
             await RedrawGameList(true);
         }
-    }
-
-    public void ToggleGameView(int gameId)
-    {
-        GameDto? game = LibraryManager.TryGetCachedGame(gameId);
-
-        if (game == null)
-        {
-            ToggleMenu(false);
-            return;
-        }
-
-        ToggleMenu(true);
-        GameViewer.IsVisible = true;
-
-        GameViewer.Draw(game);
     }
 
     private async Task RedrawGameList() => await RedrawGameList(false);
@@ -158,10 +145,27 @@ public partial class Page_Library : UserControl
         await gameList.RefreshGame(gameId);
     }
 
+    public async Task ToggleGameView(int gameId)
+    {
+        GameDto? game = LibraryManager.TryGetCachedGame(gameId);
 
+        if (game == null)
+        {
+            ToggleMenu(false);
+            return;
+        }
+
+        ToggleMenu(true);
+        GameViewer.IsVisible = true;
+
+        await GameViewer.Draw(game);
+        openedMenu = GameViewer;
+    }
 
     public void ToggleMenu(bool to)
     {
+        openedMenu = null;
+
         eff_Blur.Effect = to ? new ImmutableBlurEffect(20) : null;
         cont_MenuView.IsVisible = to;
 
@@ -171,11 +175,11 @@ public partial class Page_Library : UserControl
         TagEditor.IsVisible = false;
     }
 
-    private void OpenIndexer()
+    private async Task OpenIndexer()
     {
         ToggleMenu(true);
         Indexer.IsVisible = false;
-        Indexer.OnOpen();
+        await Indexer.OnOpen();
     }
     private async Task OpenSettings()
     {
@@ -263,7 +267,7 @@ public partial class Page_Library : UserControl
 
 
     // sort
-    private async void UpdateSortDirection()
+    private async Task UpdateSortDirection()
     {
         currentSortAscending = !currentSortAscending;
         RedrawSortNames();
@@ -271,7 +275,7 @@ public partial class Page_Library : UserControl
         await RedrawGameList(true);
     }
 
-    private async void UpdateSortType()
+    private async Task UpdateSortType()
     {
         currentSort = (GameFilterRequest.OrderType)btn_SorType.selectedIndex;
         await RedrawGameList(true);
@@ -301,5 +305,36 @@ public partial class Page_Library : UserControl
             return;
 
         img_Bg.Source = (IImage)brush!.Source!;
+    }
+
+
+
+    // page controls
+
+    public Task Enter()
+    {
+        return Task.CompletedTask;
+    }
+
+    public async Task<bool> Move(int x, int y)
+    {
+        return await ((openedMenu ?? gameList)?.Move(x, y) ?? Task.FromResult(true));
+    }
+
+    public async Task<bool> PressButton(ControllerButton btn)
+    {
+        if (openedMenu != null)
+        {
+            bool close = await openedMenu.PressButton(btn);
+
+            if (close)
+            {
+                ToggleMenu(false);
+            }
+
+            return false;
+        }
+
+        return await (gameList?.PressButton(btn) ?? Task.FromResult(true));
     }
 }

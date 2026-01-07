@@ -15,15 +15,17 @@ using GameLibrary.AvaloniaUI.Controls.Pages.Library;
 using GameLibrary.AvaloniaUI.Controls.SubPages.Popup_GameView_Tabs;
 using GameLibrary.AvaloniaUI.Helpers;
 using GameLibrary.AvaloniaUI.Utils;
+using GameLibrary.Controller;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Enums;
+using GameLibrary.Logic.Helpers;
 using GameLibrary.Logic.Objects;
 using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.AvaloniaUI.Controls.SubPage;
 
-public partial class Popup_GameView : UserControl
+public partial class Popup_GameView : UserControl, IControlChild
 {
     public GameDto? inspectingGame { private set; get; }
     private Popup_GameView_TabBase.TabGroup tabs;
@@ -44,13 +46,13 @@ public partial class Popup_GameView : UserControl
         btn_Browse.RegisterClick(BrowseToGame);
         btn_Launch.RegisterClick(LaunchGame, "Launching");
 
-        lbl_Title.PointerPressed += async (_, __) => await StartNameChange();
+        lbl_Title.PointerPressed += (_, __) => _ = StartNameChange();
 
-        LibraryManager.onGameDetailsUpdate += RefreshSelectedGame;
+        LibraryManager.onGameDetailsUpdate.RegisterTask(RefreshSelectedGame);
         RunnerManager.onGameStatusChange += (a, b) => HelperFunctions.WrapUIThread(() => UpdateRunningGameStatus(a, b));
     }
 
-    public async void Draw(GameDto game)
+    public async Task Draw(GameDto game)
     {
         inspectingGame = game;
         img_bg.Source = null;
@@ -89,7 +91,7 @@ public partial class Popup_GameView : UserControl
         async Task HandleWarningFix(Func<Task> body)
         {
             await body();
-            RefreshSelectedGame(inspectingGame!.gameId);
+            await RefreshSelectedGame(inspectingGame!.gameId);
         }
     }
 
@@ -138,12 +140,12 @@ public partial class Popup_GameView : UserControl
             await inspectingGame!.UpdateGameName(res);
     }
 
-    private void RefreshSelectedGame(int gameId)
+    private async Task RefreshSelectedGame(int gameId)
     {
         if (gameId != inspectingGame?.gameId)
             return;
 
-        Draw(inspectingGame!);
+        await Draw(inspectingGame!);
     }
 
     private void UpdateRunningGameStatus(string binary, bool to)
@@ -152,5 +154,23 @@ public partial class Popup_GameView : UserControl
             return;
 
         btn_Launch.Label = to ? "Stop" : "Play";
+    }
+
+    public Task Enter()
+    {
+        throw new NotImplementedException();
+    }
+
+    public Task<bool> Move(int x, int y)
+    {
+        throw new NotImplementedException();
+    }
+
+    public async Task<bool> PressButton(ControllerButton btn)
+    {
+        if (btn == ControllerButton.B)
+            return true;
+
+        return await btn_Launch.PressButton(btn);
     }
 }

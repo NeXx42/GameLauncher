@@ -6,6 +6,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
 using Avalonia.Threading;
+using GameLibrary.Controller;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Objects;
 
@@ -13,11 +14,10 @@ namespace GameLibrary.AvaloniaUI.Controls.Pages.Library;
 
 public partial class LibraryPage_Grid : LibraryPageBase
 {
-    public static (int x, int y) ContentPerPage = (6, 3);
-
-    public int getTotalContentPerPage => ContentPerPage.x * ContentPerPage.y;
+    public const int ContentPerPage = 18;
 
     public override Panel getGameChild => cont_Games;
+    public override int getNumberOfItemsPerColumn => (int)Math.Max(1, Math.Round(cont_Games.Bounds.Width / (CardSize.width + cont_Games.ItemSpacing)));
 
     private int page;
 
@@ -45,9 +45,9 @@ public partial class LibraryPage_Grid : LibraryPageBase
     }
 
     public async Task PrevPage() => await UpdatePage(Math.Max(page - 1, 0));
-    public async Task NextPage() => await UpdatePage(Math.Min(page + 1, LibraryManager.GetMaxPages(ContentPerPage.x * ContentPerPage.y)));
+    public async Task NextPage() => await UpdatePage(Math.Min(page + 1, LibraryManager.GetMaxPages(ContentPerPage)));
     public async Task FirstPage() => await UpdatePage(0);
-    public async Task LastPage() => await UpdatePage(LibraryManager.GetMaxPages(ContentPerPage.x * ContentPerPage.y));
+    public async Task LastPage() => await UpdatePage(LibraryManager.GetMaxPages(ContentPerPage));
 
     private async Task UpdatePage(int to)
     {
@@ -58,7 +58,6 @@ public partial class LibraryPage_Grid : LibraryPageBase
         await DrawGames();
     }
 
-    protected override GameFilterRequest GetGameFilter() => library.GetGameFilter(page, ContentPerPage.x * ContentPerPage.y);
-
+    protected override GameFilterRequest GetGameFilter() => library.GetGameFilter(page, ContentPerPage);
     public override void ResetLayout() => page = 0;
 }

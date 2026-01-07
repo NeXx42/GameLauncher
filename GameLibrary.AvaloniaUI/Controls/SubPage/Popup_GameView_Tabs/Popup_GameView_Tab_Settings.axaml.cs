@@ -70,7 +70,7 @@ public partial class Popup_GameView_Tab_Settings : Popup_GameView_TabBase
             int selectedProfile = possibleRunners.Select(x => x.runnerId).ToList().IndexOf(game.runnerId ?? -1);
 
             element.inp_WineProfile.IsVisible = true;
-            element.inp_WineProfile.SetupAsync(profileOptions, selectedProfile >= 0 ? (selectedProfile + 1) : 0, HandleWineProfileChange);
+            element.inp_WineProfile.Setup(profileOptions, selectedProfile >= 0 ? (selectedProfile + 1) : 0, HandleWineProfileChange);
         }
 
         private void DrawBinaries(GameDto game)
@@ -80,7 +80,7 @@ public partial class Popup_GameView_Tab_Settings : Popup_GameView_TabBase
             if (options != null)
             {
                 (element.Parent as Control)!.IsVisible = true;
-                element.inp_binary.SetupAsync(options.Value.possibleBinaries.Select(x => Path.GetFileName(x)), options.Value.currentExecutable, HandleBinaryChange);
+                element.inp_binary.Setup(options.Value.possibleBinaries.Select(x => Path.GetFileName(x)), options.Value.currentExecutable, HandleBinaryChange);
             }
             else
             {
@@ -161,7 +161,7 @@ public partial class Popup_GameView_Tab_Settings : Popup_GameView_TabBase
                 return Task.CompletedTask;
             }
 
-            private async void Save()
+            private async Task Save()
             {
                 GameDto? game = inspectingGameFetcher();
 

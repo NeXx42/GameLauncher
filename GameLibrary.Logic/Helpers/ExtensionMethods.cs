@@ -44,4 +44,9 @@ public static class ExtensionMethods
 
         return path;
     }
+
+
+    public static void RegisterTask(this Action? act, Func<Task>? callback) { if (callback != null) act += () => _ = callback?.Invoke(); }
+    public static void RegisterTask<T>(this Action<T>? act, Func<T, Task>? callback) { if (callback != null) act += (a) => _ = callback?.Invoke(a); }
+    public static void RegisterTask<T, T2>(this Action<T, T2>? act, Func<T, T2, Task>? callback) { if (callback != null) act += (a, b) => _ = callback?.Invoke(a, b); }
 }

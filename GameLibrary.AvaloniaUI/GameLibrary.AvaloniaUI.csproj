@@ -24,4 +24,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\GameLibrary.Controller\GameLibrary.Controller.csproj" />
+  </ItemGroup>
 </Project>

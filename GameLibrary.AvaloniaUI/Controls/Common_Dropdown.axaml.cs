@@ -25,10 +25,13 @@ public partial class Common_Dropdown : UserControl
         inp.SelectionChanged += (_, __) => OnChangeCallback();
     }
 
-    public void SetupAsync(IEnumerable collection, int? defaultOption, Func<Task> onChange)
-        => Setup(collection, defaultOption, async () => await onChange());
+    public void Setup(IEnumerable collection, int? defaultOption, Func<Task>? onChange)
+        => SetupInternal(collection, defaultOption, onChange == null ? null : () => _ = onChange());
 
     public void Setup(IEnumerable collection, int? defaultOption, Action? onChange)
+        => SetupInternal(collection, defaultOption, onChange);
+
+    private void SetupInternal(IEnumerable collection, int? defaultOption, Action? onChange)
     {
         ignoreEvents = true;
         inp.ItemsSource = collection;

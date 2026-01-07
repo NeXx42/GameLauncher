@@ -78,7 +78,7 @@ public partial class Popup_GameView_Tab_Tags : Popup_GameView_TabBase
             }
         }
 
-        private async void HandleTagToggle(TagDto tag)
+        private async Task HandleTagToggle(TagDto tag)
         {
             if (tag is TagDto_Managed)
                 return;

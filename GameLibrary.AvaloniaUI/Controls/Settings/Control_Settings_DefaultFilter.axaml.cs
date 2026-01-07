@@ -20,7 +20,7 @@ public partial class Control_Settings_DefaultFilter : UserControl, ISettingContr
 
         this.setting = setting;
 
-        type.SetupAsync(GameFilterRequest.getOrderOptionsNames, 0, Save);
+        type.Setup(GameFilterRequest.getOrderOptionsNames, 0, Save);
         dir.RegisterClick(FlipDirection);
     }
 

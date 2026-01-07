@@ -18,7 +18,7 @@ public class UILinker : IUILinker
 
     public async Task OpenLoadingModal(bool progressiveLoad, Func<Task>[] tasks)
     {
-        await MainWindow.instance!.DisplayModal<Modal_Loading>(ModalRequest);
+        await MainWindow.instance!.DisplayModalAsync<Modal_Loading>(ModalRequest);
 
         async Task ModalRequest(Modal_Loading modal)
         {
@@ -29,20 +29,20 @@ public class UILinker : IUILinker
     public async Task<string?> OpenStringInputModal(string windowName, string? existingText = "", bool obfuscateInput = false)
     {
         string? res = null;
-        await MainWindow.instance!.DisplayModal<Modal_Input>(ModalRequest);
+        await MainWindow.instance!.DisplayModalAsync<Modal_Input>(ModalRequest);
 
         return res;
 
         async Task ModalRequest(Modal_Input modal)
         {
-            res = await modal.RequestString(windowName, existingText, obfuscateInput);
+            res = await modal.RequestStringAsync(windowName, existingText, obfuscateInput);
         }
     }
 
     public async Task<bool> OpenYesNoModal(string title, string paragraph)
     {
         bool res = false;
-        await MainWindow.instance!.DisplayModal<Modal_YesNo>(ModalRequest);
+        await MainWindow.instance!.DisplayModalAsync<Modal_YesNo>(ModalRequest);
 
         return res;
 
@@ -55,7 +55,7 @@ public class UILinker : IUILinker
     public async Task<bool> OpenYesNoModalAsync(string title, string paragraph, Func<Task> positiveCallback, string? loadingMessage)
     {
         bool res = false;
-        await MainWindow.instance!.DisplayModal<Modal_YesNo>(ModalRequest);
+        await MainWindow.instance!.DisplayModalAsync<Modal_YesNo>(ModalRequest);
 
         return res;
 
@@ -68,7 +68,7 @@ public class UILinker : IUILinker
     public async Task<int> OpenConfirmationAsync(string title, string paragraph, params (string btn, Func<Task> callback, string? loadingMessage)[] controls)
     {
         int res = -1;
-        await MainWindow.instance!.DisplayModal<Modal_YesNo>(ModalRequest);
+        await MainWindow.instance!.DisplayModalAsync<Modal_YesNo>(ModalRequest);
 
         return res;
 

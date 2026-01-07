@@ -29,7 +29,7 @@ public partial class Common_Toggle : UserControl
 
     public void RegisterOnChange(Func<bool, Task> onChange)
     {
-        listeningEvent += async (x) => await onChange(x);
+        listeningEvent += (x) => _ = onChange(x);
     }
 
     public void RegisterOnChange(Action<bool> onChange)

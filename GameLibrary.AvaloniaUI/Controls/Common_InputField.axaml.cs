@@ -30,7 +30,7 @@ public partial class Common_InputField : UserControl
 
     public void OnChange(Func<Task> callback)
     {
-        onTextChange = async () => await callback();
+        onTextChange = () => _ = callback();
     }
 
     public void OnChange(Action callback)

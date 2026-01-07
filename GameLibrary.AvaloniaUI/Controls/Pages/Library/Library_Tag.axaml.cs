@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -80,20 +81,22 @@ public partial class Library_Tag : UserControl
     }
     #endregion
 
-    private Action? clickEvent;
+    private Func<Task>? clickEvent;
 
     public Library_Tag()
     {
         InitializeComponent();
-        border.PointerPressed += (_, __) => clickEvent?.Invoke();
+        border.PointerPressed += (_, __) => _ = clickEvent?.Invoke();
         //border.Margin = new Thickness(0, 0, 5, 5);
     }
 
-    public void Draw(TagDto tag, Action<TagDto>? onClick)
+    public void Draw(TagDto tag, Func<TagDto, Task>? onClick)
     {
         Toggle(false);
 
-        clickEvent = () => onClick?.Invoke(tag);
+        if (onClick != null)
+            clickEvent = async () => await (onClick?.Invoke(tag) ?? Task.CompletedTask);
+
         DrawName(tag);
     }
 

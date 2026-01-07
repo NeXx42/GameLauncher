@@ -29,13 +29,15 @@ public partial class Indexer_FolderView : UserControl
         InitializeComponent();
     }
 
-    public void Setup(Popup_AddGames master)
+    public Task Setup(Popup_AddGames master)
     {
         this.master = master;
 
         btn_FolderView_Close.RegisterClick(master.CloseFolderView);
         btn_Generic.RegisterClick(() => btn_Generic_Callback?.Invoke());
         btn_Launch.RegisterClick(() => btn_Launch_Callback?.Invoke());
+
+        return Task.CompletedTask;
     }
 
     public void RequestFolderView(FileManager.ImportEntry_Folder folder, Indexer_Folder ui)
@@ -140,7 +142,7 @@ public partial class Indexer_FolderView : UserControl
         if (RunnerManager.IsUniversallyAcceptedExecutableFormat(dir))
         {
             btn_Launch.IsVisible = true;
-            btn_Launch_Callback = async () => await LaunchSelectedBinary(dir);
+            btn_Launch_Callback = () => _ = LaunchSelectedBinary(dir);
 
             btn_Generic.IsVisible = true;
             btn_Generic.Label = "Select Binary";
@@ -152,7 +154,7 @@ public partial class Indexer_FolderView : UserControl
             btn_Generic.IsVisible = true;
             btn_Generic.Label = "Extract Here";
 
-            btn_Generic_Callback = async () => await ExtractFile(dir);
+            btn_Generic_Callback = () => _ = ExtractFile(dir);
         }
     }
 

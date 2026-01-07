@@ -32,7 +32,7 @@ public partial class Control_Settings_Dropdown : UserControl, ISettingControl
         btn.SilentlyChangeValue(selected);
     }
 
-    private async void SaveValue()
+    private async Task SaveValue()
     {
         await settings!.SaveSetting(btn.selectedIndex);
     }

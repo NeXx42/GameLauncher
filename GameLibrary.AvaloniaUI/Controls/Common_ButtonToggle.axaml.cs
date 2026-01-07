@@ -88,7 +88,7 @@ public partial class Common_ButtonToggle : UserControl
 
     public void Register(Func<bool, Task> onToggle, string? asyncMessage)
     {
-        callback = async (b) => await onToggle(b);
+        callback = (b) => _ = onToggle(b);
     }
 
     private void HandleToggle()

@@ -5,6 +5,7 @@ using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using GameLibrary.AvaloniaUI.Controls.Pages.Library;
 using GameLibrary.Logic;
+using GameLibrary.Logic.Helpers;
 using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.AvaloniaUI.Controls.SubPage;
@@ -43,12 +44,12 @@ public partial class Popup_TagManager : UserControl
         btn_Delete.RegisterClick(DeleteTag);
         btn_Edit.RegisterClick(EditTag);
 
-        TagManager.onTagChange += async (_, __) => await RedrawTagList();
+        TagManager.onTagChange += (__, ___) => _ = RedrawTagList();
     }
 
     public async Task OnOpen()
     {
-        SelectTag(null);
+        await SelectTag(null);
         await RedrawTagList();
     }
 
@@ -79,12 +80,14 @@ public partial class Popup_TagManager : UserControl
         }
     }
 
-    private void SelectTag(TagDto? tag)
+    private Task SelectTag(TagDto? tag)
     {
         currentlySelectedTag = tag?.id;
 
         btn_Delete.IsVisible = currentlySelectedTag.HasValue;
         btn_Edit.Label = currentlySelectedTag.HasValue ? "Edit" : "Add";
+
+        return Task.CompletedTask;
     }
 
     private async Task DeleteTag()
@@ -97,7 +100,7 @@ public partial class Popup_TagManager : UserControl
 
         int temp = currentlySelectedTag.Value;
 
-        SelectTag(null);
+        await SelectTag(null);
         await TagManager.DeleteTag(temp);
     }
 

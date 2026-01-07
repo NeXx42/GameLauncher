@@ -1,7 +1,9 @@
+using System;
 using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
+using GameLibrary.Controller;
 using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.AvaloniaUI.Controls.Pages.Library;
@@ -9,6 +11,7 @@ namespace GameLibrary.AvaloniaUI.Controls.Pages.Library;
 public partial class LibraryPage_Endless : LibraryPageBase
 {
     public override Panel getGameChild => cont_Games;
+    public override int getNumberOfItemsPerColumn => (int)Math.Max(1, Math.Round(cont_Games.Bounds.Width / (CardSize.width + cont_Games.ItemSpacing)));
 
     public LibraryPage_Endless(Page_Library library) : base(library)
     {
@@ -17,6 +20,6 @@ public partial class LibraryPage_Endless : LibraryPageBase
 
 
     protected override GameFilterRequest GetGameFilter() => library.GetGameFilter(0, 99999);
-
     public override void ResetLayout() => scroll.Offset = scroll.Offset.WithY(0);
+
 }

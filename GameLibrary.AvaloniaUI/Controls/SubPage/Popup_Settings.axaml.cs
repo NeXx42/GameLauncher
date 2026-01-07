@@ -23,10 +23,10 @@ public partial class Popup_Settings : UserControl
         if (Design.IsDesignMode)
             return;
 
-        DrawSettings();
+        _ = DrawSettings();
     }
 
-    private async void DrawSettings()
+    private async Task DrawSettings()
     {
         List<UITabGroup_Group> groups = new List<UITabGroup_Group>();
 
@@ -110,7 +110,7 @@ public partial class Popup_Settings : UserControl
 
         public override void Setup(UITabGroup master, int index)
         {
-            toggle.Register(async (_) => await master.ChangeSelection(index));
+            toggle.Register(async (_) => await master.ChangeSelection(index), string.Empty);
             element.IsVisible = false;
         }
 

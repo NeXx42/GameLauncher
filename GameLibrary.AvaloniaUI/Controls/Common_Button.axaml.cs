@@ -9,10 +9,12 @@ using Avalonia.Media;
 using Avalonia.Media.Immutable;
 using Avalonia.Styling;
 using Avalonia.Threading;
+using GameLibrary.AvaloniaUI.Utils;
+using GameLibrary.Controller;
 
 namespace GameLibrary.AvaloniaUI.Controls
 {
-    public partial class Common_Button : UserControl
+    public partial class Common_Button : UserControl, IControlChild
     {
         private Action? callback;
         private string? defaultMessage;
@@ -40,9 +42,9 @@ namespace GameLibrary.AvaloniaUI.Controls
 
         public void RegisterClick(Func<Task> callback, string? asyncMessage = "")
         {
-            this.callback += async () => await HandleUpdate();
+            this.callback += () => _ = HandleUpdateAsync();
 
-            async Task HandleUpdate()
+            async Task HandleUpdateAsync()
             {
                 if (!string.IsNullOrEmpty(asyncMessage))
                     Dispatcher.UIThread.Post(() => SetValue(LabelProperty!, asyncMessage));
@@ -54,9 +56,22 @@ namespace GameLibrary.AvaloniaUI.Controls
             }
         }
 
-        public void RegisterClick(Action callback)
+        public void RegisterClick(Action? callback)
         {
             this.callback += () => callback?.Invoke();
+        }
+
+        public Task Enter() => Task.CompletedTask;
+        public Task<bool> Move(int x, int y) => Task.FromResult(false);
+
+        public Task<bool> PressButton(ControllerButton btn)
+        {
+            if (btn == ControllerButton.A)
+            {
+                callback?.Invoke();
+            }
+
+            return Task.FromResult(false);
         }
     }
 }

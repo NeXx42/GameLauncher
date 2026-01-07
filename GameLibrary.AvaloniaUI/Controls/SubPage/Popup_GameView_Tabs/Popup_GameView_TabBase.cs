@@ -55,7 +55,7 @@ public abstract class Popup_GameView_TabBase : UserControl
         {
             this.master = (TabGroup)master;
 
-            toggleBtn.Register(async (_) => await master.ChangeSelection(index));
+            toggleBtn.Register(async (_) => await master.ChangeSelection(index), string.Empty);
             element.IsVisible = false;
 
             InternalSetup(this.master);

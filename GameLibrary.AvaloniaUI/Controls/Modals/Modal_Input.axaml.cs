@@ -17,14 +17,14 @@ public partial class Modal_Input : UserControl
         btn_Close.RegisterClick(() => stringRequest?.SetResult(null));
     }
 
-    public Task<string?> RequestString(string windowName, string? existingText, bool obfuscateInput = false)
+    public Task<string?> RequestStringAsync(string windowName, string? existingText, bool obfuscateInput = false)
     {
         lbl_Title.Content = windowName;
 
         txt_Input.Text = existingText;
         txt_Input.PasswordChar = obfuscateInput ? '*' : '\0';
 
-        stringRequest = new TaskCompletionSource<string?>(TaskCreationOptions.RunContinuationsAsynchronously);
+        stringRequest = new TaskCompletionSource<string?>();
         return stringRequest.Task;
     }
 

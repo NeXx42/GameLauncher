@@ -16,8 +16,8 @@ public partial class Popup_AddGames : UserControl
     {
         InitializeComponent();
 
-        cont_ImportView.Setup(this);
-        cont_FolderView.Setup(this);
+        _ = cont_ImportView.Setup(this);
+        _ = cont_FolderView.Setup(this);
     }
 
 
@@ -26,7 +26,7 @@ public partial class Popup_AddGames : UserControl
         onReimportGames = onReimport;
     }
 
-    public async void OnOpen()
+    public async Task OnOpen()
     {
         this.IsVisible = true;
         CloseFolderView();

@@ -85,7 +85,7 @@ public class UITabGroup_Group
 
     public virtual void Setup(UITabGroup master, int index)
     {
-        btn.PointerPressed += async (_, __) => await master.ChangeSelection(index);
+        btn.PointerPressed += (_, __) => _ = master.ChangeSelection(index);
         element.IsVisible = false;
     }
 

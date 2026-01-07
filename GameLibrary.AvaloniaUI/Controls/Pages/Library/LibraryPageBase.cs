@@ -5,12 +5,14 @@ using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Media;
 using Avalonia.Threading;
+using GameLibrary.AvaloniaUI.Utils;
+using GameLibrary.Controller;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Objects;
 
 namespace GameLibrary.AvaloniaUI.Controls.Pages.Library;
 
-public abstract class LibraryPageBase : UserControl
+public abstract class LibraryPageBase : UserControl, IControlChild
 {
     public static (int width, int height) CardSize = (290, 257);
 
@@ -44,6 +46,7 @@ public abstract class LibraryPageBase : UserControl
     protected Dictionary<int, int> activeUI;
 
     public abstract Panel getGameChild { get; }
+    public abstract int getNumberOfItemsPerColumn { get; }
 
 
     public LibraryPageBase(Page_Library library)
@@ -108,16 +111,16 @@ public abstract class LibraryPageBase : UserControl
         getGameChild.Children.Add(ui);
         cacheUI.Add(ui);
 
-        ui.pointerStatusChange += (enter) => hoveredGame = (enter ? i : null);
+        ui.pointerStatusChange += (enter) => hoveredGame = enter ? i : null;
     }
 
-    protected virtual void ViewGame(int? id)
+    protected virtual async Task ViewGame(int? id)
     {
         if (id == null)
             return;
 
         hoveredGame = activeUI[id.Value];
-        library.ToggleGameView(id.Value);
+        await library.ToggleGameView(id.Value);
     }
 
     public virtual async Task RefreshGame(int gameId)
@@ -131,5 +134,38 @@ public abstract class LibraryPageBase : UserControl
         if (activeUI.TryGetValue(gameId, out int uiPos))
             cacheUI[uiPos].RedrawIcon(gameId, brush);
     }
+    public virtual Task Enter()
+    {
+        return Task.CompletedTask;
+    }
 
+    public virtual Task<bool> Move(int x, int y)
+    {
+        if (hoveredGame == null)
+        {
+            hoveredGame = 0;
+            return Task.FromResult(false);
+        }
+
+        y = -y;
+
+        int currentHover = hoveredGame ?? 0;
+
+        currentHover += x;
+        currentHover += getNumberOfItemsPerColumn * y;
+
+        if (currentHover < 0 || currentHover >= activeUI.Count)
+            return Task.FromResult(true);
+
+        hoveredGame = currentHover;
+        return Task.FromResult(false);
+    }
+
+    public virtual async Task<bool> PressButton(ControllerButton btn)
+    {
+        if (!hoveredGame.HasValue)
+            return false;
+
+        return await cacheUI[hoveredGame.Value].PressButton(btn);
+    }
 }

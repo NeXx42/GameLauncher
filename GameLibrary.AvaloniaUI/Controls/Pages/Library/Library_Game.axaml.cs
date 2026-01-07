@@ -8,6 +8,8 @@ using Avalonia.Animation.Easings;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
 using Avalonia.Media;
+using GameLibrary.AvaloniaUI.Utils;
+using GameLibrary.Controller;
 using GameLibrary.DB.Tables;
 using GameLibrary.Logic;
 using GameLibrary.Logic.Objects;
@@ -15,7 +17,7 @@ using GameLibrary.Logic.Objects.Tags;
 
 namespace GameLibrary.AvaloniaUI.Controls.Pages.Library;
 
-public partial class Library_Game : UserControl
+public partial class Library_Game : UserControl, IControlChild
 {
     private static IBrush? noBGBrush
     {
@@ -60,7 +62,7 @@ public partial class Library_Game : UserControl
         ToggleHover(false);
     }
 
-    public async Task Draw(int gameId, Action<int?> onLaunch)
+    public async Task Draw(int gameId, Func<int?, Task> onLaunch)
     {
         if (this.gameId == gameId)
             return;
@@ -142,5 +144,18 @@ public partial class Library_Game : UserControl
         {
             ctrl.Classes.Remove("hovered");
         }
+    }
+
+    public Task Enter() => Task.CompletedTask;
+    public Task<bool> Move(int x, int y) => Task.FromResult(false);
+
+    public Task<bool> PressButton(ControllerButton btn)
+    {
+        if (btn == ControllerButton.A)
+        {
+            onClick?.Invoke();
+        }
+
+        return Task.FromResult(false);
     }
 }

@@ -122,7 +122,7 @@ public partial class Control_Settings_Runners : UserControl, ISettingControl
 
     private async Task OpenEditMenu()
     {
-        await MainWindow.instance!.DisplayModal<Modal_Settings_Runner>(HandleModal);
+        await MainWindow.instance!.DisplayModalAsync<Modal_Settings_Runner>(HandleModal);
 
         async Task HandleModal(Modal_Settings_Runner modal)
         {

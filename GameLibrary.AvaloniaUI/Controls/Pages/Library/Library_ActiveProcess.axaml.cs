@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -13,7 +14,7 @@ public partial class Library_ActiveProcess : UserControl
     {
         InitializeComponent();
 
-        this.PointerPressed += (_, __) => TryToClose();
+        this.PointerPressed += (_, __) => _ = TryToClose();
     }
 
     public void Draw(string lbl)
@@ -22,7 +23,7 @@ public partial class Library_ActiveProcess : UserControl
         this.lbl.Content = lbl;
     }
 
-    private async void TryToClose()
+    private async Task TryToClose()
     {
         if (string.IsNullOrEmpty(representing))
             return; // maybe have a ui clean up here

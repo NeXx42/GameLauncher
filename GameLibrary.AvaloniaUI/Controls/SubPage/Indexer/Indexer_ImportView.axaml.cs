@@ -26,7 +26,7 @@ public partial class Indexer_ImportView : UserControl
         InitializeComponent();
     }
 
-    public async void Setup(Popup_AddGames master)
+    public async Task Setup(Popup_AddGames master)
     {
         this.master = master;
         cont_FoundGames.Children.Clear();

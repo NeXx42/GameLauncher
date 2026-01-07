@@ -41,21 +41,20 @@ public partial class Modal_Settings_Runner : UserControl
         tabGroup = new UITabGroup(TabGroup_Buttons, TabGroup_Content, true);
     }
 
-    public Task HandleOpen(int? runnerId)
+    public async Task HandleOpen(int? runnerId)
     {
         selectedRunner = null;
         modalRes = new TaskCompletionSource();
 
-        Draw(runnerId);
-        return modalRes.Task;
+        await Draw(runnerId);
     }
 
-    private async void Draw(int? runnerId)
+    private async Task Draw(int? runnerId)
     {
         selectedRunner = runnerId.HasValue ? RunnerManager.GetRunnerProfile(runnerId.Value) : null;
 
         string[] types = selectedRunner != null ? [selectedRunner.runnerType.ToString()] : System.Enum.GetNames(typeof(RunnerDto.RunnerType));
-        inp_Type.SetupAsync(types, 0, ChangeRunnerType);
+        inp_Type.Setup(types, 0, ChangeRunnerType);
 
         await UpdateDefaultDetails();
         await UpdateWineDetails();

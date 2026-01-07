@@ -17,10 +17,10 @@ public partial class App : Application
 
     public override void OnFrameworkInitializationCompleted()
     {
-        TaskScheduler.UnobservedTaskException += async (s, e) =>
+        TaskScheduler.UnobservedTaskException += (s, e) =>
         {
             e.SetObserved();
-            await CatchException(e.Exception);
+            _ = CatchExceptionAsync(e.Exception).ConfigureAwait(true);
         };
 
         if (ApplicationLifetime is IClassicDesktopStyleApplicationLifetime desktop)
@@ -37,12 +37,12 @@ public partial class App : Application
         //GameLauncher.KillAllExistingProcesses();
     }
 
-    private async Task CatchException(Exception exception)
+    private async Task CatchExceptionAsync(Exception exception)
     {
         // don't want this to loop endlessly loop for some reason
         try
         {
-            await DependencyManager.OpenYesNoModal("Unhandled exception", $"{exception.Message}\n\n{exception.StackTrace}");
+            await DependencyManager.OpenYesNoModal("Unhandled exception", $"{exception.Message}\n\n{exception.StackTrace}").ConfigureAwait(true);
         }
         catch { }
     }

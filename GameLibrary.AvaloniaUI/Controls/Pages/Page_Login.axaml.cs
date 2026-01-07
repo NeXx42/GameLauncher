@@ -1,4 +1,5 @@
 using System;
+using System.Threading.Tasks;
 using Avalonia;
 using Avalonia.Controls;
 using Avalonia.Markup.Xaml;
@@ -9,23 +10,23 @@ namespace GameLibrary.AvaloniaUI.Controls.Pages;
 public partial class Page_Login : UserControl
 {
     private string? passwordHash;
-    private Action? onSuccess;
+    private Func<Task>? onSuccess;
 
     public Page_Login()
     {
         InitializeComponent();
-        btn_Login.RegisterClick(AttemptToLogin);
+        btn_Login.RegisterClick(AttemptToLoginAsync);
     }
 
-    public void Enter(string passwordHash, Action onSuccess)
+    public void Enter(string passwordHash, Func<Task> onSuccess)
     {
         this.onSuccess = onSuccess;
         this.passwordHash = passwordHash;
     }
 
-    private void AttemptToLogin()
+    private async Task AttemptToLoginAsync()
     {
         if (EncryptionHelper.TestPassword(inp_Password.Text, passwordHash))
-            onSuccess?.Invoke();
+            await onSuccess!();
     }
 }
