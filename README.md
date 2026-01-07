@@ -8,7 +8,7 @@ Built with Avalonia, cross platform. However mainly designed for linux.
 <img width="1921" height="1081" alt="image" src="https://github.com/user-attachments/assets/0a215d25-9bb9-4c11-a589-87af4ef61ba6" />
 <img width="1920" height="1081" alt="image" src="https://github.com/user-attachments/assets/f3394608-cb8f-4069-9d20-459ea2d06ec1" />
 
-## Prerequists
+## Prerequisites
 
 Requires
 * .Net
@@ -27,4 +27,5 @@ make publish
 ```sh
 ./_Output/AvaloniaUI/GameLibrary.AvaloniaUI
 ```
+
 
