@@ -21,7 +21,7 @@ public static class RunnerManager
 
     public static Action<string, bool>? onGameStatusChange;
 
-    public static bool IsBinaryRunning(string dir) => activeGames.ContainsKey(dir);
+    public static bool IsIdentifierRunning(string dir) => activeGames.ContainsKey(dir);
 
     public static bool IsUniversallyAcceptedExecutableFormat(string path)
     {
@@ -38,14 +38,14 @@ public static class RunnerManager
 
     public static async Task RunGame(LaunchRequest launchRequest)
     {
-        if (activeGames.TryGetValue(launchRequest.path, out ActiveProcess? process))
+        if (activeGames.TryGetValue(launchRequest.identifier, out ActiveProcess? process))
         {
             if (process?.IsActive ?? false)
             {
                 throw new Exception("Game is already running");
             }
 
-            activeGames.Remove(launchRequest.path);
+            activeGames.Remove(launchRequest.identifier);
         }
 
         await _mutex.WaitAsync();
@@ -76,7 +76,7 @@ public static class RunnerManager
             await HandleEmbeds(launchRequest.gameId, launchArguments, selectedRunner);
 
             launchArguments.gameId = gameDto?.gameId;
-            launchArguments.identifier = launchRequest.path;
+            launchArguments.identifier = launchRequest.identifier;
             launchArguments.loggingLevel = gameDto?.config.GetEnum(Game_Config.General_LoggingLevel, LoggingLevel.Off) ?? LoggingLevel.Off;
 
             ExecuteRunRequest(launchArguments, gameDto?.getAbsoluteLogFile);
@@ -101,16 +101,16 @@ public static class RunnerManager
         }
     }
 
-    public static async Task RunSteamGame(int gameId, long appId)
+    public static async Task RunSteamGame(GameDto_Steam game)
     {
         LaunchArguments dat = new LaunchArguments()
         {
-            gameId = gameId,
-            identifier = appId.ToString(),
+            gameId = game.gameId,
+            identifier = game.gameName,
 
             command = "steam"
         };
-        dat.arguments.AddLast($"steam://rungameid/{appId}");
+        dat.arguments.AddLast($"steam://rungameid/{game.appId}");
 
         ExecuteRunRequest(dat, null);
     }
@@ -118,7 +118,7 @@ public static class RunnerManager
 
     public static async Task RunWineTricks(int runnerId, string process, string? subprocess)
     {
-        if (IsBinaryRunning($"{runnerId}_{process}"))
+        if (IsIdentifierRunning($"{runnerId}_{process}"))
         {
             await DependencyManager.OpenYesNoModal("Already running", $"{process} is already running, close before trying again");
             return;
@@ -127,16 +127,15 @@ public static class RunnerManager
         RunnerDto runnerDto = GetRunnerProfile(runnerId);
 
         await runnerDto.SetupRunner();
-        LaunchArguments req = await runnerDto.InitRunDetails(new LaunchRequest() { runnerId = runnerId });
+        LaunchArguments req = await runnerDto.InitRunDetails(new LaunchRequest() { identifier = process, runnerId = runnerId });
 
         req.command = process;
 
         if (!string.IsNullOrEmpty(subprocess))
             req.arguments.AddFirst(subprocess);
 
-        req.identifier = $"{runnerId}_{process}";
-        req.loggingLevel = LoggingLevel.Off;
 
+        req.loggingLevel = LoggingLevel.Off;
         ExecuteRunRequest(req, null);
     }
 
@@ -358,6 +357,8 @@ public static class RunnerManager
 
     public struct LaunchRequest
     {
+        public required string identifier;
+
         public int? gameId;
         public int? runnerId;
         public string path;

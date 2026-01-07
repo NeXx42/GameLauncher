@@ -100,6 +100,7 @@ public class RunnerDto_Wine : RunnerDto
     {
         await RunnerManager.ExecuteRunRequest(await InitRunDetails(new RunnerManager.LaunchRequest()
         {
+            identifier = "wine",
             path = "reg",
         }), null).WaitForExitAsync();
     }

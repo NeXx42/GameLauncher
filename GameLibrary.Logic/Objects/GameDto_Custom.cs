@@ -15,6 +15,8 @@ public class GameDto_Custom : GameDto
     {
         await RunnerManager.RunGame(new RunnerManager.LaunchRequest()
         {
+            identifier = gameName,
+
             gameId = gameId,
             path = getAbsoluteBinaryLocation,
             runnerId = runnerId,

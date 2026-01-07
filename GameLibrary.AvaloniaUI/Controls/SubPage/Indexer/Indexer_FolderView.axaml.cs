@@ -160,7 +160,8 @@ public partial class Indexer_FolderView : UserControl
     {
         await RunnerManager.RunGame(new RunnerManager.LaunchRequest()
         {
-            path = dir
+            path = dir,
+            identifier = dir
         });
     }
 

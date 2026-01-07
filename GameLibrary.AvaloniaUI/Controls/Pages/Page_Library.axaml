@@ -49,6 +49,8 @@
                 </Border>
 
                 <Grid x:Name="cont_GameList" Grid.Row="2"/>
+
+                <StackPanel x:Name="cont_ActiveGames" Grid.Row="2" HorizontalAlignment="Left" VerticalAlignment="Bottom" Spacing="5" Margin="10" Width="200"/>
             </Grid>
         </Border>
 

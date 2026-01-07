@@ -55,7 +55,7 @@ public partial class Popup_GameView : UserControl
         inspectingGame = game;
         img_bg.Source = null;
 
-        UpdateRunningGameStatus(game.getAbsoluteBinaryLocation, RunnerManager.IsBinaryRunning(game.getAbsoluteBinaryLocation));
+        UpdateRunningGameStatus(game.getAbsoluteBinaryLocation, RunnerManager.IsIdentifierRunning(game.gameName));
 
         lbl_Title.Content = game.gameName;
         lbl_LastPlayed.Content = $"Last played {game.GetLastPlayedFormatted()}";
@@ -103,7 +103,7 @@ public partial class Popup_GameView : UserControl
 
     private async Task LaunchGame()
     {
-        if (RunnerManager.IsBinaryRunning(inspectingGame!.getAbsoluteBinaryLocation))
+        if (RunnerManager.IsIdentifierRunning(inspectingGame!.getAbsoluteBinaryLocation))
         {
             RunnerManager.KillProcess(inspectingGame!.getAbsoluteBinaryLocation);
         }

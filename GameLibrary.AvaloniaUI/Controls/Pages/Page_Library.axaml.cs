@@ -21,10 +21,11 @@ public partial class Page_Library : UserControl
 
     private bool currentSortAscending = true;
     private GameFilterRequest.OrderType currentSort = GameFilterRequest.OrderType.Id;
-    private Dictionary<GameFilterRequest.OrderType, Common_ButtonToggle> sortBtns = new Dictionary<GameFilterRequest.OrderType, Common_ButtonToggle>();
 
     private LibraryPageBase? gameList;
     private bool disableBackgroundImages;
+
+    private Dictionary<string, Library_ActiveProcess> activeGameUI = new Dictionary<string, Library_ActiveProcess>();
 
     public Page_Library()
     {
@@ -41,6 +42,8 @@ public partial class Page_Library : UserControl
 
         LibraryManager.onGameDetailsUpdate += async (int gameId) => await RedrawGameFromGameList(gameId);
         LibraryManager.onGameDeletion += async () => await RedrawGameList();
+
+        RunnerManager.onGameStatusChange += UpdateActiveGameList;
     }
 
     private async void DrawEverything()
@@ -209,6 +212,35 @@ public partial class Page_Library : UserControl
         ToggleMenu(true);
         TagEditor.IsVisible = true;
         TagEditor.OnOpen();
+    }
+
+
+
+    private void UpdateActiveGameList(string path, bool status)
+    {
+        Dispatcher.UIThread.Post(Internal);
+
+        void Internal()
+        {
+            Library_ActiveProcess ui;
+
+            if (activeGameUI.TryGetValue(path, out ui!))
+            {
+                if (!status)
+                {
+                    cont_ActiveGames.Children.Remove(ui);
+                    activeGameUI.Remove(path);
+                }
+
+                return;
+            }
+
+            ui = new Library_ActiveProcess();
+            ui.Draw(path);
+
+            cont_ActiveGames.Children.Add(ui);
+            activeGameUI[path] = ui;
+        }
     }
 
 
