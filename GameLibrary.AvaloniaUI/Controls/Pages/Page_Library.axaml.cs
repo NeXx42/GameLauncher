@@ -44,6 +44,7 @@ public partial class Page_Library : UserControl
         LibraryManager.onGameDeletion += async () => await RedrawGameList();
 
         RunnerManager.onGameStatusChange += UpdateActiveGameList;
+        TagManager.onTagChange += async (TagDto? tag, bool didDelete) => await HandleTagChange(tag, didDelete);
     }
 
     private async void DrawEverything()
@@ -81,6 +82,7 @@ public partial class Page_Library : UserControl
         GameViewer.PointerPressed += (_, e) => e.Handled = true;
         Indexer.PointerPressed += (_, e) => e.Handled = true;
         Settings.PointerPressed += (_, e) => e.Handled = true;
+        TagEditor.PointerPressed += (_, e) => e.Handled = true;
 
         cont_MenuView.PointerPressed += (_, __) => ToggleMenu(false);
 
@@ -99,33 +101,6 @@ public partial class Page_Library : UserControl
         currentSortAscending = asc;
 
         RedrawSortNames();
-    }
-
-    public async Task DrawTags()
-    {
-        generatedTagUI.Clear();
-        activeTags.Clear();
-
-        cont_AllTags.Children.Clear();
-
-        TagDto[] tags = await TagManager.GetAllTags();
-
-        foreach (TagDto tag in tags)
-        {
-            if (generatedTagUI.ContainsKey(tag))
-                continue;
-
-            generatedTagUI.Add(tag, CreateTagUI(tag));
-        }
-
-        Library_Tag CreateTagUI(TagDto tag)
-        {
-            Library_Tag ui = new Library_Tag();
-            ui.Draw(tag, SwapTagMode);
-
-            cont_AllTags.Children.Add(ui);
-            return ui;
-        }
     }
 
     private async void SwapTagMode(TagDto tagId)
@@ -209,11 +184,11 @@ public partial class Page_Library : UserControl
         await Settings.OnOpen();
     }
 
-    private void OpenTagManager()
+    private async Task OpenTagManager()
     {
         ToggleMenu(true);
         TagEditor.IsVisible = true;
-        TagEditor.OnOpen();
+        await TagEditor.OnOpen();
     }
 
 
@@ -242,6 +217,47 @@ public partial class Page_Library : UserControl
 
             cont_ActiveGames.Children.Add(ui);
             activeGameUI[path] = ui;
+        }
+    }
+
+    private async Task HandleTagChange(TagDto? tag, bool didDelete)
+    {
+        if (tag != null && !didDelete)
+        {
+            generatedTagUI[tag].DrawName(tag);
+            return;
+        }
+
+        if (tag != null && didDelete)
+        {
+            generatedTagUI[tag].IsVisible = false; // should be deleting
+            generatedTagUI.Remove(tag);
+
+            activeTags.Remove(tag);
+        }
+
+        await DrawTags();
+    }
+
+    public async Task DrawTags()
+    {
+        TagDto[] tags = await TagManager.GetAllTags();
+
+        foreach (TagDto newTag in tags)
+        {
+            if (generatedTagUI.ContainsKey(newTag))
+                continue;
+
+            CreateTag(newTag);
+        }
+
+        void CreateTag(TagDto tag)
+        {
+            Library_Tag ui = new Library_Tag();
+            ui.Draw(tag, SwapTagMode);
+
+            cont_AllTags.Children.Add(ui);
+            generatedTagUI[tag] = ui;
         }
     }
 

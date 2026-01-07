@@ -94,6 +94,11 @@ public partial class Library_Tag : UserControl
         Toggle(false);
 
         clickEvent = () => onClick?.Invoke(tag);
+        DrawName(tag);
+    }
+
+    public void DrawName(TagDto tag)
+    {
         txt.Text = tag.name.Replace("\n", "");
     }
 
