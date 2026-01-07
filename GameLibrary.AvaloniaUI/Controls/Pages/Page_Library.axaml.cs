@@ -142,6 +142,8 @@ public partial class Page_Library : UserControl
                 activeTags.Add(tagId);
                 ui.Toggle(true);
             }
+
+            await RedrawGameList(true);
         }
     }
 
