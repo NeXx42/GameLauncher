@@ -28,7 +28,7 @@ publish-appimage:
 		-c Release \
 		-r linux-x64 \
 		--self-contained true \
-		/p:PublishSingleFile=true \
+		/p:PublishSingleFile=false \
 		-o ${OUTPUT_DIR}/RunixLauncher.AppDir/usr/bin
 		
 	cp ./Build/AppImageData/* ${OUTPUT_DIR}/RunixLauncher.AppDir

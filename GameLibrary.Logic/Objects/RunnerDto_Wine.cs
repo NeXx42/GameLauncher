@@ -130,10 +130,12 @@ public class RunnerDto_Wine : RunnerDto
             Path.Combine(shareRoot, "AppData").CreateDirectoryIfNotExists();
             string shareLocal = Path.Combine(shareRoot, "AppData", "Local").CreateDirectoryIfNotExists();
             string shareRoaming = Path.Combine(shareRoot, "AppData", "Roaming").CreateDirectoryIfNotExists();
+            string shareLocalLow = Path.Combine(shareRoot, "AppData", "LocalLow").CreateDirectoryIfNotExists();
 
             HandleSymlink(Path.Combine(usrPath, "Documents"), shareDocuments);
             HandleSymlink(Path.Combine(usrPath, "AppData", "Local"), shareLocal);
             HandleSymlink(Path.Combine(usrPath, "AppData", "Roaming"), shareRoaming);
+            HandleSymlink(Path.Combine(usrPath, "AppData", "LocalLow"), shareLocalLow);
 
             void HandleSymlink(string prefixLoc, string sharedLoc)
             {

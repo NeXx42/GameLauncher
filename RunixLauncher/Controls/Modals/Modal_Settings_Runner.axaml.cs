@@ -41,12 +41,13 @@ public partial class Modal_Settings_Runner : UserControl
         tabGroup = new UITabGroup(TabGroup_Buttons, TabGroup_Content, true);
     }
 
-    public async Task HandleOpen(int? runnerId)
+    public Task HandleOpen(int? runnerId)
     {
         selectedRunner = null;
         modalRes = new TaskCompletionSource();
 
-        await Draw(runnerId);
+        _ = Draw(runnerId);
+        return modalRes.Task;
     }
 
     private async Task Draw(int? runnerId)
