@@ -17,16 +17,18 @@ Requires
 ## Installation
 1. Clone
 ```sh
-git clone https://github.com/NeXx42/GameLauncher.git --recursive
+git clone https://github.com/NeXx42/RunixLauncher.git --recursive
 ```
 2. Build
 ```sh
-make publish
+cd ./RunixLauncher
+make publish-appimage
 ```
 3. Run
 ```sh
-./_Output/AvaloniaUI/GameLibrary.AvaloniaUI
+./Build/Output/RunixLauncher.appimage
 ```
+
 
 
 
