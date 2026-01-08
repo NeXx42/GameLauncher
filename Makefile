@@ -18,3 +18,10 @@ publish:
 		
 	cp GameLibrary_GTKOverlay/target/release/GameLibrary_GTKOverlay ${OUTPUT_DIR}/AvaloniaUI/
 	tar -czvf ${OUTPUT_DIR}/GameLibrary.AvaloniaUI.tar.gz -C ${OUTPUT_DIR} AvaloniaUI
+	
+	
+overlay-debug:
+	cd GameLibrary_GTKOverlay && cargo build
+	
+overlay:
+	cd GameLibrary_GTKOverlay && cargo build --release

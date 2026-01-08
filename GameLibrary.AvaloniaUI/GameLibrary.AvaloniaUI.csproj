@@ -27,7 +27,7 @@
 
 
   <!-- Overlay -->
-  <ItemGroup Condition="'$(Configuration)' == 'Debug'">
+  <ItemGroup Condition="'$(Configuration)' == 'Debug' And Exists('..\GameLibrary_GTKOverlay\target\debug\GameLibrary_GTKOverlay')">
     <None Include="..\GameLibrary_GTKOverlay\target\debug\GameLibrary_GTKOverlay">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
