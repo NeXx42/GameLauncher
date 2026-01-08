@@ -1,7 +1,6 @@
 # Build results
 bin/
 obj/
-[Bb]uild/
 [Ll]og/
 [Ll]ogs/
 
@@ -81,3 +80,4 @@ $RECYCLE.BIN/
 
 _Output
 GameLibrary_GTKOverlay/target
+[Bb]uild/Output/
