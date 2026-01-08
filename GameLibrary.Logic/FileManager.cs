@@ -99,8 +99,10 @@ namespace GameLibrary.Logic
 
             foreach (string path in paths)
             {
-                topLevelFolders.AddRange(Directory.GetDirectories(path));
-                extracts.AddRange(Directory.GetFiles(path).Where(IsZip));
+                string actualPath = path.Replace("%20", " ");
+
+                topLevelFolders.AddRange(Directory.GetDirectories(actualPath));
+                extracts.AddRange(Directory.GetFiles(actualPath).Where(IsZip));
             }
 
             foreach (string extract in extracts)

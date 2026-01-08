@@ -107,7 +107,7 @@ public class RunnerDto_Wine : RunnerDto
 
     public override async Task SharePrefixDocuments(string path)
     {
-        string prefixFolder = Path.Combine(rootLoc, "shared");
+        string prefixFolder = Path.Combine(prefixRoot, "shared");
 
         if (!Directory.Exists(prefixFolder))
             throw new Exception("Profile hasnt been ran yet");

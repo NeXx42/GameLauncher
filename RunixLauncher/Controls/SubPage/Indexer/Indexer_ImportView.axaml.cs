@@ -68,7 +68,7 @@ public partial class Indexer_ImportView : UserControl
 
     private async Task AddFolder()
     {
-        string[]? selectedFolders = await DependencyManager.OpenFilesDialog("Select Games");
+        string[]? selectedFolders = await DependencyManager.OpenFoldersDialog("Select Games");
 
         if (selectedFolders == null)
             return;
