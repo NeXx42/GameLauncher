@@ -1,6 +1,6 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <ItemGroup>
-    <ProjectReference Include="..\GameLibrary.Database\CSharpSqliteORM.csproj" />
+    <ProjectReference Include="..\Runix.Database\CSharpSqliteORM.csproj" />
   </ItemGroup>
   <ItemGroup>
     <PackageReference Include="SharpCompress" Version="0.42.1" />

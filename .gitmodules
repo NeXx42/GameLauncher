@@ -1,3 +1,3 @@
-[submodule "GameLibrary.Database"]
-	path = GameLibrary.Database
+[submodule "Runix.Database"]
+	path = Runix.Database
 	url = https://github.com/NeXx42/CSharpSqliteORM.git
