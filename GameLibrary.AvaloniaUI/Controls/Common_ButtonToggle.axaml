@@ -1,9 +1,0 @@
-<UserControl xmlns="https://github.com/avaloniaui"
-  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
-  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="800" d:DesignHeight="450" x:Class="GameLibrary.AvaloniaUI.Controls.Common_ButtonToggle"
-  xmlns:local="clr-namespace:GameLibrary.AvaloniaUI.Controls" x:DataType="local:Common_ButtonToggle">
-  <Border x:Name="ctrl" CornerRadius="8" Background="#111920" BorderBrush="rgba(38, 43, 48, 1)" BorderThickness="1">
-    <TextBlock Margin="10 5" Text="{Binding Label, Mode=OneWay}" FontSize="13" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" x:Name="lbl"/>
-  </Border>
-</UserControl>

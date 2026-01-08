@@ -1,0 +1,8 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" x:Class="GameLibrary.AvaloniaUI.Controls.Pages.Library.Library_Tag">
+  <Border x:Name="border" Background="#111920" BorderBrush="rgba(41, 48, 54, 1)" CornerRadius="6" BorderThickness="1" MinWidth="70" Height="30">
+    <TextBlock x:Name="txt" Text="Test" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="#7f8890" FontSize="12" Margin="10, 5"/>
+  </Border>
+</UserControl>

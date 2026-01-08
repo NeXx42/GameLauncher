@@ -1,0 +1,27 @@
+<UserControl xmlns="https://github.com/avaloniaui"
+  xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+  xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+  xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006" mc:Ignorable="d" d:DesignWidth="1920" d:DesignHeight="1080" x:Class="GameLibrary.AvaloniaUI.Controls.Modals.Modal_Input"
+  xmlns:Common="clr-namespace:GameLibrary.AvaloniaUI.Controls">
+  <Border Background="#0f1419" CornerRadius="16" BorderBrush="{DynamicResource bg_Border}" BorderThickness="1" Width="400" VerticalAlignment="Center">
+    <StackPanel Spacing="20" Margin="10">
+      <Grid>
+        <Label FontSize="24" x:Name="lbl_Title" Content="Input" HorizontalAlignment="Center"/>
+
+        <Common:Common_Button Classes="negative" x:Name="btn_Close" Label="X" HorizontalAlignment="Left" Height="30" Width="30"/>
+      </Grid>
+
+      <Grid>
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="5"/>
+          <ColumnDefinition Width="100"/>
+        </Grid.ColumnDefinitions>
+
+        <TextBox x:Name="txt_Input"/>
+        <Common:Common_Button x:Name="btn_Enter" Grid.Column="2" Label="Enter" VerticalAlignment="Stretch"/>
+      </Grid>
+
+    </StackPanel>
+  </Border>
+</UserControl>

@@ -1,9 +1,0 @@
-# top-level editorconfig
-root = true
-
-[*.cs]
-# Disable "Use 'Async' suffix for async methods" (VSTHRD200)
-dotnet_diagnostic.VSTHRD200.severity = none
-
-# Optionally disable other warnings
-dotnet_diagnostic.VSTHRD110.severity = none
