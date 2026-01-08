@@ -1,4 +1,4 @@
-# GameLauncher
+# Runix Launcher
 A simple Linux game launcher designed to make managing and launching your games. Integrates with your Steam library and lets you pick the runtime for each game. Uses tags for organisation, and images for customly imported games can be generated used an incorporated overlay.
 
 Built with Avalonia, cross platform. However mainly designed for linux.
@@ -27,5 +27,6 @@ make publish
 ```sh
 ./_Output/AvaloniaUI/GameLibrary.AvaloniaUI
 ```
+
 
 
