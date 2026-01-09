@@ -51,7 +51,7 @@ public static class Integration_Steam
             }
         }
 
-        await Database_Manager.InsertItem(newGames.ToArray());
+        await LibraryManager.InsertGames(newGames.ToArray());
     }
 
     private static async Task<int> GetOrCreateLibrary()

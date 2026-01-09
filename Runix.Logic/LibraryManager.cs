@@ -192,5 +192,11 @@ namespace GameLibrary.Logic
         {
             DependencyManager.InvokeOnUIThread(() => onGameDetailsUpdate?.Invoke(gameId));
         }
+
+        public static async Task InsertGames(dbo_Game[] games)
+        {
+            await Database_Manager.InsertItem(games);
+            onGameDeletion?.Invoke();
+        }
     }
 }
