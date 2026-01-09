@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.9.34622.214
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runix.Logic", "Runix.Logic\GameLibrary.Logic.csproj", "{F2532506-FC40-479E-B9E9-84FE2AB6A3B2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Runix.Logic", "Runix.Logic\Runix.Logic.csproj", "{F2532506-FC40-479E-B9E9-84FE2AB6A3B2}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunixLauncher", "RunixLauncher\RunixLauncher.csproj", "{06830198-F5EA-46E1-A3A7-EE2CAAB84FEB}"
 EndProject

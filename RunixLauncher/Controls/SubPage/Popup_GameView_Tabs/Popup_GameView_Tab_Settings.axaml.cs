@@ -44,6 +44,7 @@ public partial class Popup_GameView_Tab_Settings : Popup_GameView_TabBase
                 new ConfigChanger_Toggle(element.inp_Emulate, Game_Config.General_LocaleEmulation, () => inspectingGame),
                     new ConfigChanger_Dropdown(element.inp_CaptureLogs, Game_Config.General_LoggingLevel, Enum.GetNames<LoggingLevel>(), () => inspectingGame),
 
+                    new ConfigChanger_Toggle(element.inp_Wine_Windowed, Game_Config.Wine_Windowed, () => inspectingGame),
                     new ConfigChanger_Toggle(element.inp_IsolatePrefix, Game_Config.Wine_IsolatedPrefix, () => inspectingGame),
                     new ConfigChanger_Toggle(element.inp_Wine_VirtualDesktop, Game_Config.Wine_ExplorerLaunch, () => inspectingGame),
                 ];

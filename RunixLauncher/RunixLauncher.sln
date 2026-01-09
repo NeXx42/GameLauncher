@@ -2,7 +2,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
 VisualStudioVersion = 17.5.2.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GameLibrary.AvaloniaUI", "GameLibrary.AvaloniaUI.csproj", "{ED352AD0-87E2-1E0E-8EBD-755FB1F1514D}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "RunixLauncher", "RunixLauncher.csproj", "{ED352AD0-87E2-1E0E-8EBD-755FB1F1514D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

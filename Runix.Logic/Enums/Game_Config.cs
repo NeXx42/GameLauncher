@@ -5,6 +5,7 @@ public enum Game_Config
     General_LocaleEmulation,
     General_LoggingLevel,
 
+    Wine_Windowed,
     Wine_ExplorerLaunch,
     Wine_IsolatedPrefix,
 }

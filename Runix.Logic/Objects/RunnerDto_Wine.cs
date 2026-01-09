@@ -60,6 +60,13 @@ public class RunnerDto_Wine : RunnerDto
 
         res.arguments.AddLast(game.path);
 
+        if (game.gameConfig?.GetBoolean(Enums.Game_Config.Wine_Windowed, false) ?? false)
+        {
+            res.arguments.AddLast("-windowed");
+            res.arguments.AddLast("-window");
+            res.arguments.AddLast("-w");
+        }
+
         res.whiteListedDirs.Add(Path.GetDirectoryName(game.path)!);
         res.whiteListedDirs.Add(Path.Combine(prefixRoot, prefixName));
         res.whiteListedDirs.Add(rootLoc);

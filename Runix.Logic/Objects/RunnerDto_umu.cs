@@ -32,7 +32,13 @@ public class RunnerDto_umu : RunnerDto_Wine
         RunnerManager.LaunchArguments res = new RunnerManager.LaunchArguments() { command = "umu-run" };
 
         res.arguments.AddLast(game.path);
-        res.arguments.AddLast("-windowed");
+
+        if (game.gameConfig?.GetBoolean(Enums.Game_Config.Wine_Windowed, false) ?? false)
+        {
+            res.arguments.AddLast("-windowed");
+            res.arguments.AddLast("-window");
+            res.arguments.AddLast("-w");
+        }
 
         res.environmentArguments.Add("WINEPREFIX", prefixLoc);
         res.environmentArguments.Add("STEAM_COMPAT_TOOL_PATHS", getRuntimeLocationRoot);

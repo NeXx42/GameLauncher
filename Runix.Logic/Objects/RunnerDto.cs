@@ -126,7 +126,7 @@ public class RunnerDto
 
     // Launching
 
-    protected virtual string[] GetAcceptableExtensions() => [".AppImage"];
+    protected virtual string[] GetAcceptableExtensions() => ["AppImage"];
 
     public virtual Task SetupRunner() => Task.CompletedTask;
 
