@@ -21,8 +21,8 @@
 
   <!-- Deps -->
   <ItemGroup>
-    <ProjectReference Include="..\GameLibrary.Logic\GameLibrary.Logic.csproj" />
-    <ProjectReference Include="..\GameLibrary.Controller\GameLibrary.Controller.csproj" />
+    <ProjectReference Include="..\Runix.Logic\Runix.Logic.csproj" />
+    <ProjectReference Include="..\Runix.Input\Runix.Input.csproj" />
   </ItemGroup>
 
 
